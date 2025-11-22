@@ -145,11 +145,6 @@ Contributions are welcome! Here's how you can help:
 - [ ] Cloud synchronization
 - [ ] Study Hangout Sessions 
 
-## 🐛 Known Issues
-
-- Local storage is disabled due to sandbox restrictions
-- Data is lost on page refresh (use browser bookmarks to keep the tab open)
-- Some animations may be reduced on low-power devices
 
 ## 📄 License
 
@@ -181,7 +176,6 @@ SOFTWARE.
 
 ## 👨‍💻 Author
 
-Your Name
 - GitHub: [iAwaisKhan](https://github.com/iAwaisKhan)
 - Email:  md.awaiskhan027@gmail.com
 
