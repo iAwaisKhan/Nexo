@@ -22,8 +22,20 @@
         </div>
         
         <div class="header-actions">
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme" title="Toggle Theme">
                 <i class="fas fa-moon"></i>
+            </button>
+            <button class="theme-toggle" onclick="showShortcutsModal()" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts (Ctrl+/)">
+                <i class="fas fa-keyboard"></i>
+            </button>
+            <button class="theme-toggle" onclick="showProductivityReport()" aria-label="Productivity Report" title="View Productivity Report">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button class="theme-toggle" onclick="exportAllData()" aria-label="Export Data" title="Export Backup (Ctrl+B)">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="theme-toggle" onclick="importData()" aria-label="Import Data" title="Import Backup">
+                <i class="fas fa-upload"></i>
             </button>
             <button class="user-avatar" id="userAvatar" aria-label="User Profile" title="View Profile" onclick="openUserProfile()">
                 <i class="fas fa-user"></i>
@@ -220,6 +232,43 @@
                     <i class="fas fa-plus"></i> New Task
                 </button>
             </div>
+            
+            <!-- Task Controls -->
+            <div class="card" style="margin-bottom: var(--space-24);">
+                <div style="display: flex; gap: var(--space-16); flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary);">Filter Tasks</label>
+                        <select onchange="filterTasks(this.value)" class="form-control" style="cursor: pointer;">
+                            <option value="all">All Tasks</option>
+                            <option value="active">Active Tasks</option>
+                            <option value="completed">Completed Tasks</option>
+                            <option value="high">High Priority</option>
+                            <option value="today">Due Today</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary);">Sort By</label>
+                        <select onchange="sortTasks(this.value)" class="form-control" style="cursor: pointer;">
+                            <option value="default">Default</option>
+                            <option value="priority">Priority</option>
+                            <option value="dueDate">Due Date</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: var(--space-8); align-items: flex-end;">
+                        <button class="btn btn--secondary ripple" onclick="selectAllTasks()" title="Select All">
+                            <i class="fas fa-check-double"></i>
+                        </button>
+                        <button class="btn btn--secondary ripple" onclick="markSelectedTasksComplete()" title="Mark Complete">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn--secondary ripple" onclick="deleteSelectedTasks()" title="Delete Selected">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="tasksContainer" class="grid-3"></div>
         </div>
 

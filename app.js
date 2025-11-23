@@ -22,7 +22,26 @@ const appData = {
         totalSessions: 0,
         lastSessionDate: null,
         sessions: []
-    }
+    },
+    // New features
+    productivity: {
+        dailyGoal: 8, // hours
+        weeklyGoal: 40, // hours
+        completedToday: 0,
+        completedThisWeek: 0,
+        history: []
+    },
+    settings: {
+        autoSave: true,
+        notifications: true,
+        soundEffects: true,
+        compactMode: false,
+        showCompleted: true
+    },
+    searchHistory: [],
+    recentFiles: [],
+    bookmarks: [],
+    lastBackup: null
 };
 
 // Quotes
@@ -218,22 +237,33 @@ function setupEventListeners() {
     });
 }
 
-// Switch View
+// Switch View with smooth transitions
 function switchView(viewName) {
+    // Update navigation active state
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
     document.querySelector(`[data-view="${viewName}"]`)?.classList.add('active');
 
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-    
+    // Get current and target views
+    const currentView = document.querySelector('.view.active');
     const targetView = document.getElementById(viewName + 'View');
-    if (targetView) {
+    
+    if (!targetView || currentView === targetView) return;
+    
+    // Remove active class from current view
+    if (currentView) {
+        currentView.classList.remove('active');
+    }
+    
+    // Small delay to ensure smooth transition
+    requestAnimationFrame(() => {
         targetView.classList.add('active');
         appData.currentView = viewName;
-    }
+        
+        // Scroll to top of new view
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 }
 
 // Toggle Theme
@@ -508,21 +538,28 @@ function renderNotes() {
 }
 
 // Render Tasks
-function renderTasks() {
+function renderTasks(tasksToRender = null) {
     const container = document.getElementById('tasksContainer');
-    if (appData.tasks.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks yet. Add your first one!</p></div>';
+    const tasks = tasksToRender || appData.tasks;
+    
+    if (tasks.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-tasks"></i><p>No tasks found. Try adjusting your filters!</p></div>';
         return;
     }
     
-    container.innerHTML = appData.tasks.map(task => `
+    container.innerHTML = tasks.map(task => `
         <div class="card" style="animation: fadeIn 0.6s ease;">
-            <h3 style="margin-bottom: var(--space-sm);">${task.title}</h3>
-            <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">${task.description}</p>
-            <div style="display: flex; gap: var(--space-md); align-items: center; flex-wrap: wrap;">
-                <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
-                <span style="font-size: 12px; color: var(--text-secondary);"><i class="fas fa-calendar"></i> ${task.dueDate}</span>
-                <span style="font-size: 12px; color: var(--text-secondary);">${task.status}</span>
+            <div style="display: flex; align-items: flex-start; gap: var(--space-12); margin-bottom: var(--space-12);">
+                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}">
+                <div style="flex: 1;">
+                    <h3 style="margin-bottom: var(--space-8); ${task.status === 'Done' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${task.title}</h3>
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-12); font-size: var(--font-size-sm);">${task.description}</p>
+                    <div style="display: flex; gap: var(--space-8); align-items: center; flex-wrap: wrap;">
+                        <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
+                        <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><i class="fas fa-calendar"></i> ${task.dueDate}</span>
+                        <span class="tag" style="font-size: var(--font-size-xs);">${task.status}</span>
+                    </div>
+                </div>
             </div>
         </div>
     `).join('');
@@ -1037,9 +1074,12 @@ function isConsecutiveDay(lastDateString) {
 function showFocusModal() {
     const modal = document.getElementById('focusSessionModal');
     if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        updateFocusDisplay();
+        // Use requestAnimationFrame for smoother transition
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            updateFocusDisplay();
+        });
     }
 }
 
@@ -1047,8 +1087,11 @@ function showFocusModal() {
 function closeFocusModal() {
     const modal = document.getElementById('focusSessionModal');
     if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
+        modal.classList.remove('active');
+        // Delay overflow reset to allow fade-out animation
+        setTimeout(() => {
+            document.body.style.overflow = 'auto';
+        }, 300);
     }
 }
 
@@ -1056,7 +1099,6 @@ function closeFocusModal() {
 function showFocusCompletionModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.style.display = 'flex';
     modal.innerHTML = `
         <div class="modal-content" style="text-align: center; max-width: 500px;">
             <div style="font-size: 64px; margin: var(--space-24) 0;">🎉</div>
@@ -1074,7 +1116,7 @@ function showFocusCompletionModal() {
                     <div class="stat-label">Minutes Today</div>
                 </div>
             </div>
-            <button class="btn ripple" onclick="this.closest('.modal').remove(); document.body.style.overflow = 'auto';" style="width: 100%;">
+            <button class="btn ripple" onclick="const m = this.closest('.modal'); m.classList.remove('active'); setTimeout(() => { m.remove(); document.body.style.overflow = 'auto'; }, 300);" style="width: 100%;">
                 <i class="fas fa-check"></i> Awesome!
             </button>
         </div>
@@ -1082,6 +1124,11 @@ function showFocusCompletionModal() {
     
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
+    
+    // Trigger transition after append
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
     
     // Play success sound (optional - requires audio file)
     playSuccessSound();
@@ -1397,7 +1444,6 @@ function startCustomFocusSession() {
 function viewFocusHistory() {
     const modal = document.createElement('div');
     modal.className = 'modal';
-    modal.style.display = 'flex';
     
     const recentSessions = appData.focusMode.sessions.slice(-10).reverse();
     
@@ -1405,7 +1451,7 @@ function viewFocusHistory() {
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
                 <h2>Focus History</h2>
-                <button class="modal-close" onclick="this.closest('.modal').remove(); document.body.style.overflow = 'auto';">
+                <button class="modal-close" onclick="const m = this.closest('.modal'); m.classList.remove('active'); setTimeout(() => { m.remove(); document.body.style.overflow = 'auto'; }, 300);">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -1455,6 +1501,11 @@ function viewFocusHistory() {
     
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
+    
+    // Trigger transition after append
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
 }
 
 // Update total sessions display
@@ -1561,9 +1612,11 @@ function openUserProfile() {
     // Load saved profile data
     loadUserProfile();
     
-    // Show modal
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    // Show modal with smooth transition
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
     
     // Focus on first input
     setTimeout(() => {
@@ -1575,8 +1628,10 @@ function closeUserProfile() {
     const modal = document.getElementById('userProfileModal');
     if (!modal) return;
     
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+    modal.classList.remove('active');
+    setTimeout(() => {
+        document.body.style.overflow = 'auto';
+    }, 300);
 }
 
 function loadUserProfile() {
@@ -1722,7 +1777,7 @@ window.addEventListener('click', (event) => {
 window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         const modal = document.getElementById('userProfileModal');
-        if (modal && modal.style.display === 'flex') {
+        if (modal && modal.classList.contains('active')) {
             closeUserProfile();
         }
     }
@@ -1752,4 +1807,576 @@ window.addEventListener('DOMContentLoaded', () => {
     // Load focus mode data
     loadFocusData();
     updateTotalSessions();
+    
+    // Initialize new features
+    initKeyboardShortcuts();
+    initAutoSave();
+    loadAllData();
+    initNotifications();
+    updateProductivityStats();
 });
+
+// ============================================
+// NEW ADVANCED FEATURES
+// ============================================
+
+// 1. KEYBOARD SHORTCUTS SYSTEM
+function initKeyboardShortcuts() {
+    const shortcuts = {
+        'ctrl+n': () => { switchView('notes'); showNoteEditor(); },
+        'ctrl+t': () => { switchView('tasks'); showTaskEditor(); },
+        'ctrl+k': () => document.getElementById('globalSearch').focus(),
+        'ctrl+s': () => saveAllData(),
+        'ctrl+b': () => exportAllData(),
+        'ctrl+/': () => showShortcutsModal(),
+        'ctrl+1': () => switchView('dashboard'),
+        'ctrl+2': () => switchView('notes'),
+        'ctrl+3': () => switchView('tasks'),
+        'ctrl+4': () => switchView('snippets'),
+        'ctrl+5': () => switchView('planner'),
+        'ctrl+f': () => switchView('focus'),
+        'escape': () => closeAllModals()
+    };
+
+    document.addEventListener('keydown', (e) => {
+        const key = (e.ctrlKey ? 'ctrl+' : '') + (e.shiftKey ? 'shift+' : '') + e.key.toLowerCase();
+        
+        if (shortcuts[key]) {
+            e.preventDefault();
+            shortcuts[key]();
+        }
+    });
+}
+
+function showShortcutsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                <button class="modal-close" onclick="const m = this.closest('.modal'); m.classList.remove('active'); setTimeout(() => { m.remove(); document.body.style.overflow = 'auto'; }, 300);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; gap: var(--space-12);">
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>N</kbd>
+                        <span>New Note</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>T</kbd>
+                        <span>New Task</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>K</kbd>
+                        <span>Focus Search</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                        <span>Save All</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>B</kbd>
+                        <span>Export Backup</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>/</kbd>
+                        <span>Show Shortcuts</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>1-5</kbd>
+                        <span>Quick Navigation</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl</kbd> + <kbd>F</kbd>
+                        <span>Focus Mode</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span>Close Modal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+// 2. AUTO-SAVE SYSTEM
+function initAutoSave() {
+    if (appData.settings.autoSave) {
+        setInterval(() => {
+            saveAllData();
+            showNotification('Auto-saved', 'success', 2000);
+        }, 120000); // Every 2 minutes
+    }
+}
+
+function saveAllData() {
+    try {
+        localStorage.setItem('aura-notes', JSON.stringify(appData.notes));
+        localStorage.setItem('aura-tasks', JSON.stringify(appData.tasks));
+        localStorage.setItem('aura-snippets', JSON.stringify(appData.snippets));
+        localStorage.setItem('aura-schedule', JSON.stringify(appData.schedule));
+        localStorage.setItem('aura-settings', JSON.stringify(appData.settings));
+        localStorage.setItem('aura-productivity', JSON.stringify(appData.productivity));
+        localStorage.setItem('aura-last-save', new Date().toISOString());
+        showNotification('💾 Data saved successfully', 'success', 2000);
+    } catch (e) {
+        showNotification('❌ Failed to save data', 'error', 3000);
+        console.error('Save error:', e);
+    }
+}
+
+function loadAllData() {
+    try {
+        const notes = localStorage.getItem('aura-notes');
+        const tasks = localStorage.getItem('aura-tasks');
+        const snippets = localStorage.getItem('aura-snippets');
+        const schedule = localStorage.getItem('aura-schedule');
+        const settings = localStorage.getItem('aura-settings');
+        const productivity = localStorage.getItem('aura-productivity');
+        
+        if (notes) appData.notes = JSON.parse(notes);
+        if (tasks) appData.tasks = JSON.parse(tasks);
+        if (snippets) appData.snippets = JSON.parse(snippets);
+        if (schedule) appData.schedule = JSON.parse(schedule);
+        if (settings) appData.settings = { ...appData.settings, ...JSON.parse(settings) };
+        if (productivity) appData.productivity = { ...appData.productivity, ...JSON.parse(productivity) };
+        
+        renderAll();
+        updateDashboard();
+    } catch (e) {
+        console.error('Load error:', e);
+    }
+}
+
+// 3. EXPORT/IMPORT SYSTEM
+function exportAllData() {
+    const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        data: {
+            notes: appData.notes,
+            tasks: appData.tasks,
+            snippets: appData.snippets,
+            schedule: appData.schedule,
+            userProfile: appData.userProfile,
+            focusMode: appData.focusMode,
+            productivity: appData.productivity,
+            settings: appData.settings
+        }
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `aura-backup-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    appData.lastBackup = new Date().toISOString();
+    localStorage.setItem('aura-last-backup', appData.lastBackup);
+    showNotification('📦 Data exported successfully!', 'success', 3000);
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const importedData = JSON.parse(event.target.result);
+                
+                if (confirm('⚠️ This will replace all current data. Continue?')) {
+                    if (importedData.data) {
+                        appData.notes = importedData.data.notes || [];
+                        appData.tasks = importedData.data.tasks || [];
+                        appData.snippets = importedData.data.snippets || [];
+                        appData.schedule = importedData.data.schedule || [];
+                        appData.userProfile = importedData.data.userProfile || appData.userProfile;
+                        appData.focusMode = importedData.data.focusMode || appData.focusMode;
+                        appData.productivity = importedData.data.productivity || appData.productivity;
+                        appData.settings = importedData.data.settings || appData.settings;
+                        
+                        saveAllData();
+                        renderAll();
+                        updateDashboard();
+                        showNotification('✅ Data imported successfully!', 'success', 3000);
+                    }
+                }
+            } catch (error) {
+                showNotification('❌ Invalid file format', 'error', 3000);
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    };
+    
+    input.click();
+}
+
+// 4. ENHANCED SEARCH WITH HISTORY
+let searchTimeout = null;
+function handleSearch(event) {
+    const query = event.target.value.toLowerCase().trim();
+    
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        if (query.length > 0) {
+            addToSearchHistory(query);
+            performGlobalSearch(query);
+        }
+    }, 300);
+}
+
+function addToSearchHistory(query) {
+    if (!appData.searchHistory.includes(query)) {
+        appData.searchHistory.unshift(query);
+        if (appData.searchHistory.length > 10) {
+            appData.searchHistory = appData.searchHistory.slice(0, 10);
+        }
+        localStorage.setItem('aura-search-history', JSON.stringify(appData.searchHistory));
+    }
+}
+
+function performGlobalSearch(query) {
+    const results = {
+        notes: appData.notes.filter(n => 
+            n.title.toLowerCase().includes(query) || 
+            n.content.toLowerCase().includes(query) ||
+            n.tags.some(t => t.toLowerCase().includes(query))
+        ),
+        tasks: appData.tasks.filter(t => 
+            t.title.toLowerCase().includes(query) || 
+            t.description.toLowerCase().includes(query)
+        ),
+        snippets: appData.snippets.filter(s => 
+            s.title.toLowerCase().includes(query) || 
+            s.code.toLowerCase().includes(query)
+        ),
+        resources: appData.resources.filter(r => 
+            r.title.toLowerCase().includes(query) || 
+            r.description.toLowerCase().includes(query) ||
+            r.tags.some(t => t.toLowerCase().includes(query))
+        )
+    };
+    
+    showSearchResults(results, query);
+}
+
+function showSearchResults(results, query) {
+    const totalResults = results.notes.length + results.tasks.length + 
+                        results.snippets.length + results.resources.length;
+    
+    if (totalResults === 0) {
+        showNotification(`No results found for "${query}"`, 'info', 2000);
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+            <div class="modal-header">
+                <h2>🔍 Search Results for "${query}"</h2>
+                <button class="modal-close" onclick="const m = this.closest('.modal'); m.classList.remove('active'); setTimeout(() => { m.remove(); document.body.style.overflow = 'auto'; }, 300);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto;">
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--space-16);">
+                    Found ${totalResults} result${totalResults !== 1 ? 's' : ''}
+                </p>
+                
+                ${results.notes.length > 0 ? `
+                    <div style="margin-bottom: var(--space-24);">
+                        <h3 style="margin-bottom: var(--space-12);">📝 Notes (${results.notes.length})</h3>
+                        <div style="display: grid; gap: var(--space-12);">
+                            ${results.notes.map(note => `
+                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('notes'); this.closest('.modal').remove();">
+                                    <h4>${note.title}</h4>
+                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                        ${note.content.substring(0, 100)}...
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${results.tasks.length > 0 ? `
+                    <div style="margin-bottom: var(--space-24);">
+                        <h3 style="margin-bottom: var(--space-12);">✅ Tasks (${results.tasks.length})</h3>
+                        <div style="display: grid; gap: var(--space-12);">
+                            ${results.tasks.map(task => `
+                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('tasks'); this.closest('.modal').remove();">
+                                    <h4>${task.title}</h4>
+                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                        ${task.description}
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${results.snippets.length > 0 ? `
+                    <div style="margin-bottom: var(--space-24);">
+                        <h3 style="margin-bottom: var(--space-12);">💻 Snippets (${results.snippets.length})</h3>
+                        <div style="display: grid; gap: var(--space-12);">
+                            ${results.snippets.map(snippet => `
+                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('snippets'); this.closest('.modal').remove();">
+                                    <h4>${snippet.title}</h4>
+                                    <span class="tag" style="margin-top: var(--space-4);">${snippet.language}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${results.resources.length > 0 ? `
+                    <div style="margin-bottom: var(--space-24);">
+                        <h3 style="margin-bottom: var(--space-12);">📚 Resources (${results.resources.length})</h3>
+                        <div style="display: grid; gap: var(--space-12);">
+                            ${results.resources.map(resource => `
+                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="window.open('${resource.url}', '_blank'); this.closest('.modal').remove();">
+                                    <h4>${resource.title}</h4>
+                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                        ${resource.description}
+                                    </p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+// 5. PRODUCTIVITY TRACKING
+function updateProductivityStats() {
+    const today = new Date().toDateString();
+    const completedTasks = appData.tasks.filter(t => t.status === 'Done').length;
+    const totalTasks = appData.tasks.length;
+    const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(0) : 0;
+    
+    appData.productivity.completedToday = completedTasks;
+    appData.productivity.completionRate = completionRate;
+    
+    // Track daily progress
+    const existingEntry = appData.productivity.history.find(h => h.date === today);
+    if (existingEntry) {
+        existingEntry.completed = completedTasks;
+        existingEntry.total = totalTasks;
+    } else {
+        appData.productivity.history.push({
+            date: today,
+            completed: completedTasks,
+            total: totalTasks,
+            focusMinutes: appData.focusMode.minutesToday
+        });
+        
+        // Keep only last 30 days
+        if (appData.productivity.history.length > 30) {
+            appData.productivity.history = appData.productivity.history.slice(-30);
+        }
+    }
+    
+    localStorage.setItem('aura-productivity', JSON.stringify(appData.productivity));
+}
+
+function showProductivityReport() {
+    const last7Days = appData.productivity.history.slice(-7);
+    const avgCompletion = last7Days.length > 0 
+        ? (last7Days.reduce((sum, day) => sum + (day.completed / Math.max(day.total, 1)), 0) / last7Days.length * 100).toFixed(0)
+        : 0;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2>📊 Productivity Report</h2>
+                <button class="modal-close" onclick="const m = this.closest('.modal'); m.classList.remove('active'); setTimeout(() => { m.remove(); document.body.style.overflow = 'auto'; }, 300);">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid" style="margin-bottom: var(--space-24);">
+                    <div class="stat-card card">
+                        <div class="stat-value">${appData.tasks.filter(t => t.status === 'Done').length}</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card card">
+                        <div class="stat-value">${avgCompletion}%</div>
+                        <div class="stat-label">7-Day Average</div>
+                    </div>
+                    <div class="stat-card card">
+                        <div class="stat-value">${appData.focusMode.totalSessions}</div>
+                        <div class="stat-label">Focus Sessions</div>
+                    </div>
+                    <div class="stat-card card">
+                        <div class="stat-value">${appData.focusMode.streak}</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-bottom: var(--space-12);">Last 7 Days</h3>
+                <div style="display: grid; gap: var(--space-8);">
+                    ${last7Days.map(day => `
+                        <div style="display: flex; justify-content: space-between; padding: var(--space-8); background: var(--color-secondary); border-radius: var(--radius-base);">
+                            <span>${new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            <span>${day.completed} / ${day.total} tasks</span>
+                            <span>${day.focusMinutes} min focus</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+// 6. NOTIFICATION SYSTEM
+function initNotifications() {
+    if ('Notification' in window && appData.settings.notifications) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+}
+
+function showNotification(message, type = 'info', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// 7. TASK FILTERING & SORTING
+function filterTasks(filter) {
+    let filtered = [...appData.tasks];
+    
+    switch(filter) {
+        case 'active':
+            filtered = filtered.filter(t => t.status !== 'Done');
+            break;
+        case 'completed':
+            filtered = filtered.filter(t => t.status === 'Done');
+            break;
+        case 'high':
+            filtered = filtered.filter(t => t.priority === 'High');
+            break;
+        case 'today':
+            const today = new Date().toISOString().split('T')[0];
+            filtered = filtered.filter(t => t.dueDate === today);
+            break;
+    }
+    
+    renderTasks(filtered);
+}
+
+function sortTasks(sortBy) {
+    let sorted = [...appData.tasks];
+    
+    switch(sortBy) {
+        case 'priority':
+            const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
+            sorted.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+            break;
+        case 'dueDate':
+            sorted.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            break;
+        case 'status':
+            sorted.sort((a, b) => a.status.localeCompare(b.status));
+            break;
+    }
+    
+    renderTasks(sorted);
+}
+
+// 8. BULK OPERATIONS
+function selectAllTasks() {
+    const checkboxes = document.querySelectorAll('.task-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+}
+
+function deleteSelectedTasks() {
+    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    if (checkboxes.length === 0) {
+        showNotification('No tasks selected', 'info', 2000);
+        return;
+    }
+    
+    if (confirm(`Delete ${checkboxes.length} selected task(s)?`)) {
+        checkboxes.forEach(cb => {
+            const taskId = parseInt(cb.dataset.taskId);
+            const index = appData.tasks.findIndex(t => t.id === taskId);
+            if (index !== -1) {
+                appData.tasks.splice(index, 1);
+            }
+        });
+        saveAllData();
+        renderTasks();
+        updateDashboard();
+        showNotification(`${checkboxes.length} task(s) deleted`, 'success', 2000);
+    }
+}
+
+function markSelectedTasksComplete() {
+    const checkboxes = document.querySelectorAll('.task-checkbox:checked');
+    if (checkboxes.length === 0) {
+        showNotification('No tasks selected', 'info', 2000);
+        return;
+    }
+    
+    checkboxes.forEach(cb => {
+        const taskId = parseInt(cb.dataset.taskId);
+        const task = appData.tasks.find(t => t.id === taskId);
+        if (task) {
+            task.status = 'Done';
+        }
+    });
+    
+    saveAllData();
+    renderTasks();
+    updateDashboard();
+    updateProductivityStats();
+    showNotification(`${checkboxes.length} task(s) marked complete`, 'success', 2000);
+}
+
+// 9. CLOSE ALL MODALS UTILITY
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.remove();
+            document.body.style.overflow = 'auto';
+        }, 300);
+    });
+}
