@@ -41,7 +41,9 @@ const appData = {
     searchHistory: [],
     recentFiles: [],
     bookmarks: [],
-    lastBackup: null
+    lastBackup: null,
+    techNews: [],
+    techEvents: []
 };
 
 // Quotes
@@ -1814,6 +1816,8 @@ window.addEventListener('DOMContentLoaded', () => {
     loadAllData();
     initNotifications();
     updateProductivityStats();
+    initTechNews();
+    initTechEvents();
 });
 
 // ============================================
@@ -2379,4 +2383,587 @@ function closeAllModals() {
             document.body.style.overflow = 'auto';
         }, 300);
     });
+}
+
+// ============================================
+// 10. TECH NEWS SECTION
+// ============================================
+
+function initTechNews() {
+    // Sample tech news data
+    appData.techNews = [
+        {
+            id: 1,
+            title: "AI Breakthrough: New Language Model Surpasses GPT-4",
+            source: "TechCrunch",
+            date: "2025-11-24",
+            category: "AI/ML",
+            url: "https://techcrunch.com",
+            image: "https://via.placeholder.com/400x250/32808d/ffffff?text=AI+News",
+            summary: "Researchers announce a groundbreaking AI model with enhanced reasoning capabilities and reduced hallucinations.",
+            tags: ["AI", "Machine Learning", "GPT"]
+        },
+        {
+            id: 2,
+            title: "JavaScript Framework Wars: The Rise of New Contenders",
+            source: "Dev.to",
+            date: "2025-11-23",
+            category: "Web Dev",
+            url: "https://dev.to",
+            image: "https://via.placeholder.com/400x250/21808d/ffffff?text=JavaScript",
+            summary: "New lightweight frameworks are challenging React and Vue's dominance in the frontend ecosystem.",
+            tags: ["JavaScript", "Frameworks", "Web Development"]
+        },
+        {
+            id: 3,
+            title: "Quantum Computing Achieves Major Milestone",
+            source: "MIT Technology Review",
+            date: "2025-11-22",
+            category: "Computing",
+            url: "https://technologyreview.com",
+            image: "https://via.placeholder.com/400x250/1d6c78/ffffff?text=Quantum",
+            summary: "Scientists demonstrate practical quantum advantage in solving real-world optimization problems.",
+            tags: ["Quantum", "Computing", "Science"]
+        },
+        {
+            id: 4,
+            title: "Cybersecurity Alert: New Zero-Day Vulnerability Discovered",
+            source: "The Hacker News",
+            date: "2025-11-21",
+            category: "Security",
+            url: "https://thehackernews.com",
+            image: "https://via.placeholder.com/400x250/195c66/ffffff?text=Security",
+            summary: "Critical vulnerability affects millions of devices. Patches are being rolled out urgently.",
+            tags: ["Security", "Vulnerability", "Cybersecurity"]
+        },
+        {
+            id: 5,
+            title: "Web3 Revolution: Decentralized Apps Go Mainstream",
+            source: "CoinDesk",
+            date: "2025-11-20",
+            category: "Blockchain",
+            url: "https://coindesk.com",
+            image: "https://via.placeholder.com/400x250/154c54/ffffff?text=Web3",
+            summary: "Major companies are integrating blockchain technology into their platforms, signaling Web3 adoption.",
+            tags: ["Web3", "Blockchain", "DApps"]
+        },
+        {
+            id: 6,
+            title: "5G Networks Enable Revolutionary IoT Applications",
+            source: "Wired",
+            date: "2025-11-19",
+            category: "IoT",
+            url: "https://wired.com",
+            image: "https://via.placeholder.com/400x250/0f3c42/ffffff?text=5G+IoT",
+            summary: "Next-generation connectivity is powering smart cities and connected devices at unprecedented scale.",
+            tags: ["5G", "IoT", "Connectivity"]
+        },
+        {
+            id: 7,
+            title: "Open Source AI Models Challenge Proprietary Giants",
+            source: "GitHub Blog",
+            date: "2025-11-18",
+            category: "Open Source",
+            url: "https://github.blog",
+            image: "https://via.placeholder.com/400x250/32808d/ffffff?text=Open+Source",
+            summary: "Community-driven AI projects are democratizing access to powerful machine learning models.",
+            tags: ["Open Source", "AI", "Community"]
+        },
+        {
+            id: 8,
+            title: "Cloud Computing: Edge Computing Takes Center Stage",
+            source: "AWS News",
+            date: "2025-11-17",
+            category: "Cloud",
+            url: "https://aws.amazon.com/blogs",
+            image: "https://via.placeholder.com/400x250/21808d/ffffff?text=Cloud",
+            summary: "Edge computing solutions are reducing latency and improving performance for distributed applications.",
+            tags: ["Cloud", "Edge Computing", "Infrastructure"]
+        }
+    ];
+    
+    renderTechNews();
+}
+
+function renderTechNews() {
+    const container = document.getElementById('newsContainer');
+    
+    if (!container) return;
+    
+    if (appData.techNews.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>No tech news available. Check back later!</p></div>';
+        return;
+    }
+    
+    container.innerHTML = appData.techNews.map(news => `
+        <div class="card news-card" style="animation: fadeIn 0.6s ease; overflow: hidden;">
+            <div class="news-image" style="width: 100%; height: 180px; background: url('${news.image}') center/cover; border-radius: var(--radius-base); margin-bottom: var(--space-16);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
+                <span class="tag" style="font-size: var(--font-size-xs);">${news.category}</span>
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                    <i class="fas fa-clock"></i> ${formatNewsDate(news.date)}
+                </span>
+            </div>
+            <h3 style="margin-bottom: var(--space-12); line-height: 1.4;">${news.title}</h3>
+            <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-12); line-height: 1.6;">
+                ${news.summary}
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-12);">
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                    <i class="fas fa-newspaper"></i> ${news.source}
+                </span>
+            </div>
+            <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-12);">
+                ${news.tags.map(tag => `<span class="tag" style="font-size: var(--font-size-xs); padding: var(--space-2) var(--space-8);">#${tag}</span>`).join('')}
+            </div>
+            <div style="display: flex; gap: var(--space-8);">
+                <button class="btn btn--primary btn--sm ripple" onclick="window.open('${news.url}', '_blank')" style="flex: 1;">
+                    <i class="fas fa-external-link-alt"></i> Read More
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="shareNews(${news.id})" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="bookmarkNews(${news.id})" title="Bookmark">
+                    <i class="fas fa-bookmark"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatNewsDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function shareNews(newsId) {
+    const news = appData.techNews.find(n => n.id === newsId);
+    if (!news) return;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: news.title,
+            text: news.summary,
+            url: news.url
+        }).then(() => {
+            showNotification('Shared successfully!', 'success', 2000);
+        }).catch(() => {
+            copyToClipboard(news.url);
+        });
+    } else {
+        copyToClipboard(news.url);
+    }
+}
+
+function bookmarkNews(newsId) {
+    const news = appData.techNews.find(n => n.id === newsId);
+    if (!news) return;
+    
+    if (!appData.bookmarks.find(b => b.type === 'news' && b.id === newsId)) {
+        appData.bookmarks.push({ type: 'news', id: newsId, title: news.title, date: new Date().toISOString() });
+        localStorage.setItem('aura-bookmarks', JSON.stringify(appData.bookmarks));
+        showNotification('📌 Bookmarked!', 'success', 2000);
+    } else {
+        showNotification('Already bookmarked', 'info', 2000);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('📋 Link copied to clipboard!', 'success', 2000);
+    }).catch(() => {
+        showNotification('Failed to copy link', 'error', 2000);
+    });
+}
+
+function filterNewsByCategory(category) {
+    const container = document.getElementById('newsContainer');
+    if (!container) return;
+    
+    const filtered = category === 'all' 
+        ? appData.techNews 
+        : appData.techNews.filter(n => n.category === category);
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>No news found in this category.</p></div>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(news => `
+        <div class="card news-card" style="animation: fadeIn 0.6s ease; overflow: hidden;">
+            <div class="news-image" style="width: 100%; height: 180px; background: url('${news.image}') center/cover; border-radius: var(--radius-base); margin-bottom: var(--space-16);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
+                <span class="tag" style="font-size: var(--font-size-xs);">${news.category}</span>
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                    <i class="fas fa-clock"></i> ${formatNewsDate(news.date)}
+                </span>
+            </div>
+            <h3 style="margin-bottom: var(--space-12); line-height: 1.4;">${news.title}</h3>
+            <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-12); line-height: 1.6;">
+                ${news.summary}
+            </p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-12);">
+                <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">
+                    <i class="fas fa-newspaper"></i> ${news.source}
+                </span>
+            </div>
+            <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-12);">
+                ${news.tags.map(tag => `<span class="tag" style="font-size: var(--font-size-xs); padding: var(--space-2) var(--space-8);">#${tag}</span>`).join('')}
+            </div>
+            <div style="display: flex; gap: var(--space-8);">
+                <button class="btn btn--primary btn--sm ripple" onclick="window.open('${news.url}', '_blank')" style="flex: 1;">
+                    <i class="fas fa-external-link-alt"></i> Read More
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="shareNews(${news.id})" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="bookmarkNews(${news.id})" title="Bookmark">
+                    <i class="fas fa-bookmark"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ============================================
+// 11. TECH EVENTS SECTION
+// ============================================
+
+function initTechEvents() {
+    // Sample tech events data
+    appData.techEvents = [
+        {
+            id: 1,
+            title: "AI Summit 2025",
+            date: "2025-12-15",
+            endDate: "2025-12-17",
+            location: "San Francisco, CA",
+            type: "Conference",
+            isVirtual: true,
+            price: "Free",
+            url: "https://aisummit2025.com",
+            image: "https://via.placeholder.com/400x250/32808d/ffffff?text=AI+Summit",
+            description: "Join industry leaders to explore the future of artificial intelligence and machine learning.",
+            attendees: "5,000+",
+            tags: ["AI", "ML", "Conference"]
+        },
+        {
+            id: 2,
+            title: "JavaScript World Conference",
+            date: "2025-12-20",
+            endDate: "2025-12-22",
+            location: "Austin, TX",
+            type: "Conference",
+            isVirtual: false,
+            price: "$299",
+            url: "https://jsworld.com",
+            image: "https://via.placeholder.com/400x250/21808d/ffffff?text=JS+World",
+            description: "Three days of JavaScript workshops, talks, and networking with top developers.",
+            attendees: "3,000+",
+            tags: ["JavaScript", "Web Dev", "Networking"]
+        },
+        {
+            id: 3,
+            title: "DevOps Days Global",
+            date: "2025-12-10",
+            endDate: "2025-12-11",
+            location: "Online",
+            type: "Webinar",
+            isVirtual: true,
+            price: "Free",
+            url: "https://devopsdays.org",
+            image: "https://via.placeholder.com/400x250/1d6c78/ffffff?text=DevOps",
+            description: "Learn best practices for continuous integration, deployment, and infrastructure automation.",
+            attendees: "10,000+",
+            tags: ["DevOps", "CI/CD", "Cloud"]
+        },
+        {
+            id: 4,
+            title: "Blockchain Developers Meetup",
+            date: "2025-12-05",
+            endDate: "2025-12-05",
+            location: "New York, NY",
+            type: "Meetup",
+            isVirtual: false,
+            price: "Free",
+            url: "https://blockchaindevelopers.com",
+            image: "https://via.placeholder.com/400x250/195c66/ffffff?text=Blockchain",
+            description: "Monthly meetup for blockchain developers to share knowledge and network.",
+            attendees: "200+",
+            tags: ["Blockchain", "Web3", "Networking"]
+        },
+        {
+            id: 5,
+            title: "React Summit",
+            date: "2026-01-15",
+            endDate: "2026-01-16",
+            location: "Amsterdam, Netherlands",
+            type: "Conference",
+            isVirtual: true,
+            price: "$199",
+            url: "https://reactsummit.com",
+            image: "https://via.placeholder.com/400x250/154c54/ffffff?text=React",
+            description: "The biggest React conference with talks from core team members and industry experts.",
+            attendees: "4,000+",
+            tags: ["React", "Frontend", "JavaScript"]
+        },
+        {
+            id: 6,
+            title: "Cybersecurity Workshop",
+            date: "2025-12-08",
+            endDate: "2025-12-08",
+            location: "Online",
+            type: "Workshop",
+            isVirtual: true,
+            price: "$49",
+            url: "https://cybersecurityworkshop.com",
+            image: "https://via.placeholder.com/400x250/0f3c42/ffffff?text=Security",
+            description: "Hands-on workshop covering penetration testing, ethical hacking, and security best practices.",
+            attendees: "500+",
+            tags: ["Security", "Hacking", "Workshop"]
+        }
+    ];
+    
+    renderTechEvents();
+}
+
+function renderTechEvents() {
+    const container = document.getElementById('eventsContainer');
+    
+    if (!container) return;
+    
+    if (appData.techEvents.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No upcoming tech events. Check back later!</p></div>';
+        return;
+    }
+    
+    // Sort events by date
+    const sortedEvents = [...appData.techEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    container.innerHTML = sortedEvents.map(event => {
+        const eventDate = new Date(event.date);
+        const isUpcoming = eventDate >= new Date();
+        const isPast = !isUpcoming;
+        
+        return `
+        <div class="card event-card ${isPast ? 'event-past' : ''}" style="animation: fadeIn 0.6s ease; overflow: hidden;">
+            <div class="event-image" style="width: 100%; height: 180px; background: url('${event.image}') center/cover; border-radius: var(--radius-base); margin-bottom: var(--space-16); position: relative;">
+                ${event.isVirtual ? '<span class="virtual-badge" style="position: absolute; top: var(--space-8); right: var(--space-8); background: var(--color-primary); color: var(--color-btn-primary-text); padding: var(--space-4) var(--space-8); border-radius: var(--radius-base); font-size: var(--font-size-xs); font-weight: 600;"><i class="fas fa-video"></i> Virtual</span>' : ''}
+                ${isPast ? '<span class="past-badge" style="position: absolute; top: var(--space-8); left: var(--space-8); background: var(--color-text-secondary); color: white; padding: var(--space-4) var(--space-8); border-radius: var(--radius-base); font-size: var(--font-size-xs); font-weight: 600;">Past Event</span>' : ''}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
+                <span class="tag" style="font-size: var(--font-size-xs);">${event.type}</span>
+                <span style="font-size: var(--font-size-xs); font-weight: 600; color: ${event.price === 'Free' ? 'var(--color-success)' : 'var(--color-primary)'};">
+                    ${event.price}
+                </span>
+            </div>
+            
+            <h3 style="margin-bottom: var(--space-12); line-height: 1.4;">${event.title}</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--space-8); margin-bottom: var(--space-12);">
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-calendar" style="width: 16px;"></i>
+                    <span>${formatEventDate(event.date, event.endDate)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-map-marker-alt" style="width: 16px;"></i>
+                    <span>${event.location}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-users" style="width: 16px;"></i>
+                    <span>${event.attendees} attendees</span>
+                </div>
+            </div>
+            
+            <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-12); line-height: 1.6;">
+                ${event.description}
+            </p>
+            
+            <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-12);">
+                ${event.tags.map(tag => `<span class="tag" style="font-size: var(--font-size-xs); padding: var(--space-2) var(--space-8);">#${tag}</span>`).join('')}
+            </div>
+            
+            <div style="display: flex; gap: var(--space-8);">
+                <button class="btn ${isPast ? 'btn--secondary' : 'btn--primary'} btn--sm ripple" onclick="window.open('${event.url}', '_blank')" style="flex: 1;">
+                    <i class="fas fa-${isPast ? 'eye' : 'ticket-alt'}"></i> ${isPast ? 'View Details' : 'Register Now'}
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="addEventToCalendar(${event.id})" title="Add to Calendar">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="shareEvent(${event.id})" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
+}
+
+function formatEventDate(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    const options = { month: 'short', day: 'numeric', year: 'numeric' };
+    
+    if (startDate === endDate) {
+        return start.toLocaleDateString('en-US', options);
+    } else {
+        return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+    }
+}
+
+function addEventToCalendar(eventId) {
+    const event = appData.techEvents.find(e => e.id === eventId);
+    if (!event) return;
+    
+    // Create ICS calendar format
+    const startDate = new Date(event.date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const endDate = new Date(event.endDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:${startDate}
+DTEND:${endDate}
+SUMMARY:${event.title}
+DESCRIPTION:${event.description}
+LOCATION:${event.location}
+URL:${event.url}
+END:VEVENT
+END:VCALENDAR`;
+    
+    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${event.title.replace(/\s+/g, '-')}.ics`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('📅 Event added to calendar!', 'success', 2000);
+}
+
+function shareEvent(eventId) {
+    const event = appData.techEvents.find(e => e.id === eventId);
+    if (!event) return;
+    
+    const shareText = `Check out ${event.title} - ${formatEventDate(event.date, event.endDate)} in ${event.location}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: event.title,
+            text: shareText,
+            url: event.url
+        }).then(() => {
+            showNotification('Shared successfully!', 'success', 2000);
+        }).catch(() => {
+            copyToClipboard(event.url);
+        });
+    } else {
+        copyToClipboard(event.url);
+    }
+}
+
+function filterEventsByType(type) {
+    const container = document.getElementById('eventsContainer');
+    if (!container) return;
+    
+    const filtered = type === 'all' 
+        ? appData.techEvents 
+        : appData.techEvents.filter(e => e.type === type);
+    
+    renderFilteredEvents(filtered);
+}
+
+function filterEventsByTime(timeFilter) {
+    const container = document.getElementById('eventsContainer');
+    if (!container) return;
+    
+    const now = new Date();
+    let filtered = appData.techEvents;
+    
+    if (timeFilter === 'upcoming') {
+        filtered = appData.techEvents.filter(e => new Date(e.date) >= now);
+    } else if (timeFilter === 'past') {
+        filtered = appData.techEvents.filter(e => new Date(e.date) < now);
+    }
+    
+    renderFilteredEvents(filtered);
+}
+
+function renderFilteredEvents(events) {
+    const container = document.getElementById('eventsContainer');
+    if (!container) return;
+    
+    if (events.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>No events found matching your filter.</p></div>';
+        return;
+    }
+    
+    const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    container.innerHTML = sortedEvents.map(event => {
+        const eventDate = new Date(event.date);
+        const isUpcoming = eventDate >= new Date();
+        const isPast = !isUpcoming;
+        
+        return `
+        <div class="card event-card ${isPast ? 'event-past' : ''}" style="animation: fadeIn 0.6s ease; overflow: hidden;">
+            <div class="event-image" style="width: 100%; height: 180px; background: url('${event.image}') center/cover; border-radius: var(--radius-base); margin-bottom: var(--space-16); position: relative;">
+                ${event.isVirtual ? '<span class="virtual-badge" style="position: absolute; top: var(--space-8); right: var(--space-8); background: var(--color-primary); color: var(--color-btn-primary-text); padding: var(--space-4) var(--space-8); border-radius: var(--radius-base); font-size: var(--font-size-xs); font-weight: 600;"><i class="fas fa-video"></i> Virtual</span>' : ''}
+                ${isPast ? '<span class="past-badge" style="position: absolute; top: var(--space-8); left: var(--space-8); background: var(--color-text-secondary); color: white; padding: var(--space-4) var(--space-8); border-radius: var(--radius-base); font-size: var(--font-size-xs); font-weight: 600;">Past Event</span>' : ''}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8);">
+                <span class="tag" style="font-size: var(--font-size-xs);">${event.type}</span>
+                <span style="font-size: var(--font-size-xs); font-weight: 600; color: ${event.price === 'Free' ? 'var(--color-success)' : 'var(--color-primary)'};">
+                    ${event.price}
+                </span>
+            </div>
+            
+            <h3 style="margin-bottom: var(--space-12); line-height: 1.4;">${event.title}</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: var(--space-8); margin-bottom: var(--space-12);">
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-calendar" style="width: 16px;"></i>
+                    <span>${formatEventDate(event.date, event.endDate)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-map-marker-alt" style="width: 16px;"></i>
+                    <span>${event.location}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+                    <i class="fas fa-users" style="width: 16px;"></i>
+                    <span>${event.attendees} attendees</span>
+                </div>
+            </div>
+            
+            <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-bottom: var(--space-12); line-height: 1.6;">
+                ${event.description}
+            </p>
+            
+            <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-12);">
+                ${event.tags.map(tag => `<span class="tag" style="font-size: var(--font-size-xs); padding: var(--space-2) var(--space-8);">#${tag}</span>`).join('')}
+            </div>
+            
+            <div style="display: flex; gap: var(--space-8);">
+                <button class="btn ${isPast ? 'btn--secondary' : 'btn--primary'} btn--sm ripple" onclick="window.open('${event.url}', '_blank')" style="flex: 1;">
+                    <i class="fas fa-${isPast ? 'eye' : 'ticket-alt'}"></i> ${isPast ? 'View Details' : 'Register Now'}
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="addEventToCalendar(${event.id})" title="Add to Calendar">
+                    <i class="fas fa-calendar-plus"></i>
+                </button>
+                <button class="btn btn--secondary btn--sm ripple" onclick="shareEvent(${event.id})" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+        </div>
+    `}).join('');
 }

@@ -599,7 +599,34 @@
         <div id="technewsView" class="view">
             <div class="section-header">
                 <h1 class="section-title">Tech News</h1>
+                <button class="btn ripple" onclick="initTechNews()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
+            
+            <div class="card" style="margin-bottom: var(--space-24);">
+                <div style="display: flex; gap: var(--space-16); flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary);">Filter by Category</label>
+                        <select onchange="filterNewsByCategory(this.value)" class="form-control" style="cursor: pointer;">
+                            <option value="all">All Categories</option>
+                            <option value="AI/ML">AI/ML</option>
+                            <option value="Web Dev">Web Development</option>
+                            <option value="Security">Security</option>
+                            <option value="Blockchain">Blockchain</option>
+                            <option value="Cloud">Cloud Computing</option>
+                            <option value="IoT">IoT</option>
+                            <option value="Open Source">Open Source</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: var(--space-8); align-items: flex-end;">
+                        <button class="btn btn--secondary ripple" onclick="initTechNews()" title="Refresh News">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="newsContainer" class="grid-2"></div>
         </div>
 
@@ -607,7 +634,39 @@
         <div id="techeventsView" class="view">
             <div class="section-header">
                 <h1 class="section-title">Tech Events</h1>
+                <button class="btn ripple" onclick="initTechEvents()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
+            
+            <div class="card" style="margin-bottom: var(--space-24);">
+                <div style="display: flex; gap: var(--space-16); flex-wrap: wrap; align-items: center;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary);">Filter by Type</label>
+                        <select onchange="filterEventsByType(this.value)" class="form-control" style="cursor: pointer;">
+                            <option value="all">All Types</option>
+                            <option value="Conference">Conference</option>
+                            <option value="Webinar">Webinar</option>
+                            <option value="Workshop">Workshop</option>
+                            <option value="Meetup">Meetup</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; margin-bottom: var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-secondary);">Show</label>
+                        <select onchange="filterEventsByTime(this.value)" class="form-control" style="cursor: pointer;">
+                            <option value="all">All Events</option>
+                            <option value="upcoming">Upcoming Only</option>
+                            <option value="past">Past Events</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: var(--space-8); align-items: flex-end;">
+                        <button class="btn btn--secondary ripple" onclick="initTechEvents()" title="Refresh Events">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="eventsContainer" class="grid-2"></div>
         </div>
 
