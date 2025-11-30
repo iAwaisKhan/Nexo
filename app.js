@@ -1,4 +1,57 @@
 
+// Initialize Lenis Smooth Scroll
+let lenis;
+
+function initLenisScroll() {
+    lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: 'vertical',
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        wheelMultiplier: 1,
+        smoothTouch: false,
+        touchMultiplier: 2,
+        infinite: false,
+    });
+
+    function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    // Apply Lenis to all scrollable containers
+    const scrollableContainers = [
+        document.querySelector('.main-content'),
+        document.querySelector('.sidebar'),
+        ...document.querySelectorAll('.modal-content'),
+        ...document.querySelectorAll('.view')
+    ];
+
+    scrollableContainers.forEach(container => {
+        if (container) {
+            container.setAttribute('data-lenis-prevent', '');
+        }
+    });
+}
+
+// Helper functions for Lenis modal integration
+function stopLenisScroll() {
+    if (lenis) {
+        lenis.stop();
+        document.documentElement.classList.add('lenis-stopped');
+    }
+}
+
+function startLenisScroll() {
+    if (lenis) {
+        lenis.start();
+        document.documentElement.classList.remove('lenis-stopped');
+    }
+}
+
 const appData = {
     notes: [],
     tasks: [],
@@ -89,6 +142,7 @@ function initTheme() {
 
 // Initialize App
 function initApp() {
+    initLenisScroll();
     initTheme();
     loadSampleData();
     setupEventListeners();
@@ -99,12 +153,25 @@ function initApp() {
     renderAll();
     initNetworkAnimation();
     
-    // Add initial loading animation
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-        document.body.style.transition = 'opacity 0.5s ease';
-        document.body.style.opacity = '1';
-    }, 100);
+    // Hide preloader with smooth transition
+    const preloader = document.querySelector('.preloader');
+    if (preloader) {
+        setTimeout(() => {
+            preloader.classList.add('hidden');
+            // Apply stagger animation to dashboard cards
+            const dashboardView = document.querySelector('.view.active');
+            if (dashboardView) {
+                applyStaggerAnimation(dashboardView);
+            }
+        }, 1500);
+    } else {
+        // Fallback if no preloader
+        document.body.style.opacity = '0';
+        setTimeout(() => {
+            document.body.style.transition = 'opacity 0.5s ease';
+            document.body.style.opacity = '1';
+        }, 100);
+    }
 }
 
 // Load Sample Data
@@ -222,6 +289,17 @@ function setupEventListeners() {
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('globalSearch').addEventListener('input', handleSearch);
     
+    // Global modal close listener for Lenis scroll management
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal') && e.target.classList.contains('active')) {
+            e.target.classList.remove('active');
+            setTimeout(() => {
+                document.body.style.overflow = 'auto';
+                startLenisScroll();
+            }, 300);
+        }
+    });
+    
     // Listen for system theme changes when in auto mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', (e) => {
@@ -263,8 +341,31 @@ function switchView(viewName) {
         targetView.classList.add('active');
         appData.currentView = viewName;
         
-        // Scroll to top of new view
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // Apply stagger animation to cards in the new view
+        applyStaggerAnimation(targetView);
+        
+        // Scroll to top of new view with Lenis
+        if (lenis) {
+            lenis.scrollTo(0, { duration: 0.8, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+}
+
+// Apply stagger animation to elements
+function applyStaggerAnimation(container) {
+    const animatableElements = container.querySelectorAll('.card, .note-card, .task-card, .snippet-card, .resource-card, .news-card, .event-card');
+    
+    animatableElements.forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, index * 50); // 50ms delay between each element
     });
 }
 
@@ -1080,6 +1181,7 @@ function showFocusModal() {
         requestAnimationFrame(() => {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            stopLenisScroll();
             updateFocusDisplay();
         });
     }
@@ -1093,6 +1195,7 @@ function closeFocusModal() {
         // Delay overflow reset to allow fade-out animation
         setTimeout(() => {
             document.body.style.overflow = 'auto';
+            startLenisScroll();
         }, 300);
     }
 }
@@ -1180,13 +1283,6 @@ function showToast(message, type = 'success') {
         toast.style.animation = 'fadeIn 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
-}
-
-// Search Handler
-function handleSearch(e) {
-    const query = e.target.value.toLowerCase();
-    // Implement search logic
-    console.log('Searching for:', query);
 }
 
 // Render Schedule

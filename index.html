@@ -3,12 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Aura - A comprehensive learning platform with notes, tasks, code snippets, focus mode, and productivity tracking.">
+    <meta name="keywords" content="learning, productivity, notes, tasks, pomodoro, code snippets, focus mode">
+    <meta name="author" content="Aura Team">
+    <meta name="theme-color" content="#14b8a6">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Aura - Enhanced Learning Platform">
+    <meta property="og:description" content="A comprehensive learning platform with notes, tasks, code snippets, focus mode, and productivity tracking.">
+    <meta property="og:image" content="/og-image.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+    
     <title>Aura - Enhanced Learning Platform</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="styles.css">
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
     <script src="app.js" defer></script>
 </head>
 <body>
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-content">
+            <div class="preloader-logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="preloader-text">Loading Aura...</div>
+            <div class="preloader-bar">
+                <div class="preloader-progress"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="logo">
@@ -796,7 +825,5 @@
 
     <!-- Animated Network Background Canvas -->
     <canvas id="networkCanvas"></canvas>
-
-    <script src="app.js"></script>
 </body>
 </html>
