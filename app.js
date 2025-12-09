@@ -934,46 +934,155 @@ function bookmarkResource(id) {
 }
 
 // timers
-let pomodoroInterval = null;
-let pomodoroSeconds = 25 * 60;
+// Pomodoro Timer Optimization
+const pomodoroState = {
+    interval: null,
+    timeLeft: 25 * 60,
+    totalTime: 25 * 60,
+    mode: 'work',
+    isActive: false,
+    endTime: null,
+    modes: {
+        work: 25 * 60,
+        shortBreak: 5 * 60,
+        longBreak: 15 * 60
+    }
+};
+
+function setPomodoroMode(mode) {
+    if (pomodoroState.isActive) {
+        const confirmSwitch = confirm('Timer is running. Switch mode?');
+        if (!confirmSwitch) return;
+        pausePomodoro();
+    }
+
+    pomodoroState.mode = mode;
+    pomodoroState.timeLeft = pomodoroState.modes[mode];
+    pomodoroState.totalTime = pomodoroState.modes[mode];
+    
+    // Update UI buttons
+    document.querySelectorAll('.pomodoro-modes button').forEach(btn => {
+        btn.classList.remove('active-mode');
+        btn.classList.add('btn-secondary');
+    });
+    const activeBtn = document.getElementById(`mode-${mode}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active-mode');
+        activeBtn.classList.remove('btn-secondary');
+    }
+
+    updatePomodoroDisplay();
+}
 
 function startPomodoro() {
-    if (pomodoroInterval) return;
-    pomodoroInterval = setInterval(() => {
-        pomodoroSeconds--;
-        updatePomodoroDisplay();
-        if (pomodoroSeconds <= 0) {
-            clearInterval(pomodoroInterval);
-            pomodoroInterval = null;
-            showToast('Pomodoro session complete! Take a break.', 'success');
+    if (pomodoroState.isActive) return;
+    
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    pomodoroState.isActive = true;
+    pomodoroState.endTime = Date.now() + (pomodoroState.timeLeft * 1000);
+    
+    pomodoroState.interval = setInterval(() => {
+        const now = Date.now();
+        const diff = pomodoroState.endTime - now;
+        
+        if (diff <= 0) {
+            completePomodoro();
+        } else {
+            pomodoroState.timeLeft = Math.ceil(diff / 1000);
+            updatePomodoroDisplay();
         }
-    }, 1000);
-    showToast('Pomodoro started!', 'success');
+    }, 100);
+    
+    showToast(`Pomodoro ${pomodoroState.mode.replace(/([A-Z])/g, ' $1').toLowerCase()} started!`, 'success');
 }
 
 function pausePomodoro() {
-    if (pomodoroInterval) {
-        clearInterval(pomodoroInterval);
-        pomodoroInterval = null;
-        showToast('Pomodoro paused', 'success');
-    }
+    if (!pomodoroState.isActive) return;
+    
+    clearInterval(pomodoroState.interval);
+    pomodoroState.isActive = false;
+    pomodoroState.interval = null;
+    showToast('Timer paused', 'info');
 }
 
 function resetPomodoro() {
-    if (pomodoroInterval) {
-        clearInterval(pomodoroInterval);
-        pomodoroInterval = null;
-    }
-    pomodoroSeconds = 25 * 60;
+    pausePomodoro();
+    pomodoroState.timeLeft = pomodoroState.modes[pomodoroState.mode];
     updatePomodoroDisplay();
-    showToast('Pomodoro reset', 'success');
+    showToast('Timer reset', 'info');
+}
+
+function completePomodoro() {
+    clearInterval(pomodoroState.interval);
+    pomodoroState.isActive = false;
+    pomodoroState.interval = null;
+    pomodoroState.timeLeft = 0;
+    updatePomodoroDisplay();
+    
+    playNotificationSound();
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Aura Pomodoro', {
+            body: `${pomodoroState.mode === 'work' ? 'Focus session' : 'Break'} complete!`,
+            icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>'
+        });
+    }
+    
+    if (pomodoroState.mode === 'work') {
+        if (appData.focusMode) {
+            appData.focusMode.minutesToday += pomodoroState.modes.work / 60;
+            appData.focusMode.sessions.push({
+                date: new Date().toISOString(),
+                duration: pomodoroState.modes.work / 60
+            });
+            if (typeof saveFocusData === 'function') {
+                saveFocusData();
+            }
+        }
+    }
+    
+    showToast(`${pomodoroState.mode === 'work' ? 'Focus session' : 'Break'} complete!`, 'success');
 }
 
 function updatePomodoroDisplay() {
-    const minutes = Math.floor(pomodoroSeconds / 60);
-    const seconds = pomodoroSeconds % 60;
-    document.getElementById('pomodoroDisplay').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(pomodoroState.timeLeft / 60);
+    const seconds = pomodoroState.timeLeft % 60;
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    const display = document.getElementById('pomodoroDisplay');
+    if (display) display.textContent = timeString;
+    
+    if (pomodoroState.isActive) {
+        document.title = `${timeString} - ${pomodoroState.mode === 'work' ? 'Focus' : 'Break'} | Aura`;
+    } else {
+        document.title = 'Aura';
+    }
+}
+
+function playNotificationSound() {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.5);
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.error('Audio play failed', e);
+    }
 }
 
 let stopwatchInterval = null;

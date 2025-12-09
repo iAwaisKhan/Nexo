@@ -4381,3 +4381,9 @@ body.compact-mode .section-header {
     transform: scale(0.98);
     transition: transform 0.1s ease;
 }
+/* Pomodoro Styles */
+.active-mode {
+    background-color: var(--color-primary) !important;
+    color: var(--color-white) !important;
+    border-color: var(--color-primary) !important;
+}
