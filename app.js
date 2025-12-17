@@ -1830,7 +1830,7 @@ function updateTotalSessions() {
     }
 }
 
-// Network Animation Background
+// Network Animation Background - Organic flowing particles
 function initNetworkAnimation() {
     const canvas = document.getElementById('networkCanvas');
     if (!canvas) return;
@@ -1845,19 +1845,38 @@ function initNetworkAnimation() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
-    // Particle class
+    // Get theme-appropriate colors
+    function getParticleColor() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches && 
+             document.documentElement.getAttribute('data-theme') !== 'light');
+        return isDark ? 'rgba(205, 145, 115, 0.4)' : 'rgba(165, 98, 68, 0.3)';
+    }
+    
+    function getLineColor(opacity) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+            (window.matchMedia('(prefers-color-scheme: dark)').matches && 
+             document.documentElement.getAttribute('data-theme') !== 'light');
+        return isDark ? `rgba(205, 145, 115, ${opacity})` : `rgba(165, 98, 68, ${opacity})`;
+    }
+    
+    // Particle class - Organic movement
     class Particle {
         constructor() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.radius = 2;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.radius = 2 + Math.random() * 1.5;
+            this.phase = Math.random() * Math.PI * 2;
+            this.amplitude = 0.3 + Math.random() * 0.2;
         }
         
         update() {
-            this.x += this.vx;
-            this.y += this.vy;
+            // Add gentle organic wave motion
+            this.phase += 0.01;
+            this.x += this.vx + Math.sin(this.phase) * this.amplitude * 0.1;
+            this.y += this.vy + Math.cos(this.phase * 0.7) * this.amplitude * 0.1;
             
             // Wrap around edges
             if (this.x < 0) this.x = canvas.width;
@@ -1869,18 +1888,18 @@ function initNetworkAnimation() {
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(79, 70, 229, 0.6)';
+            ctx.fillStyle = getParticleColor();
             ctx.fill();
         }
     }
     
-    // Create particles
+    // Create particles - fewer for a calmer feel
     const particles = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 35; i++) {
         particles.push(new Particle());
     }
     
-    // Draw connections
+    // Draw connections with curved lines for organic feel
     function drawConnections() {
         for (let i = 0; i < particles.length; i++) {
             for (let j = i + 1; j < particles.length; j++) {
@@ -1888,13 +1907,16 @@ function initNetworkAnimation() {
                 const dy = particles[i].y - particles[j].y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                if (distance < 150) {
-                    const opacity = (1 - distance / 150) * 0.5;
+                if (distance < 180) {
+                    const opacity = (1 - distance / 180) * 0.25;
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(79, 70, 229, ${opacity})`;
-                    ctx.lineWidth = 1;
+                    // Slight curve for organic feel
+                    const midX = (particles[i].x + particles[j].x) / 2;
+                    const midY = (particles[i].y + particles[j].y) / 2 + Math.sin(distance * 0.05) * 5;
+                    ctx.quadraticCurveTo(midX, midY, particles[j].x, particles[j].y);
+                    ctx.strokeStyle = getLineColor(opacity);
+                    ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
             }
