@@ -1,5 +1,8 @@
 // smooth scroll lib
 let lenis;
+const DATA_EXPORT_VERSION = '1.0';
+const STORAGE_COLLECTIONS = ['notes', 'tasks', 'snippets', 'schedule'];
+let autoSaveIntervalId = null;
 
 function initLenisScroll() {
     lenis = new Lenis({
@@ -83,6 +86,104 @@ const appData = {
     techNews: [],
     techEvents: []
 };
+
+function escapeHTML(value = '') {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeForSingleQuote(value = '') {
+    return String(value ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, '\\r')
+        .replace(/\n/g, '\\n');
+}
+
+function ensureArray(value, fallback = []) {
+    return Array.isArray(value) ? value : fallback;
+}
+
+function ensureObject(value, fallback = {}) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+        return value;
+    }
+    return fallback;
+}
+
+function safeParseArrayFromStorage(key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+        console.error(`Failed to parse ${key}:`, error);
+        return null;
+    }
+}
+
+function safeParseObjectFromStorage(key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+        console.error(`Failed to parse ${key}:`, error);
+        return null;
+    }
+}
+
+function validateImportPayload(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return { valid: false, message: 'Invalid backup format.' };
+    }
+    if (payload.version && payload.version !== DATA_EXPORT_VERSION) {
+        return { valid: false, message: `Unsupported backup version ${payload.version}.` };
+    }
+    if (!payload.data || typeof payload.data !== 'object') {
+        return { valid: false, message: 'Backup missing data section.' };
+    }
+
+    const normalized = {
+        userProfile: { ...appData.userProfile },
+        focusMode: { ...appData.focusMode },
+        productivity: { ...appData.productivity },
+        settings: { ...appData.settings }
+    };
+
+    STORAGE_COLLECTIONS.forEach(collection => {
+        const collectionValue = payload.data[collection];
+        normalized[collection] = Array.isArray(collectionValue) ? collectionValue : [];
+    });
+
+    normalized.userProfile = {
+        ...normalized.userProfile,
+        ...ensureObject(payload.data.userProfile)
+    };
+    normalized.focusMode = {
+        ...normalized.focusMode,
+        ...ensureObject(payload.data.focusMode)
+    };
+    normalized.productivity = {
+        ...normalized.productivity,
+        ...ensureObject(payload.data.productivity)
+    };
+    normalized.settings = {
+        ...normalized.settings,
+        ...ensureObject(payload.data.settings)
+    };
+
+    return {
+        valid: true,
+        data: normalized
+    };
+}
 
 // Quotes
 const quotes = [
@@ -461,6 +562,9 @@ function applySettingEffect(setting) {
         case 'showCompleted':
             renderTasks();
             break;
+        case 'autoSave':
+            applyAutoSaveSetting();
+            break;
         case 'notifications':
             if (appData.settings.notifications) {
                 initNotifications();
@@ -741,15 +845,20 @@ function renderNotes() {
         return;
     }
     
-    container.innerHTML = appData.notes.map(note => `
-        <div class="card" style="cursor: pointer; animation: fadeIn 0.6s ease;">
-            <h3 style="margin-bottom: var(--space-sm);">${note.title}</h3>
-            <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">${note.content.substring(0, 100)}...</p>
-            <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-                ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+    container.innerHTML = appData.notes.map(note => {
+        const safeTitle = escapeHTML(note.title || 'Untitled note');
+        const safeContent = escapeHTML((note.content || '').substring(0, 100));
+        const safeTags = (note.tags || []).map(tag => `<span class="tag">${escapeHTML(tag)}</span>`).join('');
+        return `
+            <div class="card" style="cursor: pointer; animation: fadeIn 0.6s ease;">
+                <h3 style="margin-bottom: var(--space-sm);">${safeTitle}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">${safeContent}...</p>
+                <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
+                    ${safeTags}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderTasks(tasksToRender = null) {
@@ -766,22 +875,31 @@ function renderTasks(tasksToRender = null) {
         return;
     }
     
-    container.innerHTML = tasks.map(task => `
-        <div class="card" style="animation: fadeIn 0.6s ease;">
-            <div style="display: flex; align-items: flex-start; gap: var(--space-12); margin-bottom: var(--space-12);">
-                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${task.status === 'Done' ? 'checked' : ''}>
-                <div style="flex: 1;">
-                    <h3 style="margin-bottom: var(--space-8); ${task.status === 'Done' ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${task.title}</h3>
-                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-12); font-size: var(--font-size-sm);">${task.description}</p>
-                    <div style="display: flex; gap: var(--space-8); align-items: center; flex-wrap: wrap;">
-                        <span class="priority-badge priority-${task.priority.toLowerCase()}">${task.priority}</span>
-                        <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><i class="fas fa-calendar"></i> ${task.dueDate}</span>
-                        <span class="tag" style="font-size: var(--font-size-xs);">${task.status}</span>
+    container.innerHTML = tasks.map(task => {
+        const safeTitle = escapeHTML(task.title || 'Untitled task');
+        const safeDescription = escapeHTML(task.description || '');
+        const safePriority = escapeHTML(task.priority || 'Low');
+        const safeDueDate = escapeHTML(task.dueDate || 'No due date');
+        const safeStatus = escapeHTML(task.status || 'To Do');
+        const priorityClass = (task.priority || 'Low').toLowerCase();
+        const doneStyle = task.status === 'Done' ? 'text-decoration: line-through; opacity: 0.6;' : '';
+        return `
+            <div class="card" style="animation: fadeIn 0.6s ease;">
+                <div style="display: flex; align-items: flex-start; gap: var(--space-12); margin-bottom: var(--space-12);">
+                    <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${task.status === 'Done' ? 'checked' : ''}>
+                    <div style="flex: 1;">
+                        <h3 style="margin-bottom: var(--space-8); ${doneStyle}">${safeTitle}</h3>
+                        <p style="color: var(--color-text-secondary); margin-bottom: var(--space-12); font-size: var(--font-size-sm);">${safeDescription}</p>
+                        <div style="display: flex; gap: var(--space-8); align-items: center; flex-wrap: wrap;">
+                            <span class="priority-badge priority-${priorityClass}">${safePriority}</span>
+                            <span style="font-size: var(--font-size-xs); color: var(--color-text-secondary);"><i class="fas fa-calendar"></i> ${safeDueDate}</span>
+                            <span class="tag" style="font-size: var(--font-size-xs);">${safeStatus}</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderSnippets() {
@@ -791,15 +909,20 @@ function renderSnippets() {
         return;
     }
     
-    container.innerHTML = appData.snippets.map(snippet => `
-        <div class="card" style="animation: fadeIn 0.6s ease;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
-                <h3>${snippet.title}</h3>
-                <span class="tag">${snippet.language}</span>
+    container.innerHTML = appData.snippets.map(snippet => {
+        const safeTitle = escapeHTML(snippet.title || 'Untitled snippet');
+        const safeLanguage = escapeHTML(snippet.language || 'Code');
+        const safeCode = escapeHTML(snippet.code || '');
+        return `
+            <div class="card" style="animation: fadeIn 0.6s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                    <h3>${safeTitle}</h3>
+                    <span class="tag">${safeLanguage}</span>
+                </div>
+                <pre style="background: var(--bg-secondary); padding: var(--space-md); border-radius: var(--radius); overflow-x: auto;"><code>${safeCode}</code></pre>
             </div>
-            <pre style="background: var(--bg-secondary); padding: var(--space-md); border-radius: var(--radius); overflow-x: auto;"><code>${snippet.code}</code></pre>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderResources(resourcesToRender = null) {
@@ -813,35 +936,42 @@ function renderResources(resourcesToRender = null) {
     }
     
     container.innerHTML = resources.map((resource, index) => {
+        const safeTitle = escapeHTML(resource.title || 'Resource');
+        const safeDescription = escapeHTML(resource.description || '');
+        const safeUrlDisplay = escapeHTML(resource.url || '');
+        const escapedUrlForJS = escapeForSingleQuote(resource.url || '#');
+        const safeTags = (resource.tags || []).slice(0, 4).map(tag => `<span class="tag">${escapeHTML(tag)}</span>`).join('');
+        const moreTags = resource.tags && resource.tags.length > 4 ? `<span class="tag">+${resource.tags.length - 4}</span>` : '';
+        const safeCategory = escapeHTML(resource.category || 'Resource');
         const categoryIcon = getCategoryIcon(resource.category);
         const categoryColor = getCategoryColor(resource.category);
         
         return `
-            <div class="card resource-card" style="animation: fadeIn 0.6s ease ${index * 0.05}s; animation-fill-mode: both; opacity: 0;" onclick="window.open('${resource.url}', '_blank')">
+            <div class="card resource-card" style="animation: fadeIn 0.6s ease ${index * 0.05}s; animation-fill-mode: both; opacity: 0;" onclick="window.open('${escapedUrlForJS}', '_blank')">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-md);">
                     <div style="display: flex; align-items: center; gap: var(--space-sm);">
                         <div class="resource-category-icon" style="background: ${categoryColor}15; color: ${categoryColor};">
                             <i class="fas ${categoryIcon}"></i>
                         </div>
-                        <span class="resource-category-badge" style="background: ${categoryColor}15; color: ${categoryColor};">${resource.category}</span>
+                        <span class="resource-category-badge" style="background: ${categoryColor}15; color: ${categoryColor};">${safeCategory}</span>
                     </div>
                     <button class="btn-icon ripple" onclick="event.stopPropagation(); bookmarkResource(${resource.id})" title="Bookmark" style="opacity: 0.6;">
                         <i class="fas fa-bookmark"></i>
                     </button>
                 </div>
                 
-                <h3 style="margin-bottom: var(--space-sm); color: var(--color-text);">${resource.title}</h3>
+                <h3 style="margin-bottom: var(--space-sm); color: var(--color-text);">${safeTitle}</h3>
                 
-                ${resource.description ? `<p style="color: var(--color-text-secondary); margin-bottom: var(--space-md); font-size: var(--font-size-sm); line-height: 1.5;">${resource.description}</p>` : ''}
+                ${resource.description ? `<p style="color: var(--color-text-secondary); margin-bottom: var(--space-md); font-size: var(--font-size-sm); line-height: 1.5;">${safeDescription}</p>` : ''}
                 
                 <div style="display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-md); color: var(--color-text-secondary); font-size: var(--font-size-sm);">
                     <i class="fas fa-external-link-alt"></i>
-                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${resource.url}</span>
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeUrlDisplay}</span>
                 </div>
                 
                 <div style="display: flex; gap: var(--space-sm); flex-wrap: wrap;">
-                    ${resource.tags.slice(0, 4).map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    ${resource.tags.length > 4 ? `<span class="tag">+${resource.tags.length - 4}</span>` : ''}
+                    ${safeTags}
+                    ${moreTags}
                 </div>
             </div>
         `;
@@ -1522,40 +1652,50 @@ function renderSchedule(filterDay = 'all') {
         return acc;
     }, {});
     
-    container.innerHTML = Object.keys(groupedSchedule).map(day => `
-        <div style="margin-bottom: var(--space-xl);">
-            <h4 style="text-transform: capitalize; margin-bottom: var(--space-md); color: var(--accent);">
-                <i class="fas fa-calendar-day"></i> ${day}
-            </h4>
-            ${groupedSchedule[day].map(item => `
-                <div class="schedule-item ${item.completed ? 'completed' : ''}">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <div class="schedule-time"><i class="fas fa-clock"></i> ${item.time}</div>
-                            <div class="schedule-subject">${item.subject}</div>
-                            <div class="schedule-description">${item.description}</div>
-                            <div style="display: flex; gap: var(--space-sm); align-items: center; margin-top: var(--space-sm);">
-                                <span style="font-size: 12px; color: var(--text-secondary);">
-                                    <i class="fas fa-map-marker-alt"></i> ${item.location}
-                                </span>
-                                <span class="schedule-day-badge">${item.day}</span>
+    container.innerHTML = Object.keys(groupedSchedule).map(day => {
+        const safeDayLabel = escapeHTML(day);
+        return `
+            <div style="margin-bottom: var(--space-xl);">
+                <h4 style="text-transform: capitalize; margin-bottom: var(--space-md); color: var(--accent);">
+                    <i class="fas fa-calendar-day"></i> ${safeDayLabel}
+                </h4>
+                ${groupedSchedule[day].map(item => {
+                    const safeTime = escapeHTML(item.time || '');
+                    const safeSubject = escapeHTML(item.subject || '');
+                    const safeDescription = escapeHTML(item.description || '');
+                    const safeLocation = escapeHTML(item.location || '');
+                    const safeItemDay = escapeHTML(item.day || '');
+                    return `
+                        <div class="schedule-item ${item.completed ? 'completed' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <div class="schedule-time"><i class="fas fa-clock"></i> ${safeTime}</div>
+                                    <div class="schedule-subject">${safeSubject}</div>
+                                    <div class="schedule-description">${safeDescription}</div>
+                                    <div style="display: flex; gap: var(--space-sm); align-items: center; margin-top: var(--space-sm);">
+                                        <span style="font-size: 12px; color: var(--text-secondary);">
+                                            <i class="fas fa-map-marker-alt"></i> ${safeLocation}
+                                        </span>
+                                        <span class="schedule-day-badge">${safeItemDay}</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: var(--space-sm);">
+                                    <button class="btn btn-secondary ripple" onclick="toggleScheduleComplete(${item.id})" 
+                                            style="padding: var(--space-sm) var(--space-md);">
+                                        <i class="fas fa-${item.completed ? 'undo' : 'check'}"></i>
+                                    </button>
+                                    <button class="btn btn-secondary ripple" onclick="deleteScheduleItem(${item.id})" 
+                                            style="padding: var(--space-sm) var(--space-md);">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div style="display: flex; gap: var(--space-sm);">
-                            <button class="btn btn-secondary ripple" onclick="toggleScheduleComplete(${item.id})" 
-                                    style="padding: var(--space-sm) var(--space-md);">
-                                <i class="fas fa-${item.completed ? 'undo' : 'check'}"></i>
-                            </button>
-                            <button class="btn btn-secondary ripple" onclick="deleteScheduleItem(${item.id})" 
-                                    style="padding: var(--space-sm) var(--space-md);">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `).join('');
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }).join('');
 }
 
 // Update Week Overview
@@ -2146,8 +2286,8 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Initialize new features
     initKeyboardShortcuts();
-    initAutoSave();
     loadAllData();
+    initAutoSave();
     initNotifications();
     updateProductivityStats();
     initTechNews();
@@ -2240,8 +2380,17 @@ function showShortcutsModal() {
 }
 
 function initAutoSave() {
+    applyAutoSaveSetting();
+}
+
+function applyAutoSaveSetting() {
+    if (autoSaveIntervalId) {
+        clearInterval(autoSaveIntervalId);
+        autoSaveIntervalId = null;
+    }
+
     if (appData.settings.autoSave) {
-        setInterval(() => {
+        autoSaveIntervalId = setInterval(() => {
             saveAllData();
             showNotification('Auto-saved', 'success', 2000);
         }, 120000); // Every 2 minutes
@@ -2266,19 +2415,21 @@ function saveAllData() {
 
 function loadAllData() {
     try {
-        const notes = localStorage.getItem('aura-notes');
-        const tasks = localStorage.getItem('aura-tasks');
-        const snippets = localStorage.getItem('aura-snippets');
-        const schedule = localStorage.getItem('aura-schedule');
-        const settings = localStorage.getItem('aura-settings');
-        const productivity = localStorage.getItem('aura-productivity');
+        const notes = safeParseArrayFromStorage('aura-notes');
+        const tasks = safeParseArrayFromStorage('aura-tasks');
+        const snippets = safeParseArrayFromStorage('aura-snippets');
+        const schedule = safeParseArrayFromStorage('aura-schedule');
+        const settings = safeParseObjectFromStorage('aura-settings');
+        const productivity = safeParseObjectFromStorage('aura-productivity');
         
-        if (notes) appData.notes = JSON.parse(notes);
-        if (tasks) appData.tasks = JSON.parse(tasks);
-        if (snippets) appData.snippets = JSON.parse(snippets);
-        if (schedule) appData.schedule = JSON.parse(schedule);
-        if (settings) appData.settings = { ...appData.settings, ...JSON.parse(settings) };
-        if (productivity) appData.productivity = { ...appData.productivity, ...JSON.parse(productivity) };
+        if (notes) appData.notes = notes;
+        if (tasks) appData.tasks = tasks;
+        if (snippets) appData.snippets = snippets;
+        if (schedule) appData.schedule = schedule;
+        if (settings) appData.settings = { ...appData.settings, ...settings };
+        if (productivity) appData.productivity = { ...appData.productivity, ...productivity };
+        
+        updateSettingsUI();
         
         renderAll();
         updateDashboard();
@@ -2289,7 +2440,7 @@ function loadAllData() {
 
 function exportAllData() {
     const exportData = {
-        version: '1.0',
+        version: DATA_EXPORT_VERSION,
         exportDate: new Date().toISOString(),
         data: {
             notes: appData.notes,
@@ -2330,23 +2481,14 @@ function importData() {
         reader.onload = (event) => {
             try {
                 const importedData = JSON.parse(event.target.result);
-                
+                const validation = validateImportPayload(importedData);
+                if (!validation.valid) {
+                    showNotification(validation.message, 'error', 3000);
+                    return;
+                }
+
                 if (confirm('⚠️ This will replace all current data. Continue?')) {
-                    if (importedData.data) {
-                        appData.notes = importedData.data.notes || [];
-                        appData.tasks = importedData.data.tasks || [];
-                        appData.snippets = importedData.data.snippets || [];
-                        appData.schedule = importedData.data.schedule || [];
-                        appData.userProfile = importedData.data.userProfile || appData.userProfile;
-                        appData.focusMode = importedData.data.focusMode || appData.focusMode;
-                        appData.productivity = importedData.data.productivity || appData.productivity;
-                        appData.settings = importedData.data.settings || appData.settings;
-                        
-                        saveAllData();
-                        renderAll();
-                        updateDashboard();
-                        showNotification('✅ Data imported successfully!', 'success', 3000);
-                    }
+                    applyImportedBackup(validation.data);
                 }
             } catch (error) {
                 showNotification('❌ Invalid file format', 'error', 3000);
@@ -2357,6 +2499,138 @@ function importData() {
     };
     
     input.click();
+}
+
+function applyImportedBackup(data, options = {}) {
+    const { persistChanges = true, skipNotifications = false } = options;
+    if (!data) return;
+
+    appData.notes = ensureArray(data.notes);
+    appData.tasks = ensureArray(data.tasks);
+    appData.snippets = ensureArray(data.snippets);
+    appData.schedule = ensureArray(data.schedule);
+    appData.userProfile = ensureObject(data.userProfile, appData.userProfile);
+    appData.focusMode = ensureObject(data.focusMode, appData.focusMode);
+    appData.productivity = ensureObject(data.productivity, appData.productivity);
+    appData.settings = ensureObject(data.settings, appData.settings);
+
+    if (persistChanges) {
+        saveAllData();
+    }
+
+    renderAll();
+    updateDashboard();
+    updateSettingsUI();
+    applyAutoSaveSetting();
+
+    if (!skipNotifications) {
+        showNotification('✅ Data imported successfully!', 'success', 3000);
+    }
+}
+
+function createSampleBackupPayload(version = DATA_EXPORT_VERSION) {
+    return {
+        version,
+        data: {
+            notes: [
+                { id: 901, title: 'Backup note', content: 'Imported test note', tags: ['backup', 'test'] }
+            ],
+            tasks: [
+                { id: 901, title: 'Backup task', description: 'Imported task', status: 'To Do', priority: 'Medium', dueDate: '2026-01-15' }
+            ],
+            snippets: [
+                { id: 901, title: 'Backup snippet', language: 'JavaScript', code: 'console.log("Import test");' }
+            ],
+            schedule: [
+                { id: 901, day: 'monday', time: '10:30 AM', subject: 'Imported backup review', description: 'Validate backup workflow', location: 'Lab', completed: false }
+            ],
+            userProfile: {
+                name: 'Import Tester',
+                email: 'tester@example.com',
+                bio: 'Validating imports',
+                goal: 'Keep data consistent',
+                skills: ['testing'],
+                avatarIcon: 'fa-user-shield'
+            },
+            focusMode: {
+                streak: 2,
+                minutesToday: 25,
+                weeklyHours: 4,
+                totalSessions: 5,
+                lastSessionDate: new Date().toISOString(),
+                sessions: []
+            },
+            productivity: {
+                dailyGoal: 5,
+                weeklyGoal: 30,
+                completedToday: 2,
+                completedThisWeek: 8,
+                history: []
+            },
+            settings: {
+                autoSave: true,
+                notifications: true,
+                soundEffects: true,
+                compactMode: false,
+                showCompleted: true
+            }
+        }
+    };
+}
+
+const importBackupTestCases = [
+    {
+        label: 'Valid backup',
+        raw: JSON.stringify(createSampleBackupPayload()),
+        expectValid: true
+    },
+    {
+        label: 'Version mismatch backup',
+        raw: JSON.stringify(createSampleBackupPayload('0.9')),
+        expectValid: false
+    },
+    {
+        label: 'Corrupted backup',
+        raw: '{ "version": "1.0", "data": { invalid json }',
+        expectParseError: true
+    }
+];
+
+function runImportBackupTests() {
+    console.group('Import backup validation tests');
+    const snapshot = JSON.parse(JSON.stringify(appData));
+
+    try {
+        importBackupTestCases.forEach(test => {
+            console.group(test.label);
+            if (test.expectParseError) {
+                try {
+                    JSON.parse(test.raw);
+                    console.error('Expected JSON.parse to fail but it succeeded.');
+                } catch (error) {
+                    console.log('Corrupted backup rejected as expected.', error.message);
+                }
+            } else {
+                const parsed = JSON.parse(test.raw);
+                const validation = validateImportPayload(parsed);
+                console.log('Validation result:', validation.valid, validation.message || 'accepted');
+
+                if (validation.valid) {
+                    applyImportedBackup(validation.data, { persistChanges: false, skipNotifications: true });
+                    console.log('Auto-save interval active:', Boolean(autoSaveIntervalId));
+                }
+            }
+            console.groupEnd();
+        });
+    } catch (error) {
+        console.error('Import backup tests failed:', error);
+    } finally {
+        Object.keys(snapshot).forEach(key => {
+            appData[key] = snapshot[key];
+        });
+        applyAutoSaveSetting();
+        console.groupEnd();
+    }
 }
 
 // search
@@ -2436,14 +2710,18 @@ function showSearchResults(results, query) {
                     <div style="margin-bottom: var(--space-24);">
                         <h3 style="margin-bottom: var(--space-12);">📝 Notes (${results.notes.length})</h3>
                         <div style="display: grid; gap: var(--space-12);">
-                            ${results.notes.map(note => `
-                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('notes'); this.closest('.modal').remove();">
-                                    <h4>${note.title}</h4>
-                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
-                                        ${note.content.substring(0, 100)}...
-                                    </p>
-                                </div>
-                            `).join('')}
+                            ${results.notes.map(note => {
+                                const safeTitle = escapeHTML(note.title || 'Untitled note');
+                                const safePreview = escapeHTML((note.content || '').substring(0, 100));
+                                return `
+                                    <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('notes'); this.closest('.modal').remove();">
+                                        <h4>${safeTitle}</h4>
+                                        <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                            ${safePreview}...
+                                        </p>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -2452,14 +2730,18 @@ function showSearchResults(results, query) {
                     <div style="margin-bottom: var(--space-24);">
                         <h3 style="margin-bottom: var(--space-12);">✅ Tasks (${results.tasks.length})</h3>
                         <div style="display: grid; gap: var(--space-12);">
-                            ${results.tasks.map(task => `
-                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('tasks'); this.closest('.modal').remove();">
-                                    <h4>${task.title}</h4>
-                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
-                                        ${task.description}
-                                    </p>
-                                </div>
-                            `).join('')}
+                            ${results.tasks.map(task => {
+                                const safeTitle = escapeHTML(task.title || 'Untitled task');
+                                const safeDescription = escapeHTML(task.description || '');
+                                return `
+                                    <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('tasks'); this.closest('.modal').remove();">
+                                        <h4>${safeTitle}</h4>
+                                        <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                            ${safeDescription}
+                                        </p>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -2468,12 +2750,16 @@ function showSearchResults(results, query) {
                     <div style="margin-bottom: var(--space-24);">
                         <h3 style="margin-bottom: var(--space-12);">💻 Snippets (${results.snippets.length})</h3>
                         <div style="display: grid; gap: var(--space-12);">
-                            ${results.snippets.map(snippet => `
-                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('snippets'); this.closest('.modal').remove();">
-                                    <h4>${snippet.title}</h4>
-                                    <span class="tag" style="margin-top: var(--space-4);">${snippet.language}</span>
-                                </div>
-                            `).join('')}
+                            ${results.snippets.map(snippet => {
+                                const safeTitle = escapeHTML(snippet.title || 'Untitled snippet');
+                                const safeLang = escapeHTML(snippet.language || 'Code');
+                                return `
+                                    <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="switchView('snippets'); this.closest('.modal').remove();">
+                                        <h4>${safeTitle}</h4>
+                                        <span class="tag" style="margin-top: var(--space-4);">${safeLang}</span>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 ` : ''}
@@ -2482,14 +2768,19 @@ function showSearchResults(results, query) {
                     <div style="margin-bottom: var(--space-24);">
                         <h3 style="margin-bottom: var(--space-12);">📚 Resources (${results.resources.length})</h3>
                         <div style="display: grid; gap: var(--space-12);">
-                            ${results.resources.map(resource => `
-                                <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="window.open('${resource.url}', '_blank'); this.closest('.modal').remove();">
-                                    <h4>${resource.title}</h4>
-                                    <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
-                                        ${resource.description}
-                                    </p>
-                                </div>
-                            `).join('')}
+                            ${results.resources.map(resource => {
+                                const safeTitle = escapeHTML(resource.title || 'Resource');
+                                const safeDescription = escapeHTML(resource.description || '');
+                                const safeUrlForJS = escapeForSingleQuote(resource.url || '#');
+                                return `
+                                    <div class="card" style="padding: var(--space-12); cursor: pointer;" onclick="window.open('${safeUrlForJS}', '_blank'); this.closest('.modal').remove();">
+                                        <h4>${safeTitle}</h4>
+                                        <p style="color: var(--color-text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-4);">
+                                            ${safeDescription}
+                                        </p>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 ` : ''}

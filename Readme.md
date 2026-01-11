@@ -116,6 +116,13 @@ StudyHub/
 - Automatically saves preference
 - Smooth theme transition
 
+## 🧪 Import Backup Tests
+
+- Open your browser DevTools console while Aura is running
+- Run `runImportBackupTests()` to drive three pre-configured cases (valid backup, version mismatch, corrupted JSON)
+- The helper logs validation results, showcases auto-save reconfiguration after the valid import, and cleans up state after the run
+- Use this when tracking import validation logic or before releasing new persistence tweaks
+
 ## 🤝 Contributing
 
 Contributions are welcome! Here's how you can help:
