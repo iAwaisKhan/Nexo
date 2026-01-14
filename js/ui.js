@@ -1,17 +1,11 @@
 import { appData } from './state.js';
 import { applyStaggerAnimation } from './utils.js';
+import { saveAllData } from './storage.js';
 
 export function initTheme() {
-    const savedTheme = localStorage.getItem('studyhub-theme');
-    let theme = savedTheme || 'auto';
-    
-    if (theme === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        theme = prefersDark ? 'dark' : 'light';
-    }
+    const theme = appData.theme || 'light';
     
     document.documentElement.setAttribute('data-theme', theme);
-    appData.theme = theme;
     
     const themeToggle = document.getElementById('themeToggle');
     const icon = document.querySelector('#themeToggle i');
@@ -24,7 +18,7 @@ export function initTheme() {
     
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect) {
-        themeSelect.value = savedTheme || 'auto';
+        themeSelect.value = theme;
     }
 }
 
@@ -35,7 +29,7 @@ export function toggleTheme() {
     
     html.setAttribute('data-theme', newTheme);
     appData.theme = newTheme;
-    localStorage.setItem('studyhub-theme', newTheme);
+    saveAllData();
     
     const themeToggle = document.getElementById('themeToggle');
     const icon = document.querySelector('#themeToggle i');

@@ -1,5 +1,6 @@
 import { appData } from './state.js';
 import { showNotification } from './utils.js';
+import { saveAllData } from './storage.js';
 
 let searchTimeout = null;
 
@@ -21,7 +22,7 @@ function addToSearchHistory(query) {
         if (appData.searchHistory.length > 10) {
             appData.searchHistory = appData.searchHistory.slice(0, 10);
         }
-        localStorage.setItem('aura-search-history', JSON.stringify(appData.searchHistory));
+        saveAllData();
     }
 }
 

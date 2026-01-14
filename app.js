@@ -3,6 +3,7 @@ import { initLenisScroll } from './js/scroll.js';
 import { initTheme, toggleTheme, switchView } from './js/ui.js';
 import { initSettingsUI } from './js/settings.js';
 import { loadSampleData, renderAll } from './js/init.js';
+import { migrateFromLocalStorage, loadAllData } from './js/storage.js';
 import { setupEventListeners } from './js/events.js';
 import { updateDashboard } from './js/dashboard.js';
 import { updateCurrentDate, startLiveClock } from './js/clock.js';
@@ -15,17 +16,21 @@ import * as legacy from './js/legacy-logic.js';
 
 let lenis;
 
-function initApp() {
+async function initApp() {
     try {
         lenis = initLenisScroll();
         initTheme();
         initSettingsUI();
         
-        // Load data or sample data if empty
-        if (!localStorage.getItem('aura-notes')) {
+        // Handle Storage Update (LocalStorage -> IndexedDB)
+        await migrateFromLocalStorage();
+        
+        // Load data from IndexedDB
+        const loaded = await loadAllData();
+        
+        // Use sample data if nothing was loaded
+        if (!loaded || (appData.notes.length === 0 && appData.tasks.length === 0)) {
             loadSampleData();
-        } else {
-            legacy.loadAllData();
         }
         
         setupEventListeners(lenis);

@@ -1,3 +1,9 @@
+import { appData, DATA_EXPORT_VERSION } from './state.js';
+import { renderTasks } from './tasks.js';
+import { updateDashboard } from './dashboard.js';
+import { showNotification, ensureArray, ensureObject } from './utils.js';
+import { saveAllData } from './storage.js';
+
 // Global variables used by legacy logic
 export let lenis;
 export let autoSaveIntervalId = null;
@@ -63,7 +69,7 @@ export function changeTheme(theme) {
     
     document.documentElement.setAttribute('data-theme', appliedTheme);
     appData.theme = appliedTheme;
-    localStorage.setItem('studyhub-theme', theme);
+    saveAllData();
     
     // Update toggle button icon and aria-label
     const themeToggle = document.getElementById('themeToggle');
@@ -89,7 +95,7 @@ export function toggleSetting(setting) {
         applySettingEffect(setting);
         
         // Save settings
-        localStorage.setItem('aura-settings', JSON.stringify(appData.settings));
+        saveAllData();
         
         const settingLabels = {
             autoSave: 'Auto Save',
@@ -1114,26 +1120,6 @@ export function saveAllData() {
         showNotification('Failed to save', 'error', 3000);
         console.error('Save error:', e);
     }
-}
-
-export function loadAllData() {
-    try {
-        const notes = safeParseArrayFromStorage('aura-notes');
-        const tasks = safeParseArrayFromStorage('aura-tasks');
-        const snippets = safeParseArrayFromStorage('aura-snippets');
-        const schedule = safeParseArrayFromStorage('aura-schedule');
-        const settings = safeParseObjectFromStorage('aura-settings');
-        const productivity = safeParseObjectFromStorage('aura-productivity');
-        if (notes) appData.notes = notes;
-        if (tasks) appData.tasks = tasks;
-        if (snippets) appData.snippets = snippets;
-        if (schedule) appData.schedule = schedule;
-        if (settings) appData.settings = { ...appData.settings, ...settings };
-        if (productivity) appData.productivity = { ...appData.productivity, ...productivity };
-        updateSettingsUI();
-        renderAll();
-        updateDashboard();
-    } catch (e) { console.error('Load error:', e); }
 }
 
 export function exportAllData() {
