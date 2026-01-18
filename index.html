@@ -458,10 +458,16 @@
             <div class="section-header">
                 <h1 class="section-title">World Clock</h1>
             </div>
-            <div class="card" style="max-width: 600px; margin: 0 auto; text-align: center;">
-                <div id="clockDisplay" style="font-size: 72px; font-weight: 700; margin: var(--space-xl) 0; background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;"></div>
-                <div id="dateDisplay" style="color: var(--text-secondary); font-size: 18px;"></div>
+            
+            <!-- Main Clock Display -->
+            <div class="card" style="max-width: 600px; margin: 0 auto var(--space-lg) auto; text-align: center; padding: var(--space-xl);">
+                <h2 style="color: var(--text-secondary); font-size: 14px; margin-bottom: var(--space-sm); text-transform: uppercase; letter-spacing: 1px;">Local Time</h2>
+                <div id="clockDisplay" style="font-size: 72px; font-weight: 700; margin: var(--space-lg) 0; background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;"></div>
+                <div id="dateDisplay" style="color: var(--text-secondary); font-size: 16px; font-weight: 500;"></div>
             </div>
+
+            <!-- World Clock Grid -->
+            <div id="worldClockGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-lg); max-width: 100%;"></div>
         </div>
 
         <div id="focusView" class="view">

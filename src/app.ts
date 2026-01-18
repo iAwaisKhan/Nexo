@@ -6,7 +6,7 @@ import { loadSampleData, renderAll } from './js/init.ts';
 import { migrateFromLocalStorage, loadAllData, exportAllData, importData, clearAllData } from './js/storage.ts';
 import { setupEventListeners } from './js/events.ts';
 import { updateDashboard, refreshRecentActivity } from './js/dashboard.ts';
-import { updateCurrentDate, startLiveClock } from './js/clock.ts';
+import { updateCurrentDate, startLiveClock, initializeWorldClock } from './js/clock.ts';
 import { displayRandomQuote } from './js/quotes.ts';
 import { initNetworkAnimation } from './js/visuals.ts';
 import { applyStaggerAnimation } from './js/utils.ts';
@@ -22,6 +22,14 @@ import { showProductivityReport } from './js/productivity.ts';
 import { startStopwatch, pauseStopwatch, resetStopwatch, startCountdown, resetCountdown } from './js/timer.ts';
 import { initTechNews, filterNewsByCategory, initTechEvents, filterEventsByType, filterEventsByTime } from './js/news.ts';
 import { appData } from './js/state.ts';
+
+// TypeScript Managers for enhanced reliability
+import { stateManager } from './js/stateManager.ts';
+import { DOMManager } from './js/domManager.ts';
+import { themeManager } from './js/themeManager.ts';
+import { animationManager } from './js/animationManager.ts';
+import { viewManager } from './js/viewManager.ts';
+import { validationManager } from './js/validationManager.ts';
 
 declare global {
   interface Window {
@@ -76,6 +84,13 @@ declare global {
     initTechEvents: () => void;
     filterEventsByType: (type: string) => void;
     filterEventsByTime: (timeFrame: string) => void;
+    // New TypeScript Manager exports
+    stateManager: typeof stateManager;
+    DOMManager: typeof DOMManager;
+    themeManager: typeof themeManager;
+    animationManager: typeof animationManager;
+    viewManager: typeof viewManager;
+    validationManager: typeof validationManager;
   }
 }
 
@@ -83,8 +98,16 @@ let lenis: any;
 
 async function initApp(): Promise<void> {
   try {
+    // Initialize managers
+    console.log('🚀 Initializing TypeScript Managers...');
+    themeManager.applyTheme();
+    viewManager.initializeViews();
+
+    // Initialize Lenis smooth scroll
     lenis = initLenisScroll();
     window.lenis = lenis;
+
+    // Initialize theme UI
     initTheme();
     initSettingsUI();
 
@@ -103,6 +126,7 @@ async function initApp(): Promise<void> {
     updateDashboard();
     updateCurrentDate();
     startLiveClock();
+    initializeWorldClock();
     displayRandomQuote();
     renderAll();
     initNetworkAnimation();
@@ -110,12 +134,14 @@ async function initApp(): Promise<void> {
     // Initialize news and events
     initTechNews();
     initTechEvents();
+
+    console.log('✅ Application initialized successfully');
   } catch (error) {
-    console.error('Core app initialization failed:', error);
+    console.error('❌ Core app initialization failed:', error);
   }
 
   // Apply stagger animation to initial view
-  const activeView = document.querySelector('.view.active') as HTMLElement;
+  const activeView = DOMManager.querySelector<HTMLElement>('.view.active');
   if (activeView) {
     applyStaggerAnimation(activeView);
   }
@@ -133,7 +159,7 @@ window.importData = (event?: Event) => {
     return importData(event);
   } else {
     // If called without event, trigger file input click
-    const fileInput = document.getElementById('importFile') as HTMLInputElement;
+    const fileInput = DOMManager.getElementById<HTMLInputElement>('importFile');
     if (fileInput) fileInput.click();
     return Promise.resolve();
   }
@@ -181,6 +207,14 @@ window.filterNewsByCategory = filterNewsByCategory;
 window.initTechEvents = initTechEvents;
 window.filterEventsByType = filterEventsByType;
 window.filterEventsByTime = filterEventsByTime;
+
+// Export new TypeScript Managers to window for advanced usage
+window.stateManager = stateManager;
+window.DOMManager = DOMManager;
+window.themeManager = themeManager;
+window.animationManager = animationManager;
+window.viewManager = viewManager;
+window.validationManager = validationManager;
 
 // Start the application
 document.addEventListener('DOMContentLoaded', initApp);

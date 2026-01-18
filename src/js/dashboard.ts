@@ -1,5 +1,7 @@
 import { appData } from './state.ts';
 import { showNotification } from './utils.ts';
+import { clockManager } from './clockManager.ts';
+import { DOMManager } from './domManager.ts';
 
 export function updateDashboard(): void {
   updateGreeting();
@@ -25,7 +27,7 @@ export function refreshRecentActivity(): void {
 }
 
 export function animateStatValue(elementId: string, targetValue: number): void {
-  const element = document.getElementById(elementId);
+  const element = DOMManager.getElementById(elementId);
   if (!element) return;
 
   const startValue = parseInt(element.textContent || '0') || 0;
@@ -39,41 +41,33 @@ export function animateStatValue(elementId: string, targetValue: number): void {
     const easeOut = 1 - Math.pow(1 - progress, 3);
     const currentValue = Math.floor(startValue + (targetValue - startValue) * easeOut);
 
-    (element as HTMLElement).textContent = currentValue.toString();
-    (element as HTMLElement).setAttribute('data-target', targetValue.toString());
+    DOMManager.setText(element, currentValue.toString());
+    DOMManager.setAttribute(element, 'data-target', targetValue.toString());
 
     if (progress < 1) {
       requestAnimationFrame(updateValue);
     } else {
-      (element as HTMLElement).textContent = targetValue.toString();
+      DOMManager.setText(element, targetValue.toString());
     }
   }
 
   requestAnimationFrame(updateValue);
 }
 
+/**
+ * Update greeting based on time of day
+ * Uses ClockManager for consistent time handling
+ */
 function updateGreeting(): void {
-  const hour = new Date().getHours();
-  const greetingElement = document.getElementById('greetingText');
-
+  const greetingElement = DOMManager.getElementById('greetingText');
   if (!greetingElement) return;
 
-  let greeting: string;
-  if (hour >= 5 && hour < 12) {
-    greeting = 'Good morning';
-  } else if (hour >= 12 && hour < 17) {
-    greeting = 'Good afternoon';
-  } else if (hour >= 17 && hour < 22) {
-    greeting = 'Good evening';
-  } else {
-    greeting = 'Welcome back';
-  }
-
-  greetingElement.textContent = greeting;
+  const greeting = clockManager.getGreeting();
+  DOMManager.setText(greetingElement, greeting);
 }
 
 export function updateRecentActivity(): void {
-  const container = document.getElementById('recentActivity');
+  const container = DOMManager.getElementById('recentActivity');
   if (!container) return;
 
   const activities = [
@@ -84,11 +78,11 @@ export function updateRecentActivity(): void {
   ];
 
   if (activities.every(a => a.text.match(/\d+/)?.[0] === '0')) {
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity. Start creating to see your progress!</p></div>';
+    DOMManager.setHTML(container, '<div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity. Start creating to see your progress!</p></div>');
     return;
   }
 
-  container.innerHTML = activities.map((activity, index) => `
+  const html = activities.map((activity, index) => `
     <div class="activity-item" style="animation-delay: ${index * 0.1}s;">
       <div class="activity-icon" style="background: ${activity.color}15; color: ${activity.color};">
         <i class="fas ${activity.icon}"></i>
@@ -99,4 +93,6 @@ export function updateRecentActivity(): void {
       </div>
     </div>
   `).join('');
+
+  DOMManager.setHTML(container, html);
 }

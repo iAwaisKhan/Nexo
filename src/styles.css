@@ -4263,3 +4263,61 @@ body.compact-mode .section-header {
     color: var(--color-white) !important;
     border-color: var(--color-primary) !important;
 }
+/* World Clock Styles */
+.world-clock-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: all 0.3s var(--ease-gentle);
+    position: relative;
+    overflow: hidden;
+}
+
+.world-clock-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s var(--ease-gentle);
+}
+
+.world-clock-card:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.world-clock-card:hover::before {
+    opacity: 1;
+}
+
+.world-clock-time {
+    font-family: var(--font-family-mono);
+    letter-spacing: 2px;
+}
+
+.world-clock-date {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#worldClockGrid {
+    animation: slideInUp 0.5s var(--ease-gentle) 0.2s both;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
