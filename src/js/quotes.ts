@@ -1,4 +1,4 @@
-import { quotes } from './state.js';
+import { quotes } from './state.ts';
 
 export function displayRandomQuote(): void {
   const quoteElement = document.getElementById('randomQuote');

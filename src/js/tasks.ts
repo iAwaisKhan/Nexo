@@ -1,8 +1,8 @@
-import { appData, Task } from './state.js';
-import { escapeHTML, showNotification } from './utils.js';
-import { saveAllData } from './storage.js';
-import { updateDashboard } from './dashboard.js';
-import { updateProductivityStats } from './productivity.js';
+import { appData, Task } from './state.ts';
+import { escapeHTML, showNotification } from './utils.ts';
+import { saveAllData } from './storage.ts';
+import { updateDashboard } from './dashboard.ts';
+import { updateProductivityStats } from './productivity.ts';
 
 export function renderTasks(tasksToRender?: Task[] | null): void {
   const container = document.getElementById('tasksContainer');

@@ -1,5 +1,5 @@
-import { appData, Note } from './state.js';
-import { escapeHTML, showNotification } from './utils.js';
+import { appData, Note } from './state.ts';
+import { escapeHTML, showNotification } from './utils.ts';
 
 export function renderNotes(): void {
   const container = document.getElementById('notesContainer');

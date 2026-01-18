@@ -1,5 +1,5 @@
-import { appData, ScheduleItem } from './state.js';
-import { escapeHTML, showNotification } from './utils.js';
+import { appData, ScheduleItem } from './state.ts';
+import { escapeHTML, showNotification } from './utils.ts';
 
 export function renderSchedule(filterDay: string = 'all'): void {
   const container = document.getElementById('scheduleContainer');

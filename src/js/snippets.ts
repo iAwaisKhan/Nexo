@@ -1,5 +1,5 @@
-import { appData, Snippet } from './state.js';
-import { escapeHTML, showNotification } from './utils.js';
+import { appData, Snippet } from './state.ts';
+import { escapeHTML, showNotification } from './utils.ts';
 
 export function renderSnippets(): void {
   const container = document.getElementById('snippetsContainer');

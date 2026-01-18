@@ -1,10 +1,10 @@
-import { appData } from './state.js';
-import { renderNotes } from './notes.js';
-import { renderTasks } from './tasks.js';
-import { renderSnippets } from './snippets.js';
-import { renderResources } from './resources.js';
-import { renderSchedule } from './schedule.js';
-import { updateDashboard } from './dashboard.js';
+import { appData } from './state.ts';
+import { renderNotes } from './notes.ts';
+import { renderTasks } from './tasks.ts';
+import { renderSnippets } from './snippets.ts';
+import { renderResources } from './resources.ts';
+import { renderSchedule } from './schedule.ts';
+import { updateDashboard } from './dashboard.ts';
 
 export function loadSampleData(): void {
   appData.notes = [

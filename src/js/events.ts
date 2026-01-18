@@ -1,8 +1,8 @@
-import { switchView, toggleTheme } from './ui.js';
-import { handleSearch } from './search.js';
-import { toggleTaskComplete } from './tasks.js';
-import { exportAllData, saveAllData } from './storage.js';
-import { showShortcutsModal } from './ui.js';
+import { switchView, toggleTheme } from './ui.ts';
+import { handleSearch } from './search.ts';
+import { toggleTaskComplete } from './tasks.ts';
+import { exportAllData, saveAllData } from './storage.ts';
+import { showShortcutsModal } from './ui.ts';
 
 export function setupEventListeners(lenis: any): void {
   document.querySelectorAll('.nav-item').forEach((item: Element) => {

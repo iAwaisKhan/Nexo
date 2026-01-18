@@ -1,5 +1,5 @@
-import { appData, TechNews, TechEvent } from './state.js';
-import { escapeHTML } from './utils.js';
+import { appData, TechNews, TechEvent } from './state.ts';
+import { escapeHTML } from './utils.ts';
 
 export function initTechNews(): void {
   appData.techNews = [

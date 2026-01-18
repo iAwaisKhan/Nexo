@@ -1,6 +1,6 @@
-import { appData } from './state.js';
-import { applyStaggerAnimation } from './utils.js';
-import { saveAllData } from './storage.js';
+import { appData } from './state.ts';
+import { applyStaggerAnimation } from './utils.ts';
+import { saveAllData } from './storage.ts';
 
 declare global {
   interface LenisInterface {

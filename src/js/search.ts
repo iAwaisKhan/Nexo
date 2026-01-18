@@ -1,6 +1,6 @@
-import { appData } from './state.js';
-import { showNotification } from './utils.js';
-import { saveAllData } from './storage.js';
+import { appData } from './state.ts';
+import { showNotification } from './utils.ts';
+import { saveAllData } from './storage.ts';
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 

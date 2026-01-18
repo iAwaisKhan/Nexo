@@ -1,4 +1,4 @@
-import { appData } from './state.js';
+import { appData } from './state.ts';
 
 export function updateProductivityStats(): void {
   const today = new Date().toDateString();

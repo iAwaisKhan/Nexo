@@ -1,6 +1,6 @@
-import { appData, DATA_EXPORT_VERSION, STORAGE_COLLECTIONS, AppData } from './state.js';
-import { ensureObject, showNotification } from './utils.js';
-import * as db from './db.js';
+import { appData, DATA_EXPORT_VERSION, STORAGE_COLLECTIONS, AppData } from './state.ts';
+import { ensureObject, showNotification } from './utils.ts';
+import * as db from './db.ts';
 
 export async function migrateFromLocalStorage(): Promise<void> {
   const collections = [...STORAGE_COLLECTIONS, 'settings', 'productivity', 'userProfile', 'focusMode', 'theme'];

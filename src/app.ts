@@ -1,27 +1,27 @@
 // Unified entry point for Aura
-import { initLenisScroll } from './js/scroll.js';
-import { initTheme, toggleTheme, switchView, showShortcutsModal } from './js/ui.js';
-import { initSettingsUI, changeTheme, toggleSetting } from './js/settings.js';
-import { loadSampleData, renderAll } from './js/init.js';
-import { migrateFromLocalStorage, loadAllData, exportAllData, importData, clearAllData } from './js/storage.js';
-import { setupEventListeners } from './js/events.js';
-import { updateDashboard, refreshRecentActivity } from './js/dashboard.js';
-import { updateCurrentDate, startLiveClock } from './js/clock.js';
-import { displayRandomQuote } from './js/quotes.js';
-import { initNetworkAnimation } from './js/visuals.js';
-import { applyStaggerAnimation } from './js/utils.js';
-import { setPomodoroMode, startPomodoro, pausePomodoro, resetPomodoro } from './js/pomodoro.js';
-import { filterResources, showResourceEditor, resetResourceFilters } from './js/resources.js';
-import { toggleTaskComplete, filterTasks, sortTasks, selectAllTasks, markSelectedTasksComplete, deleteSelectedTasks, showTaskEditor } from './js/tasks.js';
-import { showNoteEditor } from './js/notes.js';
-import { showSnippetEditor, copySnippet } from './js/snippets.js';
-import { showScheduleEditor, toggleScheduleComplete, filterSchedule } from './js/schedule.js';
-import { startFocusSession, startCustomFocusSession, pauseFocusSession, stopFocusSession, viewFocusHistory } from './js/focus.js';
-import { openUserProfile, closeUserProfile, saveUserProfile, changeAvatar } from './js/profile.js';
-import { showProductivityReport } from './js/productivity.js';
-import { startStopwatch, pauseStopwatch, resetStopwatch, startCountdown, resetCountdown } from './js/timer.js';
-import { initTechNews, filterNewsByCategory, initTechEvents, filterEventsByType, filterEventsByTime } from './js/news.js';
-import { appData } from './js/state.js';
+import { initLenisScroll } from './js/scroll.ts';
+import { initTheme, toggleTheme, switchView, showShortcutsModal } from './js/ui.ts';
+import { initSettingsUI, changeTheme, toggleSetting } from './js/settings.ts';
+import { loadSampleData, renderAll } from './js/init.ts';
+import { migrateFromLocalStorage, loadAllData, exportAllData, importData, clearAllData } from './js/storage.ts';
+import { setupEventListeners } from './js/events.ts';
+import { updateDashboard, refreshRecentActivity } from './js/dashboard.ts';
+import { updateCurrentDate, startLiveClock } from './js/clock.ts';
+import { displayRandomQuote } from './js/quotes.ts';
+import { initNetworkAnimation } from './js/visuals.ts';
+import { applyStaggerAnimation } from './js/utils.ts';
+import { setPomodoroMode, startPomodoro, pausePomodoro, resetPomodoro } from './js/pomodoro.ts';
+import { filterResources, showResourceEditor, resetResourceFilters } from './js/resources.ts';
+import { toggleTaskComplete, filterTasks, sortTasks, selectAllTasks, markSelectedTasksComplete, deleteSelectedTasks, showTaskEditor } from './js/tasks.ts';
+import { showNoteEditor } from './js/notes.ts';
+import { showSnippetEditor, copySnippet } from './js/snippets.ts';
+import { showScheduleEditor, toggleScheduleComplete, filterSchedule } from './js/schedule.ts';
+import { startFocusSession, startCustomFocusSession, pauseFocusSession, stopFocusSession, viewFocusHistory } from './js/focus.ts';
+import { openUserProfile, closeUserProfile, saveUserProfile, changeAvatar } from './js/profile.ts';
+import { showProductivityReport } from './js/productivity.ts';
+import { startStopwatch, pauseStopwatch, resetStopwatch, startCountdown, resetCountdown } from './js/timer.ts';
+import { initTechNews, filterNewsByCategory, initTechEvents, filterEventsByType, filterEventsByTime } from './js/news.ts';
+import { appData } from './js/state.ts';
 
 declare global {
   interface Window {

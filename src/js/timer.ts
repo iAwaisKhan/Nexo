@@ -1,4 +1,4 @@
-import { showNotification } from './utils.js';
+import { showNotification } from './utils.ts';
 
 let stopwatchInterval: ReturnType<typeof setInterval> | null = null;
 let stopwatchSeconds: number = 0;

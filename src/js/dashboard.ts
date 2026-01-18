@@ -1,5 +1,5 @@
-import { appData } from './state.js';
-import { showNotification } from './utils.js';
+import { appData } from './state.ts';
+import { showNotification } from './utils.ts';
 
 export function updateDashboard(): void {
   updateGreeting();

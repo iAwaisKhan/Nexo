@@ -1,5 +1,5 @@
-import { saveAllData } from './storage.js';
-import { showNotification } from './utils.js';
+import { saveAllData } from './storage.ts';
+import { showNotification } from './utils.ts';
 
 export function openUserProfile(): void {
   document.getElementById('userProfileModal')?.classList.add('active');

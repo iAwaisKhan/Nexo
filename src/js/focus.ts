@@ -1,4 +1,4 @@
-import { showNotification } from './utils.js';
+import { showNotification } from './utils.ts';
 
 let focusInterval: ReturnType<typeof setInterval> | null = null;
 let focusSecondsRemaining: number = 0;

@@ -1,5 +1,5 @@
-import { appData, Resource } from './state.js';
-import { escapeHTML, escapeForSingleQuote, showNotification } from './utils.js';
+import { appData, Resource } from './state.ts';
+import { escapeHTML, escapeForSingleQuote, showNotification } from './utils.ts';
 
 export function renderResources(resourcesToRender?: Resource[] | null): void {
   const container = document.getElementById('resourcesContainer');

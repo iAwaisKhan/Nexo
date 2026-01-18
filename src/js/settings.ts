@@ -1,7 +1,7 @@
-import { appData } from './state.js';
-import { saveAllData } from './storage.js';
-import { showNotification } from './utils.js';
-import { renderTasks } from './tasks.js';
+import { appData } from './state.ts';
+import { saveAllData } from './storage.ts';
+import { showNotification } from './utils.ts';
+import { renderTasks } from './tasks.ts';
 
 export function initSettingsUI(): void {
   const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
