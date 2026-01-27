@@ -43,44 +43,49 @@ const Profile: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md bg-surface/50 backdrop-blur-md border border-border/10 rounded-3xl shadow-sm overflow-hidden p-10 space-y-10"
+          className="w-full max-w-sm bg-surface/30 dark:bg-white/[0.03] backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
         >
-          <header className="flex items-center gap-6">
+          <header className="flex flex-col items-center text-center gap-4 mb-8">
             <Avatar 
-              size="lg" 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Awais" 
+              size="xl" 
+              src="https://cdn.flyonui.com/fy-assets/avatar/avatar-1.png" 
               fallback="AK" 
               status="online" 
             />
-            <div>
-              <h2 className="text-3xl font-display italic text-text">Awais Khan</h2>
-              <p className="text-xs font-bold text-text/30 uppercase tracking-[0.2em] mt-1">Free Tier • Harmonic Soul</p>
+            <div className="space-y-1">
+              <h2 className="text-2xl font-display text-text">Awais Khan</h2>
+              <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Free Tier • Harmonic Soul</p>
             </div>
           </header>
 
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-surface border border-border/5 flex items-center justify-between">
+          <div className="space-y-3">
+            <div className="group flex items-center justify-between p-4 rounded-2xl bg-surface/50 border border-border/50 hover:border-primary/20 transition-all cursor-default">
               <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-text/30" />
-                <span className="text-sm font-medium">awais@aura.io</span>
+                <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center">
+                  <Mail className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
+                </div>
+                <span className="text-sm font-medium text-text/80">awais@aura.io</span>
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Verified</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 px-2 py-1 bg-primary/5 rounded-full">Verified</span>
             </div>
-            <div className="p-4 rounded-2xl bg-surface border border-border/5 flex items-center justify-between group cursor-pointer hover:border-primary/20 transition-all">
+
+            <div className="group flex items-center justify-between p-4 rounded-2xl bg-surface/50 border border-border/50 hover:border-primary/20 transition-all cursor-pointer">
               <div className="flex items-center gap-3">
-                <Shield className="w-4 h-4 text-text/30 group-hover:text-primary transition-colors" />
-                <span className="text-sm font-medium">Security & Keys</span>
+                <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
+                </div>
+                <span className="text-sm font-medium text-text/80">Security & Privacy</span>
               </div>
-              <ArrowRight className="w-4 h-4 text-text/20" />
+              <ArrowRight className="w-4 h-4 text-text-muted/30 group-hover:text-primary/40 transition-transform group-hover:translate-x-0.5" />
             </div>
           </div>
 
-          <div className="pt-6 border-t border-border/5 flex flex-col gap-4">
+          <div className="mt-8 pt-6 border-t border-border/40">
             <button 
               onClick={() => setMode("login")}
-              className="w-full h-11 border border-border/10 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-500/5 hover:text-red-500 hover:border-red-500/20 transition-all"
+              className="w-full h-11 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted hover:text-red-500 transition-colors"
             >
-              Sign Out
+              Sign Out of Aura
             </button>
           </div>
         </motion.div>
@@ -89,124 +94,131 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[70vh] p-6">
+    <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm bg-surface/50 backdrop-blur-md border border-border/10 rounded-3xl shadow-sm overflow-hidden p-8 space-y-8"
+        className="w-full max-w-sm bg-surface/30 dark:bg-white/[0.03] backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
-        <header className="text-center space-y-2">
-          <AnimatePresence mode="wait">
-            <motion.h1 
-              key={mode + (isSuccess ? "-s" : "")}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              className="text-2xl font-display text-text italic"
+        {/* Card Header */}
+        <div className="p-8 pb-4 flex flex-col gap-1 relative">
+          <div className="absolute top-8 right-8">
+            <button 
+              onClick={toggleMode}
+              className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-colors"
             >
-              {isSuccess ? "Identity Secured" : (mode === "login" ? "Welcome Back" : "New Journey")}
-            </motion.h1>
-          </AnimatePresence>
-          <p className="text-xs text-text/40 font-medium tracking-wide">
-            {mode === "login" ? "Enter your frequency to continue" : "Join the mindful network"}
+              {mode === "login" ? "Sign Up" : "Login"}
+            </button>
+          </div>
+          <h2 className="text-2xl font-display text-text tracking-tight">
+            {isSuccess ? "Identity Secured" : (mode === "login" ? "Welcome back" : "Join the Flow")}
+          </h2>
+          <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.1em] opacity-60">
+            {isSuccess ? "Syncing Resonance..." : (mode === "login" ? "Access your personal workspace" : "Create your decentralized identity")}
           </p>
-        </header>
+        </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        {/* Card Content */}
+        <div className="px-8 pb-8 pt-2">
           {!isSuccess ? (
-            <>
-              <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="flex flex-col gap-4">
                 <AnimatePresence mode="popLayout">
                   {mode === "signup" && (
                     <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="space-y-1.5"
                     >
+                      <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Name</label>
                       <input
                         type="text"
-                        placeholder="Neural Name"
+                        placeholder="Your name"
                         required
-                        className="w-full h-11 bg-transparent border-b border-border/20 px-1 py-2 text-sm text-text placeholder:text-text/20 focus:outline-hidden focus:border-primary/50 transition-all"
+                        className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
                       />
                     </motion.div>
                   )}
                 </AnimatePresence>
 
-                <input
-                  type="email"
-                  placeholder="Email Resonance"
-                  required
-                  className="w-full h-11 bg-transparent border-b border-border/20 px-1 py-2 text-sm text-text placeholder:text-text/20 focus:outline-hidden focus:border-primary/50 transition-all"
-                />
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Email</label>
+                  <input
+                    type="email"
+                    placeholder="m@aura.io"
+                    required
+                    className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
+                  />
+                </div>
 
-                <input
-                  type="password"
-                  placeholder="Security Cipher"
-                  required
-                  className="w-full h-11 bg-transparent border-b border-border/20 px-1 py-2 text-sm text-text placeholder:text-text/20 focus:outline-hidden focus:border-primary/50 transition-all"
-                />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between ml-1">
+                    <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Password</label>
+                    {mode === "login" && (
+                      <a href="#" className="text-[9px] font-bold text-primary/40 hover:text-primary transition-colors tracking-widest">
+                        RECOVER
+                      </a>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Card Footer */}
+              <div className="flex flex-col gap-3 pt-2">
                 <button 
                   disabled={isLoading}
                   type="submit" 
-                  className="w-full h-12 bg-primary text-white text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  className="w-full h-11 bg-text text-background text-xs font-bold uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "login" ? "Authorize" : "Synchronize")}
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "login" ? "Enter Dashboard" : "Create Account")}
                 </button>
                 
-                <div className="relative flex items-center justify-center py-2">
-                  <div className="absolute inset-0 flex items-center px-1"><div className="w-full border-t border-border/5"></div></div>
-                  <span className="relative bg-surface px-4 text-[8px] font-black uppercase tracking-[0.3em] text-text/20">External Verification</span>
+                <div className="relative my-2">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border/50"></div></div>
+                  <div className="relative flex justify-center text-[8px] uppercase tracking-[0.4em] font-bold"><span className="bg-surface/30 px-3 backdrop-blur-xl text-text-muted/40">OR</span></div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => handleOAuth("Google")}
-                    disabled={isLoading}
-                    className="h-11 rounded-xl border border-border/10 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 group"
-                  >
-                    <Chrome className="w-4 h-4 text-text/30 group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text/40 group-hover:text-text">Google</span>
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => handleOAuth("GitHub")}
-                    disabled={isLoading}
-                    className="h-11 rounded-xl border border-border/10 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center justify-center gap-2 group"
-                  >
-                    <Github className="w-4 h-4 text-text/30 group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-text/40 group-hover:text-text">GitHub</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-text/30 pt-2">
-                  <button onClick={toggleMode} type="button" className="hover:text-primary transition-colors">
-                    {mode === "login" ? "No Identity? Create One" : "Existing Identity? Login"}
-                  </button>
-                </div>
+                <button 
+                  type="button"
+                  onClick={() => handleOAuth("Google")}
+                  disabled={isLoading}
+                  className="w-full h-11 rounded-2xl bg-surface/50 border border-border/50 hover:border-primary/20 transition-all flex items-center justify-center gap-2 group"
+                >
+                  <Chrome className="w-4 h-4 text-text-muted group-hover:text-text transition-colors" />
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-text-muted/60 group-hover:text-text">Provider login</span>
+                </button>
               </div>
-            </>
+            </form>
           ) : (
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-10 text-center space-y-6"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="py-12 text-center space-y-6"
             >
-              <div className="w-16 h-16 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto border border-primary/20">
-                <CheckCircle2 className="w-8 h-8 text-primary" />
+              <div className="relative mx-auto w-20 h-20">
+                <motion.div 
+                  animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-xl"
+                />
+                <div className="relative w-full h-full bg-primary/10 rounded-[2.5rem] flex items-center justify-center border border-primary/20 shadow-inner">
+                  <CheckCircle2 className="w-10 h-10 text-primary" />
+                </div>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-bold uppercase tracking-[0.2em] text-text">Access Granted</p>
-                <p className="text-[10px] font-medium text-text/40">Syncing workspace resonance...</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-text">Access Granted</p>
+                <p className="text-[9px] font-medium text-text-muted/50 uppercase tracking-widest">Workspace resonance synced</p>
               </div>
             </motion.div>
           )}
-        </form>
+        </div>
       </motion.div>
     </div>
   );

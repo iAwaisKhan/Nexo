@@ -52,3 +52,7 @@ export function applyStaggerAnimation(container: HTMLElement): void {
     }, index * 25);
   });
 }
+
+export function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(' ');
+}
