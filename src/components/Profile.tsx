@@ -39,23 +39,20 @@ const Profile: React.FC = () => {
 
   if (mode === "account") {
     return (
-      <div className="flex items-center justify-center min-h-[70vh] p-6">
+      <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-sm bg-surface/30 dark:bg-white/[0.03] backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
         >
-          <header className="flex flex-col items-center text-center gap-4 mb-8">
+          <header className="flex justify-center mb-10">
             <Avatar 
-              size="xl" 
+              size="lg" 
               src="https://cdn.flyonui.com/fy-assets/avatar/avatar-1.png" 
               fallback="AK" 
-              status="online" 
+              status="online"
+              label={{ name: "Awais Khan", email: "awais@aura.io" }}
             />
-            <div className="space-y-1">
-              <h2 className="text-2xl font-display text-text">Awais Khan</h2>
-              <p className="text-[10px] font-bold text-text-muted uppercase tracking-[0.2em]">Free Tier • Harmonic Soul</p>
-            </div>
           </header>
 
           <div className="space-y-3">

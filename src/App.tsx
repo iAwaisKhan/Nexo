@@ -76,13 +76,14 @@ const App: React.FC = () => {
         <AnimatePresence mode="wait">
           {activeView === "dashboard" ? (
             <motion.div
-              key="landing"
+              key="dashboard"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
+              className="pt-20 md:pt-24 px-4 md:px-8 pb-6 md:pb-10 h-full overflow-y-auto custom-scrollbar"
             >
-              <LandingHero />
+              <Dashboard />
             </motion.div>
           ) : (
             <motion.section
