@@ -49,39 +49,39 @@ npm run preview
 ```
 Aura/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── Dashboard.tsx    # Main dashboard with focus, notes, tasks, snippets
-│   │   ├── Header.tsx       # Navigation header with Uiverse menu
-│   │   ├── LandingHero.tsx  # Landing page hero section
-│   │   ├── Notes.tsx        # Full notes view
-│   │   ├── Tasks.tsx        # Full tasks view
-│   │   ├── Focus.tsx        # Focus mode component
-│   │   ├── Profile.tsx      # User profile page
-│   │   ├── Settings.tsx     # Application settings
+│   ├── components/          
+│   │   ├── Dashboard.tsx    
+│   │   ├── Header.tsx       
+│   │   ├── LandingHero.tsx  
+│   │   ├── Notes.tsx        
+│   │   ├── Tasks.tsx       
+│   │   ├── Focus.tsx       
+│   │   ├── Profile.tsx      
+│   │   ├── Settings.tsx     
 │   │   └── ui/
-│   │       ├── Avatar.tsx   # User avatar component
-│   │       └── CommandPalette.tsx  # Search/command palette
-│   ├── js/                  # Business logic and utilities
-│   │   ├── storageManager.ts     # Data persistence layer
-│   │   ├── db.ts                 # Mock data and database setup
-│   │   ├── focus.ts              # Focus timer logic
-│   │   ├── notes.ts              # Notes logic
-│   │   ├── tasks.ts              # Tasks logic
-│   │   └── ...                   # Other utilities
+│   │       ├── Avatar.tsx   
+│   │       └── CommandPalette.tsx  
+│   ├── js/                  
+│   │   ├── storageManager.ts     
+│   │   ├── db.ts                 
+│   │   ├── focus.ts              
+│   │   ├── notes.ts             
+│   │   ├── tasks.ts              
+│   │   └── ...                  
 │   ├── types/
-│   │   └── focus.ts         # TypeScript type definitions
-│   ├── App.tsx              # Root app component
-│   ├── main.tsx             # Entry point
-│   ├── index.css            # Global styles and theme variables
-│   └── styles.css           # Additional component styles
+│   │   └── focus.ts        
+│   ├── App.tsx              
+│   ├── main.tsx             
+│   ├── index.css           
+│   └── styles.css           
 ├── public/
-│   ├── manifest.json        # PWA manifest
-│   └── sw.js                # Service worker
-├── vite.config.ts           # Vite build configuration
-├── tsconfig.json            # TypeScript configuration
-├── package.json             # Dependencies and scripts
-├── README.md                # This file
-└── LICENSE                  # License
+│   ├── manifest.json       
+│   └── sw.js               
+├── vite.config.ts           
+├── tsconfig.json            
+├── package.json            
+├── README.md               
+└── LICENSE                  
 ```
 
 ## 🛠 Development
@@ -171,36 +171,6 @@ npm run build
 
 This creates a `dist/` folder with optimized, minified assets.
 
-### Deploy to Vercel, Netlify, or GitHub Pages
-
-```bash
-# Vercel
-vercel deploy
-
-# Netlify
-netlify deploy --prod --dir=dist
-
-# GitHub Pages
-npm run build
-# Then push the dist/ folder or use GitHub Actions
-```
-
-## 🐛 Troubleshooting
-
-### Port already in use?
-Vite will automatically try the next available port. Check the terminal output for the correct URL.
-
-### Styles not loading?
-Clear your browser cache and restart the dev server:
-```bash
-npm run dev
-```
-
-### localStorage not persisting?
-Check browser settings: Ensure your app is not in private/incognito mode and localStorage is enabled.
-
-### Command Palette not opening?
-Try pressing `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux).
 
 ## 📝 Notes
 
