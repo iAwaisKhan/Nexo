@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { 
   Plus, 
   Search, 
@@ -42,10 +42,9 @@ export interface Note {
 }
 
 interface NotesProps {
-  isDarkMode?: boolean;
 }
 
-const Notes: React.FC<NotesProps> = ({ isDarkMode = false }) => {
+const Notes: React.FC<NotesProps> = () => {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -456,7 +455,7 @@ const Notes: React.FC<NotesProps> = ({ isDarkMode = false }) => {
                     <div className="w-12 h-px bg-primary/20 mx-auto" />
                   </motion.div>
                 )}
-                <div className={`prose ${selectedNote.isBlog ? "prose-base mx-auto max-w-2xl" : "prose-sm max-w-none"} dark:prose-invert transition-all`}>
+                <div className={`prose ${selectedNote.isBlog ? "prose-base mx-auto max-w-2xl" : "prose-sm max-w-none"} transition-all`}>
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -482,7 +481,7 @@ const Notes: React.FC<NotesProps> = ({ isDarkMode = false }) => {
                         return match ? (
                           <SyntaxHighlighter
                             children={String(children).replace(/\n$/, "")}
-                            style={(isDarkMode ? vscDarkPlus : oneLight) as any}
+                            style={oneLight as any}
                             language={match[1]}
                             PreTag="div"
                           />

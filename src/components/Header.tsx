@@ -11,13 +11,11 @@ import {
 import { Avatar } from "./ui/Avatar";
 
 interface HeaderProps {
-  isDarkMode: boolean;
-  toggleTheme: () => void;
   activeView: string;
   setActiveView: (view: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeView, setActiveView }) => {
+const Header: React.FC<HeaderProps> = ({ activeView, setActiveView }) => {
   const navItems = [
     { id: "dashboard", label: "Home", icon: Home },
     { id: "notes", label: "Notes", icon: StickyNote },
@@ -56,13 +54,6 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeView, se
 
       {/* Right: Actions */}
       <div className="flex-1 flex items-center justify-end gap-2 md:gap-3">
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-xl text-text-muted hover:text-primary transition-all hover:bg-primary/5"
-        >
-          {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-        </button>
-
         <div
           className="group cursor-pointer transition-all flex items-center"
           onClick={() => setActiveView("profile")}

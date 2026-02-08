@@ -123,7 +123,7 @@ const LandingHero: React.FC = () => {
             <div className="space-y-4">
               <div className="p-4 rounded-3xl bg-surface/50 border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
                 <h5 className="font-bold text-sm text-text mb-1 group-hover:text-primary transition-colors">Tailwind v4 Thoughts</h5>
-                <p className="text-[11px] text-text-muted line-clamp-2">The new engine feels incredibly fast. Native support for dark mode...</p>
+                <p className="text-[11px] text-text-muted line-clamp-2">The new engine feels incredibly fast. Native support for light-weight...</p>
               </div>
             </div>
           </div>

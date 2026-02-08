@@ -11,47 +11,24 @@ declare global {
 }
 
 export function initTheme(): void {
-  const theme = appData.theme || 'light';
+  const theme = 'light';
 
   document.documentElement.setAttribute('data-theme', theme);
 
   const themeToggle = document.getElementById('themeToggle');
-  const icon = document.querySelector('#themeToggle i');
-  if (icon) {
-    icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-  }
   if (themeToggle) {
-    themeToggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+    themeToggle.style.display = 'none';
   }
 
   const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
   if (themeSelect) {
     themeSelect.value = theme;
+    themeSelect.disabled = true;
   }
 }
 
 export function toggleTheme(): void {
-  const html = document.documentElement;
-  const currentTheme = html.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-  html.setAttribute('data-theme', newTheme);
-  appData.theme = newTheme as 'light' | 'dark';
-  saveAllData();
-
-  const themeToggle = document.getElementById('themeToggle');
-  const icon = document.querySelector('#themeToggle i');
-  if (icon) {
-    icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-  }
-  if (themeToggle) {
-    themeToggle.setAttribute('aria-label', `Switch to ${newTheme === 'dark' ? 'light' : 'dark'} mode`);
-  }
-
-  const themeSelect = document.getElementById('themeSelect') as HTMLSelectElement;
-  if (themeSelect) {
-    themeSelect.value = newTheme;
-  }
+  // Dark mode removed
 }
 
 export function switchView(viewName: string, lenis?: LenisInterface | null): void {

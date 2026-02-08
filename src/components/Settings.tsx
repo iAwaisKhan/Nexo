@@ -62,11 +62,9 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, descriptio
 );
 
 interface SettingsProps {
-  isDarkMode: boolean;
-  toggleTheme: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ isDarkMode, toggleTheme }) => {
+const Settings: React.FC<SettingsProps> = () => {
   const clearData = () => {
     if (confirm("Are you sure? This will permanently delete all your notes, tasks, and focus history.")) {
       indexedDB.deleteDatabase("AuraDB_Modern");
@@ -96,28 +94,6 @@ const Settings: React.FC<SettingsProps> = ({ isDarkMode, toggleTheme }) => {
             label="Notifications" 
             description="Manage system alerts and break reminders"
             action={<div className="w-12 h-6 rounded-full bg-border/20 relative cursor-not-allowed"><div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-text/20" /></div>}
-          />
-        </SettingSection>
-
-        {/* Appearance */}
-        <SettingSection title="Appearance">
-          <SettingItem 
-            icon={Palette} 
-            label="Theme Mode" 
-            description={`Currently set to ${isDarkMode ? 'dark' : 'light'} mode`}
-            action={
-              <button 
-                onClick={(e) => { e.stopPropagation(); toggleTheme(); }}
-                className="w-12 h-6 rounded-full bg-primary/20 relative transition-colors hover:bg-primary/30"
-              >
-                <motion.div 
-                  animate={{ x: isDarkMode ? 24 : 4 }}
-                  className="absolute top-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center text-[8px] text-white"
-                >
-                  {isDarkMode ? <Moon className="w-2 h-2" /> : <Sun className="w-2 h-2" />}
-                </motion.div>
-              </button>
-            }
           />
         </SettingSection>
 

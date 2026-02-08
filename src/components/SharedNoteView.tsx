@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useQuery } from "@tanstack/react-query";
 import { storage } from "../js/storageManager";
 import { Note } from "./Notes";
@@ -76,7 +76,7 @@ const SharedNoteView: React.FC = () => {
             </div>
           </div>
 
-          <div className="prose prose-lg dark:prose-invert max-w-none 
+          <div className="prose prose-lg max-w-none 
             prose-headings:font-display prose-headings:italic prose-headings:font-normal
             prose-p:text-text/80 prose-p:leading-relaxed prose-p:font-medium
             prose-code:text-primary prose-pre:bg-surface/50 prose-pre:border prose-pre:border-border/10
@@ -89,7 +89,7 @@ const SharedNoteView: React.FC = () => {
                   return match ? (
                     <SyntaxHighlighter
                       children={String(children).replace(/\n$/, "")}
-                      style={vscDarkPlus as any}
+                      style={oneLight as any}
                       language={match[1]}
                       PreTag="div"
                     />

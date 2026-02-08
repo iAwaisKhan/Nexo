@@ -43,7 +43,7 @@ const Profile: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm bg-surface/30 dark:bg-white/[0.03] backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
+          className="w-full max-w-sm bg-surface/30 backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
         >
           <header className="flex justify-center mb-10">
             <Avatar 
@@ -95,7 +95,7 @@ const Profile: React.FC = () => {
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm bg-surface/30 dark:bg-white/[0.03] backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+        className="w-full max-w-sm bg-surface/30 backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
       >
         {/* Card Header */}
         <div className="p-8 pb-4 flex flex-col gap-1 relative">

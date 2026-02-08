@@ -21,27 +21,10 @@ export interface ThemeConfig {
 export class ThemeManager {
   private currentTheme: Theme = 'light';
   private listeners: Set<(theme: Theme) => void> = new Set();
-  private systemPreference: Theme = this.getSystemPreference();
 
   constructor() {
-    this.currentTheme = appData.theme || 'light';
-    this.setupSystemPreferenceListener();
-  }
-
-  /**
-   * Get system theme preference
-   */
-  private getSystemPreference(): Theme {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  /**
-   * Listen to system preference changes
-   */
-  private setupSystemPreferenceListener(): void {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      this.systemPreference = e.matches ? 'dark' : 'light';
-    });
+    this.currentTheme = 'light';
+    document.documentElement.setAttribute('data-theme', 'light');
   }
 
   /**
@@ -63,41 +46,16 @@ export class ThemeManager {
    * Get current theme
    */
   getTheme(): Theme {
-    return this.currentTheme;
+    return 'light';
   }
 
   /**
    * Set theme
    */
   async setTheme(theme: Theme): Promise<void> {
-    if (this.currentTheme === theme) return;
-
-    this.currentTheme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-
-    // Update theme toggle button
-    const themeToggle = DOMManager.getElementById('themeToggle');
-    const icon = DOMManager.querySelector('#themeToggle i');
-    if (icon) {
-      icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-    if (themeToggle) {
-      DOMManager.setAttribute(
-        themeToggle,
-        'aria-label',
-        `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`
-      );
-    }
-
-    // Update theme select
-    const themeSelect = DOMManager.getElementById<HTMLSelectElement>('themeSelect');
-    if (themeSelect) {
-      themeSelect.value = theme;
-    }
-
-    // Update state and persist
-    stateManager.updateProperty('theme', theme);
-    await saveAllData();
+    // Dark mode removed
+    return;
+  }
 
     // Notify listeners
     this.notifyListeners();

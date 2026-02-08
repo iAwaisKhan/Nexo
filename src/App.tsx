@@ -30,11 +30,6 @@ const App: React.FC = () => {
     if (window.location.pathname.startsWith('/share/')) return "shared-note";
     return "dashboard";
   });
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem("nexo-theme");
-    // Explicitly default to light if no saved preference or if explicitly set to light
-    return saved === "dark";
-  });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -56,22 +51,13 @@ const App: React.FC = () => {
     { id: "nv-settings", title: "Settings", icon: SettingsIcon, category: "Navigation", perform: () => setActiveView("settings") },
   ];
 
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", isDarkMode ? "dark" : "light");
-    localStorage.setItem("nexo-theme", isDarkMode ? "dark" : "light");
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
-
   if (activeView === "shared-note") {
     return <SharedNoteView />;
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500 ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500`}>
       <Header 
-        isDarkMode={isDarkMode} 
-        toggleTheme={toggleTheme} 
         activeView={activeView} 
         setActiveView={setActiveView} 
       />
@@ -101,7 +87,7 @@ const App: React.FC = () => {
               <div className="max-w-[1600px] mx-auto">
                 {activeView === "notes" ? (
                   <div className="h-[calc(100vh-8rem)]">
-                    <Notes isDarkMode={isDarkMode} />
+                    <Notes />
                   </div>
                 ) : activeView === "tasks" ? (
                   <div className="h-[calc(100vh-8rem)]">
@@ -112,7 +98,7 @@ const App: React.FC = () => {
                 ) : activeView === "focus" || activeView === "workspace" ? (
                   <Focus />
                 ) : activeView === "settings" ? (
-                  <Settings isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                  <Settings />
                 ) : (
                   <Dashboard />
                 )}
