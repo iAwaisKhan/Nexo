@@ -31,8 +31,9 @@ const App: React.FC = () => {
     return "dashboard";
   });
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem("aura-theme");
-    return saved === "dark"; // Defaults to false (light) if not set
+    const saved = localStorage.getItem("nexo-theme");
+    // Explicitly default to light if no saved preference or if explicitly set to light
+    return saved === "dark";
   });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
@@ -57,7 +58,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", isDarkMode ? "dark" : "light");
-    localStorage.setItem("aura-theme", isDarkMode ? "dark" : "light");
+    localStorage.setItem("nexo-theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
@@ -100,7 +101,7 @@ const App: React.FC = () => {
               <div className="max-w-[1600px] mx-auto">
                 {activeView === "notes" ? (
                   <div className="h-[calc(100vh-8rem)]">
-                    <Notes />
+                    <Notes isDarkMode={isDarkMode} />
                   </div>
                 ) : activeView === "tasks" ? (
                   <div className="h-[calc(100vh-8rem)]">

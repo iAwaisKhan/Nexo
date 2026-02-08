@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { vscDarkPlus, oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { 
   Plus, 
   Search, 
@@ -41,7 +41,11 @@ export interface Note {
   isBlog?: boolean;
 }
 
-const Notes: React.FC = () => {
+interface NotesProps {
+  isDarkMode?: boolean;
+}
+
+const Notes: React.FC<NotesProps> = ({ isDarkMode = false }) => {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -478,7 +482,7 @@ const Notes: React.FC = () => {
                         return match ? (
                           <SyntaxHighlighter
                             children={String(children).replace(/\n$/, "")}
-                            style={vscDarkPlus as any}
+                            style={(isDarkMode ? vscDarkPlus : oneLight) as any}
                             language={match[1]}
                             PreTag="div"
                           />

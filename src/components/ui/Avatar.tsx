@@ -30,7 +30,7 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md",
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-black border border-white/10 flex items-center justify-center overflow-hidden transition-all hover:border-white/20`}>
+      <div className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/30`}>
         {src ? (
           <img 
             src={src} 
@@ -39,7 +39,7 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md",
           />
         ) : (
           <User 
-            className={`text-white/40 ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} 
+            className={`text-text-muted ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} 
             strokeWidth={1.5}
           />
         )}
