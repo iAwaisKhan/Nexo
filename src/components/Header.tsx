@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleTheme, activeView, se
           className="flex items-center cursor-pointer group"
           onClick={() => setActiveView("dashboard")}
         >
-          <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Aura</span>
+          <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Nexo</span>
         </div>
       </div>
 

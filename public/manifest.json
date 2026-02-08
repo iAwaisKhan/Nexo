@@ -1,11 +1,11 @@
 {
-    "name": "Aura Study Companion",
-    "short_name": "Aura",
-    "description": "Your personal study companion for notes, tasks and focus sessions",
+    "name": "Nexo Dashboard",
+    "short_name": "Nexo",
+    "description": "Your personal dashboard for deep work and high productivity.",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#a56244",
+    "theme_color": "#3b82f6",
     "icons": [
         {
             "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f4da.svg",

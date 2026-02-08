@@ -65,81 +65,59 @@ const LandingHero: React.FC = () => {
       </motion.div>
 
       {/* Main Content (Z-10) */}
-      <div className="relative z-10 w-full flex flex-col items-center">
+      <div className="relative z-10 w-full flex flex-col items-center pt-24 md:pt-32">
         {/* Main Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-center max-w-4xl mx-auto mb-8 px-4"
+          className="text-center max-w-6xl mx-auto mb-12 md:mb-16 px-4"
         >
-          <h1 className="text-5xl md:text-8xl font-serif font-medium text-text mb-4 tracking-[-0.02em] leading-tight">
-            Aura: Your Single
-            <span className="block mt-4 bg-gradient-to-r from-primary via-primary/50 to-primary bg-clip-text text-transparent filter drop-shadow-[0_0_30px_rgba(59,130,246,0.3)] font-handwriting font-bold py-4 leading-[1.1]">
+          <h1 className="text-3xl md:text-6xl font-serif font-medium text-text mb-2 tracking-[-0.02em] leading-tight">
+            Nexo: Your Single
+            <span className="block mt-2 text-primary font-handwriting py-2 leading-[1.1] text-5xl md:text-9xl">
               Dashboard for Deep Flow
             </span>
           </h1>
         </motion.div>
 
-        {/* Description */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-text-muted text-lg md:text-xl text-center max-w-2xl mb-20 leading-relaxed font-redhat px-4"
-        >
-          Experience the ultimate synergy of notes, tasks, and code. Seamlessly
-          bridge the gap between learning and building in a distraction-free
-          environment.
-        </motion.p>
+        {/* Description - Removed */}
 
         {/* Mockup Dashboard Section (The Requested Image Implementation) */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 relative"
+          className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 relative"
         >
-          {/* Main Focus Card (Top Left) */}
-          <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group shadow-2xl">
+          {/* Main Focus Card (Top Left) - Height Reduced */}
+          <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-5 md:p-6 relative overflow-hidden group shadow-2xl">
             {/* Wavy Background Pattern */}
             <div className="absolute inset-0 opacity-10 pointer-events-none">
               <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-primary/20 to-transparent" />
-              <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 320">
+              <svg className="absolute bottom-0 left-0 w-full scale-y-150 origin-bottom" viewBox="0 0 1440 320">
                 <path fill="rgba(59, 130, 246, 0.2)" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
               </svg>
             </div>
 
             <div className="relative z-10">
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-6">
-                <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Focus Session</span>
-              </div>
+              <h3 className="text-3xl font-serif font-medium text-text mb-1">Current Session: Deep Work</h3>
+              <p className="text-text-muted mb-4 font-redhat">Analyzing the new backend architecture</p>
               
-              <h3 className="text-3xl font-serif font-medium text-text mb-2">Current Session: Deep Work</h3>
-              <p className="text-text-muted mb-8 font-redhat">Analyzing the new backend architecture</p>
-              
-              <div className="flex items-end gap-4 mb-2">
+              <div className="flex items-end gap-4 mb-0">
                 <span className="text-7xl font-sans font-bold text-text tracking-tighter">24:52</span>
-                <span className="text-2xl font-sans text-text-muted mb-2 tracking-tight">/ 45:00</span>
-              </div>
-
-              <div className="absolute bottom-8 right-8">
-                <button className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all group">
-                  <Play className="w-5 h-5 fill-white" />
-                  Resume session
-                </button>
+                <span className="text-2xl font-sans text-text-muted mb-1 tracking-tight">/ 45:00</span>
               </div>
             </div>
           </div>
 
           {/* Recent Notes (Top Right) */}
-          <div className="md:col-span-4 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="md:col-span-4 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
                 <h4 className="font-serif font-bold text-text text-lg">Recent Notes</h4>
               </div>
-              <button className="text-xs font-bold text-primary hover:underline">View all</button>
             </div>
 
             <div className="space-y-4">
@@ -147,51 +125,15 @@ const LandingHero: React.FC = () => {
                 <h5 className="font-bold text-sm text-text mb-1 group-hover:text-primary transition-colors">Tailwind v4 Thoughts</h5>
                 <p className="text-[11px] text-text-muted line-clamp-2">The new engine feels incredibly fast. Native support for dark mode...</p>
               </div>
-              <div className="p-4 rounded-3xl bg-surface/50 border border-white/5 hover:border-primary/20 transition-all cursor-pointer group">
-                <h5 className="font-bold text-sm text-text mb-1 group-hover:text-primary transition-colors">Machine Learning Basics</h5>
-                <p className="text-[11px] text-text-muted line-clamp-2">Gradient descent is basically just finding the valley in a mountain range...</p>
-              </div>
             </div>
           </div>
 
-          {/* Tasks (Bottom Left) */}
-          <div className="md:col-span-4 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <h4 className="font-serif font-bold text-text text-lg">Tasks</h4>
-              </div>
-              <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-                <span className="text-[9px] font-bold text-green-500 tracking-widest">65% DONE</span>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-start gap-3 opacity-50">
-                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center mt-0.5">
-                  <CheckCircle2 className="w-3 h-3 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-text line-through">Review PR #452</p>
-                  <div className="h-1 w-full bg-green-500/30 rounded-full mt-2" />
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full border-2 border-primary/30 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-text">Design focus mode UI</p>
-                  <div className="h-1 w-1/3 bg-primary/50 rounded-full mt-2" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Code Snippet (Bottom Right) */}
-          <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between mb-6">
+          {/* Code Snippet (Full Width) */}
+          <div className="md:col-span-12 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-5 md:p-6 shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Code2 className="w-5 h-5 text-primary" />
-                <h4 className="font-serif font-bold text-text text-lg">Snippet: Next.js Middleware</h4>
+                <h4 className="font-serif font-bold text-text text-base md:text-lg">Snippet: Next.js Middleware</h4>
               </div>
               <div className="flex gap-4">
                 <Copy className="w-4 h-4 text-text-muted hover:text-primary cursor-pointer" />
@@ -199,8 +141,8 @@ const LandingHero: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 bg-[#050505] rounded-[1.5rem] p-6 font-mono text-sm leading-relaxed overflow-hidden border border-white/5 relative">
-              <div className="flex gap-1.5 absolute top-4 left-6">
+            <div className="flex-1 bg-[#050505] rounded-[1.5rem] p-5 font-mono text-sm leading-relaxed overflow-hidden border border-white/5 relative">
+              <div className="flex gap-1.5 absolute top-3 left-6">
                 <div className="w-2 h-2 rounded-full bg-red-500/40" />
                 <div className="w-2 h-2 rounded-full bg-yellow-500/40" />
                 <div className="w-2 h-2 rounded-full bg-green-500/40" />

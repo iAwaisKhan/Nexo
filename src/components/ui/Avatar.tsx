@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { User } from "lucide-react";
 
 interface AvatarProps {
   src?: string;
@@ -29,22 +30,19 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md",
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`relative ${sizeClasses[size]} shrink-0 p-[2px] rounded-full ring-2 ring-white/5 bg-gradient-to-tr from-white/5 to-transparent`}>
-        <div className="w-full h-full rounded-full overflow-hidden bg-[#050505] border border-white/10 flex items-center justify-center relative group">
-          {src ? (
-            <img 
-              src={src} 
-              alt={alt || "avatar"} 
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <span className={`font-sans font-black text-primary uppercase tracking-wider ${textSizes[size]} drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]`}>
-                {fallback}
-              </span>
-            </div>
-          )}
-        </div>
+      <div className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-black border border-white/10 flex items-center justify-center overflow-hidden transition-all hover:border-white/20`}>
+        {src ? (
+          <img 
+            src={src} 
+            alt={alt || "avatar"} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <User 
+            className={`text-white/40 ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} 
+            strokeWidth={1.5}
+          />
+        )}
       </div>
 
       {label && (

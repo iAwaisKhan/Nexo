@@ -30,7 +30,10 @@ const App: React.FC = () => {
     if (window.location.pathname.startsWith('/share/')) return "shared-note";
     return "dashboard";
   });
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark for this design
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("aura-theme");
+    return saved === "dark"; // Defaults to false (light) if not set
+  });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`h-screen flex flex-col bg-background text-text transition-colors duration-500 overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500 ${isDarkMode ? 'dark' : ''}`}>
       <Header 
         isDarkMode={isDarkMode} 
         toggleTheme={toggleTheme} 
@@ -81,7 +84,7 @@ const App: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="pt-20 md:pt-24 px-4 md:px-8 pb-6 md:pb-10 h-full overflow-y-auto custom-scrollbar"
+              className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10"
             >
               <Dashboard />
             </motion.div>
@@ -92,9 +95,9 @@ const App: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="pt-24 px-8 pb-10"
+              className="pt-32 px-8 pb-10"
             >
-              <div className="max-w-7xl mx-auto">
+              <div className="max-w-[1600px] mx-auto">
                 {activeView === "notes" ? (
                   <div className="h-[calc(100vh-8rem)]">
                     <Notes />
