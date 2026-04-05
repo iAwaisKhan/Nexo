@@ -1,9 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-import { storage } from "../js/storageManager";
-import { Note } from "./Notes";
-import { Task } from "./Tasks";
+import { useAppStore } from "../store/useAppStore";
 import { 
   StickyNote, 
   CheckSquare, 
@@ -19,21 +16,8 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ query, onNavigate }) => {
-  const { data: notes = [] } = useQuery({
-    queryKey: ["notes"],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<Note>("notes");
-    }
-  });
-
-  const { data: tasks = [] } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<Task>("tasks");
-    }
-  });
+  const notes = useAppStore(state => state.notes);
+  const tasks = useAppStore(state => state.tasks);
 
   const filteredNotes = useMemo(() => 
     notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase()) || n.content.toLowerCase().includes(query.toLowerCase()))

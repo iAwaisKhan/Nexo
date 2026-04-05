@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Sparkles, Volume2, VolumeX } from "lucide-react";
-import { storage } from "../js/storageManager";
-import { FocusSession } from "../types/focus";
+import { useAppStore, AppFocusSession } from "../store/useAppStore";
 
 const FocusMode: React.FC = () => {
   const [focusMinutes, setFocusMinutes] = useState(25);
@@ -15,6 +14,8 @@ const FocusMode: React.FC = () => {
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<number | null>(null);
+  
+  const addFocusSession = useAppStore(state => state.addFocusSession);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
@@ -76,7 +77,7 @@ const FocusMode: React.FC = () => {
   const logSession = async (duration: number) => {
     if (duration < 10) return; // Prevent logging very short accidental sessions
 
-    const session: FocusSession = {
+    const session: AppFocusSession = {
       id: Date.now().toString(),
       startTime: sessionStartRef.current || Date.now(),
       endTime: Date.now(),
@@ -87,8 +88,7 @@ const FocusMode: React.FC = () => {
       hour: new Date().getHours()
     };
 
-    await storage.init();
-    await storage.add("focusSessions", session);
+    addFocusSession(session);
   };
 
   const formatTime = (seconds: number) => {

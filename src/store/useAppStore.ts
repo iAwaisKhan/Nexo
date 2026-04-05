@@ -1,0 +1,119 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Task } from '../components/Tasks';
+import type { Note } from '../components/Notes';
+
+export interface AppFocusSession {
+  id: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  targetId?: string;
+  targetType?: 'task' | 'note' | string;
+  date: string;
+  hour: number;
+}
+
+export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+
+interface AppState {
+  tasks: Task[];
+  notes: Note[];
+  focusSessions: AppFocusSession[];
+
+  // Sync metadata
+  syncStatus: SyncStatus;
+  lastSyncedAt: number | null;
+
+  // Tasks Actions
+  addTask: (task: Task) => void;
+  updateTask: (task: Task) => void;
+  deleteTask: (id: string) => void;
+
+  // Notes Actions
+  addNote: (note: Note) => void;
+  updateNote: (note: Note) => void;
+  deleteNote: (id: string) => void;
+
+  // Focus Session Actions
+  addFocusSession: (session: AppFocusSession) => void;
+
+  // Internal sync actions (prefixed with _ to indicate internal use)
+  _setSyncStatus: (status: SyncStatus) => void;
+  _setLastSyncedAt: (timestamp: number) => void;
+  _hydrateFromCloud: (notes: Note[], tasks: Task[], sessions: AppFocusSession[]) => void;
+}
+
+// Lazy import to avoid circular dependency — syncEngine imports useAppStore
+const getSyncEngine = () => import('../lib/syncEngine').then(m => m.syncEngine);
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      tasks: [],
+      notes: [],
+      focusSessions: [],
+      syncStatus: 'idle' as SyncStatus,
+      lastSyncedAt: null,
+
+      // ── Tasks ──────────────────────────────────────────────
+      addTask: (task) => {
+        set((state) => ({ tasks: [...state.tasks, task] }));
+        getSyncEngine().then(se => se.pushTask(task));
+      },
+      updateTask: (updatedTask) => {
+        set((state) => ({
+          tasks: state.tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+        }));
+        getSyncEngine().then(se => se.pushTask(updatedTask));
+      },
+      deleteTask: (id) => {
+        set((state) => ({
+          tasks: state.tasks.filter(t => t.id !== id)
+        }));
+        getSyncEngine().then(se => se.deleteTaskCloud(id));
+      },
+
+      // ── Notes ──────────────────────────────────────────────
+      addNote: (note) => {
+        set((state) => ({ notes: [...state.notes, note] }));
+        getSyncEngine().then(se => se.pushNote(note));
+      },
+      updateNote: (updatedNote) => {
+        set((state) => ({
+          notes: state.notes.map(n => n.id === updatedNote.id ? updatedNote : n)
+        }));
+        getSyncEngine().then(se => se.pushNote(updatedNote));
+      },
+      deleteNote: (id) => {
+        set((state) => ({
+          notes: state.notes.filter(n => n.id !== id)
+        }));
+        getSyncEngine().then(se => se.deleteNoteCloud(id));
+      },
+
+      // ── Focus Sessions ────────────────────────────────────
+      addFocusSession: (session) => {
+        set((state) => ({
+          focusSessions: [...state.focusSessions, session]
+        }));
+        getSyncEngine().then(se => se.pushFocusSession(session));
+      },
+
+      // ── Internal Sync Actions ─────────────────────────────
+      _setSyncStatus: (status) => set({ syncStatus: status }),
+      _setLastSyncedAt: (timestamp) => set({ lastSyncedAt: timestamp }),
+      _hydrateFromCloud: (notes, tasks, sessions) =>
+        set({ notes, tasks, focusSessions: sessions }),
+    }),
+    {
+      name: 'nexo_storage',
+      partialize: (state) => ({
+        // Only persist data, not transient sync state
+        tasks: state.tasks,
+        notes: state.notes,
+        focusSessions: state.focusSessions,
+      }),
+    }
+  )
+);

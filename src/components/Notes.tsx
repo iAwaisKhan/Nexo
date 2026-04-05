@@ -20,12 +20,10 @@ import {
   Share2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { storage } from "../js/storageManager";
+import { useAppStore, AppFocusSession } from "../store/useAppStore";
 import GraphView from "./GraphView";
 import NoteSharing from "./NoteSharing";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
-import { FocusSession } from "../types/focus";
 
 export interface Note {
   id: string;
@@ -45,7 +43,6 @@ interface NotesProps {
 }
 
 const Notes: React.FC<NotesProps> = () => {
-  const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -55,51 +52,13 @@ const Notes: React.FC<NotesProps> = () => {
   
   const sessionStartRef = useRef<number | null>(null);
 
-  const { data: notes = [], isLoading } = useQuery({
-    queryKey: ["notes"],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<Note>("notes");
-    }
-  });
-
-  const addMutation = useMutation({
-    mutationFn: async (newNote: Note) => {
-      await storage.save("notes", newNote);
-      return newNote;
-    },
-    onSuccess: (newNote) => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setSelectedId(newNote.id);
-    }
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (note: Note) => {
-      await storage.save("notes", note);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await storage.delete("notes", id);
-    },
-    onSuccess: (_, deletedId) => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      if (selectedId === deletedId) setSelectedId(null);
-    }
-  });
-
-  const { data: sessions = [] } = useQuery({
-    queryKey: ["focusSessions"],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<FocusSession>("focusSessions");
-    }
-  });
+  const notes = useAppStore(state => state.notes);
+  const sessions = useAppStore(state => state.focusSessions);
+  const addNoteStore = useAppStore(state => state.addNote);
+  const updateNoteStore = useAppStore(state => state.updateNote);
+  const deleteNoteStore = useAppStore(state => state.deleteNote);
+  const addFocusSession = useAppStore(state => state.addFocusSession);
+  const isLoading = false;
 
   const selectedNote = useMemo(() => 
     notes.find(n => n.id === selectedId) || null
@@ -123,9 +82,9 @@ const Notes: React.FC<NotesProps> = () => {
           const note = notes.find(n => n.id === id);
           if (note) {
             const updatedTime = (note.timeSpent || 0) + duration;
-            storage.save("notes", { ...note, timeSpent: updatedTime });
+            updateNoteStore({ ...note, timeSpent: updatedTime });
             
-            const session: FocusSession = {
+            const session: AppFocusSession = {
               id: Date.now().toString(),
               startTime: sessionStartRef.current,
               endTime: Date.now(),
@@ -135,7 +94,7 @@ const Notes: React.FC<NotesProps> = () => {
               date: new Date().toISOString().split('T')[0],
               hour: new Date(sessionStartRef.current).getHours()
             };
-            storage.save("focusSessions", session);
+            addFocusSession(session);
           }
         }
         sessionStartRef.current = null;
@@ -184,13 +143,14 @@ const Notes: React.FC<NotesProps> = () => {
       isPinned: false,
       lastModified: Date.now()
     };
-    addMutation.mutate(newNote);
+    addNoteStore(newNote);
+    setSelectedId(newNote.id);
   };
 
   const handleUpdateNote = (id: string, updates: Partial<Note>) => {
     const note = notes.find(n => n.id === id);
     if (note) {
-      updateMutation.mutate({ ...note, ...updates, lastModified: Date.now() });
+      updateNoteStore({ ...note, ...updates, lastModified: Date.now() });
       
       // Handle suggestions
       if (updates.content !== undefined) {
@@ -231,14 +191,15 @@ const Notes: React.FC<NotesProps> = () => {
 
   const handleDeleteNote = (id: string) => {
     if (confirm("Are you sure you want to delete this note?")) {
-      deleteMutation.mutate(id);
+      deleteNoteStore(id);
+      if (selectedId === id) setSelectedId(null);
     }
   };
 
   const togglePin = (id: string) => {
     const note = notes.find(n => n.id === id);
     if (note) {
-      updateMutation.mutate({ ...note, isPinned: !note.isPinned });
+      updateNoteStore({ ...note, isPinned: !note.isPinned });
     }
   };
 

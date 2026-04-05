@@ -9,26 +9,11 @@ import {
   Share2
 } from 'lucide-react';
 import Footer from './Footer';
-import { useQuery } from '@tanstack/react-query';
-import { storage } from '../js/storageManager';
+import { useAppStore } from '../store/useAppStore';
 
 const Dashboard: React.FC = () => {
-  // Real data fetching
-  const { data: notes = [] } = useQuery({
-    queryKey: ['notes'],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<any>('notes');
-    }
-  });
-
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: async () => {
-      await storage.init();
-      return await storage.getAll<any>('tasks');
-    }
-  });
+  const notes = useAppStore(state => state.notes);
+  const tasks = useAppStore(state => state.tasks);
 
   const MOCK_NOTES = [
     { id: 'm1', title: 'Rust Memory Safety', contentSnippet: 'Exploring Ownership and Borrowing rules in concurrent systems...' },

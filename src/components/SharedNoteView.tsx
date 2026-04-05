@@ -1,27 +1,20 @@
 import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { useQuery } from "@tanstack/react-query";
-import { storage } from "../js/storageManager";
-import { Note } from "./Notes";
+import { useAppStore } from "../store/useAppStore";
 import { Globe, ArrowLeft, GraduationCap } from "lucide-react";
 
 const SharedNoteView: React.FC = () => {
-  const noteId = window.location.pathname.split('/share/')[1];
+  const { noteId } = useParams<{ noteId: string }>();
+  const navigate = useNavigate();
 
-  const { data: note, isLoading } = useQuery({
-    queryKey: ["note", noteId],
-    queryFn: async () => {
-      await storage.init();
-      const notes = await storage.getAll<Note>("notes");
-      const found = notes.find(n => n.id === noteId);
-      if (found && found.isPublic) return found;
-      return null;
-    }
-  });
+  const notes = useAppStore(state => state.notes);
+  const note = notes.find(n => n.id === noteId && n.isPublic);
+  const isLoading = false;
 
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
@@ -40,7 +33,7 @@ const SharedNoteView: React.FC = () => {
         <p className="text-sm text-text/40 max-w-xs mx-auto">This note is either private or does not exist in the Aura network.</p>
       </div>
       <button 
-        onClick={() => window.location.href = '/'}
+        onClick={() => navigate('/')}
         className="px-6 py-3 rounded-2xl bg-primary text-white text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
       >
         Go to Dashboard
@@ -114,7 +107,7 @@ const SharedNoteView: React.FC = () => {
           <p className="text-xs text-text/20">The minimalist home for your knowledge and growth.</p>
         </div>
         <button 
-          onClick={() => window.location.href = '/'}
+          onClick={() => navigate('/')}
           className="inline-flex items-center gap-2 text-primary hover:gap-3 transition-all duration-300 font-medium text-sm italic"
         >
           <ArrowLeft className="w-4 h-4" />

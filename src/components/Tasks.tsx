@@ -11,9 +11,8 @@ import {
   Pause
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { storage } from "../js/storageManager";
-import { FocusSession } from "../types/focus";
+import { useAppStore } from "../store/useAppStore";
+import { AppFocusSession } from "../store/useAppStore";
 
 export interface Task {
   id: string;
@@ -27,7 +26,12 @@ export interface Task {
 }
 
 const Tasks: React.FC = () => {
-  const queryClient = useQueryClient();
+  const tasks = useAppStore(state => state.tasks).sort((a, b) => b.createdAt - a.createdAt);
+  const addTaskStore = useAppStore(state => state.addTask);
+  const updateTaskStore = useAppStore(state => state.updateTask);
+  const deleteTaskStore = useAppStore(state => state.deleteTask);
+  const addFocusSession = useAppStore(state => state.addFocusSession);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "To Do" | "Done">("All");
   const [isAdding, setIsAdding] = useState(false);
@@ -35,43 +39,7 @@ const Tasks: React.FC = () => {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const activeTaskStartRef = useRef<number | null>(null);
 
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["tasks"],
-    queryFn: async () => {
-      await storage.init();
-      const loaded = await storage.getAll<Task>("tasks");
-      return loaded.sort((a, b) => b.createdAt - a.createdAt);
-    }
-  });
-
-  const addMutation = useMutation({
-    mutationFn: async (task: Task) => {
-      await storage.save("tasks", task);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      setNewTask({ title: "", description: "", priority: "Medium", dueDate: "" });
-      setIsAdding(false);
-    }
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (task: Task) => {
-      await storage.save("tasks", task);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    }
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await storage.delete("tasks", id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-    }
-  });
+  const isLoading = false;
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -90,18 +58,20 @@ const Tasks: React.FC = () => {
       status: "To Do",
       createdAt: Date.now()
     };
-    addMutation.mutate(task);
+    addTaskStore(task);
+    setNewTask({ title: "", description: "", priority: "Medium", dueDate: "" });
+    setIsAdding(false);
   };
 
   const toggleTask = (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     const updatedTask = { ...task, status: task.status === "Done" ? "To Do" : "Done" as "To Do" | "Done" };
-    updateMutation.mutate(updatedTask);
+    updateTaskStore(updatedTask);
   };
 
   const deleteTask = (id: string) => {
-    deleteMutation.mutate(id);
+    deleteTaskStore(id);
   };
 
   const toggleFocus = (id: string) => {
@@ -113,9 +83,9 @@ const Tasks: React.FC = () => {
           const task = tasks.find(t => t.id === id);
           if (task) {
             const updatedTime = (task.timeSpent || 0) + duration;
-            storage.save("tasks", { ...task, timeSpent: updatedTime });
+            updateTaskStore({ ...task, timeSpent: updatedTime });
             
-            const session: FocusSession = {
+            const session: AppFocusSession = {
               id: Date.now().toString(),
               startTime: activeTaskStartRef.current,
               endTime: Date.now(),
@@ -125,8 +95,7 @@ const Tasks: React.FC = () => {
               date: new Date().toISOString().split('T')[0],
               hour: new Date(activeTaskStartRef.current).getHours()
             };
-            storage.save("focusSessions", session);
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            addFocusSession(session);
           }
         }
       }
@@ -149,7 +118,7 @@ const Tasks: React.FC = () => {
         const task = tasks.find(t => t.id === activeTaskId);
         if (task && duration > 0) {
           const updatedTime = (task.timeSpent || 0) + duration;
-          storage.save("tasks", { ...task, timeSpent: updatedTime });
+          updateTaskStore({ ...task, timeSpent: updatedTime });
           // Save session too but might be tricky with async delete during unmount?
           // Usually we want to save before unmount.
         }

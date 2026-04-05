@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Notes from "./components/Notes";
 import Tasks from "./components/Tasks";
@@ -7,30 +8,78 @@ import Profile from "./components/Profile";
 import Focus from "./components/Focus";
 import Settings from "./components/Settings";
 import SharedNoteView from "./components/SharedNoteView";
-import SearchResults from "./components/SearchResults";
-import LandingHero from "./components/LandingHero";
 import Header from "./components/Header";
+import Auth from "./components/Auth";
 import { CommandPalette } from "./components/ui/CommandPalette";
-import { 
-  Home, 
-  StickyNote, 
-  CheckSquare, 
-  Clock, 
-  Brain, 
-  Settings as SettingsIcon, 
-  Search, 
-  User, 
-  Sun, 
-  Moon,
-  GraduationCap
+import { useAuthStore } from "./store/useAuthStore";
+import { isSupabaseConfigured } from "./lib/supabase";
+import { syncEngine } from "./lib/syncEngine";
+import {
+  Home,
+  StickyNote,
+  CheckSquare,
+  Brain,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
+// Animated page wrapper
+const PageTransition: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4 }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const App: React.FC = () => {
-  const [activeView, setActiveView] = useState(() => {
-    if (window.location.pathname.startsWith('/share/')) return "shared-note";
-    return "dashboard";
-  });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [skippedAuth, setSkippedAuth] = useState(() => {
+    return localStorage.getItem('nexo_skipped_auth') === 'true';
+  });
+
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, isAuthenticated, initialize } = useAuthStore();
+
+  // Initialize auth on mount
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // Initialize sync engine when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      syncEngine.initialize(user.id);
+      // If user was in skipped mode, clear it
+      localStorage.removeItem('nexo_skipped_auth');
+      setSkippedAuth(false);
+    }
+
+    return () => {
+      if (!isAuthenticated) {
+        syncEngine.destroy();
+      }
+    };
+  }, [isAuthenticated, user]);
+
+  // Listen for skip-auth event from Auth component
+  useEffect(() => {
+    const handler = () => {
+      localStorage.setItem('nexo_skipped_auth', 'true');
+      setSkippedAuth(true);
+    };
+    window.addEventListener('nexo:skip-auth', handler);
+    return () => window.removeEventListener('nexo:skip-auth', handler);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,73 +93,109 @@ const App: React.FC = () => {
   }, []);
 
   const actions = [
-    { id: "nv-dash", title: "Dashboard", icon: Home, category: "Navigation", perform: () => setActiveView("dashboard") },
-    { id: "nv-notes", title: "Notes", icon: StickyNote, category: "Navigation", perform: () => setActiveView("notes") },
-    { id: "nv-tasks", title: "Tasks", icon: CheckSquare, category: "Navigation", perform: () => setActiveView("tasks") },
-    { id: "nv-focus", title: "Focus Mode", icon: Brain, category: "Navigation", perform: () => setActiveView("focus") },
-    { id: "nv-settings", title: "Settings", icon: SettingsIcon, category: "Navigation", perform: () => setActiveView("settings") },
+    { id: "nv-dash", title: "Dashboard", icon: Home, category: "Navigation", perform: () => navigate("/") },
+    { id: "nv-notes", title: "Notes", icon: StickyNote, category: "Navigation", perform: () => navigate("/notes") },
+    { id: "nv-tasks", title: "Tasks", icon: CheckSquare, category: "Navigation", perform: () => navigate("/tasks") },
+    { id: "nv-focus", title: "Focus Mode", icon: Brain, category: "Navigation", perform: () => navigate("/focus") },
+    { id: "nv-settings", title: "Settings", icon: SettingsIcon, category: "Navigation", perform: () => navigate("/settings") },
   ];
 
-  if (activeView === "shared-note") {
-    return <SharedNoteView />;
+  // Show loading spinner while auth initializes
+  if (authLoading && isSupabaseConfigured()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
+            Initializing...
+          </span>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Show auth screen if Supabase is configured but user is not signed in (and hasn't skipped)
+  if (isSupabaseConfigured() && !isAuthenticated && !skippedAuth) {
+    return <Auth />;
   }
 
   return (
     <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500`}>
-      <Header 
-        activeView={activeView} 
-        setActiveView={setActiveView} 
-      />
+      <Header />
 
       <main className="flex-1 relative">
-        <AnimatePresence mode="wait">
-          {activeView === "dashboard" ? (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10"
-            >
-              <Dashboard />
-            </motion.div>
-          ) : (
-            <motion.section
-              key="content"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-              className="pt-32 px-8 pb-10"
-            >
-              <div className="max-w-[1600px] mx-auto">
-                {activeView === "notes" ? (
-                  <div className="h-[calc(100vh-8rem)]">
-                    <Notes />
-                  </div>
-                ) : activeView === "tasks" ? (
-                  <div className="h-[calc(100vh-8rem)]">
-                    <Tasks />
-                  </div>
-                ) : activeView === "profile" ? (
-                  <Profile />
-                ) : activeView === "focus" || activeView === "workspace" ? (
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
+                <Dashboard />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/notes"
+            element={
+              <PageTransition className="pt-32 px-8 pb-10">
+                <div className="max-w-[1600px] mx-auto h-[calc(100vh-8rem)]">
+                  <Notes />
+                </div>
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <PageTransition className="pt-32 px-8 pb-10">
+                <div className="max-w-[1600px] mx-auto h-[calc(100vh-8rem)]">
+                  <Tasks />
+                </div>
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/focus"
+            element={
+              <PageTransition className="pt-32 px-8 pb-10">
+                <div className="max-w-[1600px] mx-auto">
                   <Focus />
-                ) : activeView === "settings" ? (
+                </div>
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <PageTransition className="pt-32 px-8 pb-10">
+                <div className="max-w-[1600px] mx-auto">
                   <Settings />
-                ) : (
-                  <Dashboard />
-                )}
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+                </div>
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PageTransition className="pt-32 px-8 pb-10">
+                <div className="max-w-[1600px] mx-auto">
+                  <Profile />
+                </div>
+              </PageTransition>
+            }
+          />
+          <Route path="/share/:noteId" element={<SharedNoteView />} />
+          {/* Catch-all: redirect unknown routes to dashboard */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
-      
-      <CommandPalette 
-        isOpen={isCommandPaletteOpen} 
-        onClose={() => setIsCommandPaletteOpen(false)} 
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
         actions={actions}
       />
     </div>
@@ -118,4 +203,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
