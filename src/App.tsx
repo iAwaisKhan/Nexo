@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Notes from "./components/Notes";
-import Tasks from "./components/Tasks";
-import Dashboard from "./components/Dashboard";
-import Profile from "./components/Profile";
-import Focus from "./components/Focus";
-import Settings from "./components/Settings";
-import SharedNoteView from "./components/SharedNoteView";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./components/ui/ErrorFallback";
+
+const Notes = lazy(() => import("./components/Notes"));
+const Tasks = lazy(() => import("./components/Tasks"));
+const Dashboard = lazy(() => import("./components/Dashboard"));
+const Profile = lazy(() => import("./components/Profile"));
+const Focus = lazy(() => import("./components/Focus"));
+const Settings = lazy(() => import("./components/Settings"));
+const SharedNoteView = lazy(() => import("./components/SharedNoteView"));
+const Auth = lazy(() => import("./components/Auth"));
+
 import Header from "./components/Header";
-import Auth from "./components/Auth";
 import { CommandPalette } from "./components/ui/CommandPalette";
+import { PWAPrompt } from "./components/ui/PWAPrompt";
 import { useAuthStore } from "./store/useAuthStore";
 import { isSupabaseConfigured } from "./lib/supabase";
 import { syncEngine } from "./lib/syncEngine";
@@ -118,9 +123,32 @@ const App: React.FC = () => {
     );
   }
 
+  // Reusable loading spinner
+  const LoadingFallback = (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex flex-col items-center gap-4"
+      >
+        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
+          Loading...
+        </span>
+      </motion.div>
+    </div>
+  );
+
   // Show auth screen if Supabase is configured but user is not signed in (and hasn't skipped)
   if (isSupabaseConfigured() && !isAuthenticated && !skippedAuth) {
-    return <Auth />;
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+        <Suspense fallback={LoadingFallback}>
+          <Auth />
+        </Suspense>
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -128,15 +156,17 @@ const App: React.FC = () => {
       <Header />
 
       <main className="flex-1 relative">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
-                <Dashboard />
-              </PageTransition>
-            }
-          />
+        <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+          <Suspense fallback={LoadingFallback}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
+                    <Dashboard />
+                  </PageTransition>
+                }
+              />
           <Route
             path="/notes"
             element={
@@ -191,6 +221,8 @@ const App: React.FC = () => {
           {/* Catch-all: redirect unknown routes to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
+      </ErrorBoundary>
       </main>
 
       <CommandPalette
@@ -198,6 +230,8 @@ const App: React.FC = () => {
         onClose={() => setIsCommandPaletteOpen(false)}
         actions={actions}
       />
+      
+      <PWAPrompt />
     </div>
   );
 };

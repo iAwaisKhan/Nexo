@@ -50,7 +50,7 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
 CREATE TABLE IF NOT EXISTS notes (
   id TEXT NOT NULL,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL DEFAULT '',
+  title VARCHAR(255) NOT NULL DEFAULT '',
   content TEXT NOT NULL DEFAULT '',
   tags TEXT[] DEFAULT '{}',
   is_pinned BOOLEAN DEFAULT FALSE,
@@ -60,8 +60,10 @@ CREATE TABLE IF NOT EXISTS notes (
   published_at BIGINT,
   slug TEXT,
   is_blog BOOLEAN DEFAULT FALSE,
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
+  fts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content, ''))) STORED,
   PRIMARY KEY (id, user_id)
 );
 
@@ -85,18 +87,32 @@ CREATE POLICY "Anyone can view public notes"
 
 
 -- 3. TASKS
+DO $$ BEGIN
+    CREATE TYPE task_priority AS ENUM ('Low', 'Medium', 'High');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE task_status AS ENUM ('To Do', 'Done');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS tasks (
   id TEXT NOT NULL,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL DEFAULT '',
+  title VARCHAR(255) NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
-  priority TEXT NOT NULL DEFAULT 'Medium' CHECK (priority IN ('High', 'Medium', 'Low')),
-  due_date TEXT DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'To Do' CHECK (status IN ('To Do', 'Done')),
+  priority task_priority NOT NULL DEFAULT 'Medium',
+  due_date VARCHAR(50) DEFAULT '',
+  status task_status NOT NULL DEFAULT 'To Do',
   created_at_ts BIGINT NOT NULL DEFAULT 0,
   time_spent INTEGER DEFAULT 0,
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
+  fts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))) STORED,
   PRIMARY KEY (id, user_id)
 );
 
@@ -147,6 +163,10 @@ CREATE POLICY "Users can delete their own sessions"
 ALTER PUBLICATION supabase_realtime ADD TABLE notes;
 ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
 ALTER PUBLICATION supabase_realtime ADD TABLE focus_sessions;
+
+-- 6. FULL TEXT SEARCH INDEXES (GIN)
+CREATE INDEX IF NOT EXISTS notes_fts_idx ON notes USING GIN (fts);
+CREATE INDEX IF NOT EXISTS tasks_fts_idx ON tasks USING GIN (fts);
 
 
 -- 6. INDEXES

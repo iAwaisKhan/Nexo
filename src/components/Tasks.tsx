@@ -23,6 +23,7 @@ export interface Task {
   status: "To Do" | "Done";
   createdAt: number;
   timeSpent?: number; // Cumulative seconds
+  deleted_at?: string | null;
 }
 
 const Tasks: React.FC = () => {
