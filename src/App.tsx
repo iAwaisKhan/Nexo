@@ -53,7 +53,7 @@ const BackgroundVideo = memo(() => {
         playsInline
         preload="auto"
         onLoadedData={() => setIsVideoLoaded(true)}
-        className={`w-full h-full object-cover opacity-80 mix-blend-screen transition-opacity duration-1000 ease-in-out ${isVideoLoaded ? 'opacity-80' : 'opacity-0'}`}
+        className={`w-full h-full object-cover mix-blend-screen transition-opacity duration-[1500ms] ease-in-out ${isVideoLoaded ? 'opacity-80' : 'opacity-0'}`}
         style={{ transform: "translateZ(0)", willChange: "opacity, transform" }} // Hardware acceleration
         src="/bg-clouds.mp4"
         onContextMenu={(e) => e.preventDefault()}
