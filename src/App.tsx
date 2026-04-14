@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy, memo } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy, memo, useCallback } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 // Memoized Video Component to completely detach it from React Render Cycles
-const BackgroundVideo = memo(() => {
+const BackgroundVideo = memo(({ onReady }: { onReady: () => void }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -51,6 +51,7 @@ const BackgroundVideo = memo(() => {
         muted
         playsInline
         preload="auto"
+        onCanPlayThrough={onReady}
         className="w-full h-full object-cover mix-blend-screen opacity-80"
         style={{ transform: "translateZ(0)", willChange: "opacity, transform" }} // Hardware acceleration
         src="/bg-clouds.mp4"
@@ -80,6 +81,9 @@ const PageTransition: React.FC<{ children: React.ReactNode; className?: string }
 };
 
 const App: React.FC = () => {
+  const [isVideoReady, setIsVideoReady] = useState(false);
+  const handleVideoReady = useCallback(() => setIsVideoReady(true), []);
+
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [skippedAuth, setSkippedAuth] = useState(() => {
     return localStorage.getItem('nexo_skipped_auth') === 'true';
@@ -158,12 +162,28 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen flex flex-col text-text transition-colors duration-500 relative`}>
       {/* Background Video ALWAYS mounted first completely detached from re-renders */}
-      <BackgroundVideo />
+      <BackgroundVideo onReady={handleVideoReady} />
+
+      <AnimatePresence>
+        {(!isVideoReady || (authLoading && isSupabaseConfigured())) && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#0a0a0f]"
+          >
+            <div className="flex flex-col items-center gap-6">
+              <div className="w-12 h-12 border-2 border-white/10 border-t-white/80 rounded-full animate-spin drop-shadow-md" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/50 drop-shadow-md">
+                {!isVideoReady ? "Loading engine..." : "Authenticating..."}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Show loading spinner while auth initializes */}
-      {authLoading && isSupabaseConfigured() ? (
-        LoadingFallback
-      ) : isSupabaseConfigured() && !isAuthenticated && !skippedAuth ? (
+      {authLoading && isSupabaseConfigured() ? null : isSupabaseConfigured() && !isAuthenticated && !skippedAuth ? (
         /* Show auth screen if Supabase is configured but user is not signed in */
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
           <Suspense fallback={LoadingFallback}>
