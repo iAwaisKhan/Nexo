@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy, memo } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
@@ -30,6 +30,36 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 
+// Memoized Video Component to completely detach it from React Render Cycles
+const BackgroundVideo = memo(() => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((e) => {
+        console.log("Auto-play was prevented by browser, waiting for user interaction.", e);
+      });
+    }
+  }, []);
+
+  return (
+    <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-black">
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        className="w-full h-full object-cover opacity-80"
+        style={{ transform: "translateZ(0)", willChange: "opacity, transform" }} // Hardware acceleration
+        src="/bg-clouds.mp4"
+        onContextMenu={(e) => e.preventDefault()}
+      />
+    </div>
+  );
+});
+
 // Animated page wrapper
 const PageTransition: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
   const location = useLocation();
@@ -54,19 +84,9 @@ const App: React.FC = () => {
   const [skippedAuth, setSkippedAuth] = useState(() => {
     return localStorage.getItem('nexo_skipped_auth') === 'true';
   });
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const navigate = useNavigate();
   const { user, isLoading: authLoading, isAuthenticated, initialize } = useAuthStore();
-
-  // Force playback for certain mobile browsers that ignore autoPlay attribute
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((e) => {
-        console.log("Auto-play was prevented by browser, waiting for user interaction.", e);
-      });
-    }
-  }, []);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -137,20 +157,8 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col text-text transition-colors duration-500 relative`}>
-      {/* Background Video ALWAYS mounted first */}
-      <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-black">
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="w-full h-full object-cover opacity-80"
-          src="/bg-clouds.mp4"
-          onContextMenu={(e) => e.preventDefault()}
-        />
-      </div>
+      {/* Background Video ALWAYS mounted first completely detached from re-renders */}
+      <BackgroundVideo />
 
       {/* Show loading spinner while auth initializes */}
       {authLoading && isSupabaseConfigured() ? (
