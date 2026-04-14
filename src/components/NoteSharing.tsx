@@ -11,7 +11,7 @@ import {
   PenTool,
   MessageSquare
 } from "lucide-react";
-import { Note } from "./Notes";
+import type { Note } from "../types";
 
 interface NoteSharingProps {
   note: Note;

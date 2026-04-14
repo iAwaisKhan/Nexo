@@ -12,9 +12,7 @@
 
 import { supabase, isSupabaseConfigured } from './supabase';
 import { useAppStore } from '../store/useAppStore';
-import type { Task } from '../components/Tasks';
-import type { Note } from '../components/Notes';
-import type { AppFocusSession } from '../store/useAppStore';
+import type { Note, Task, AppFocusSession } from '../types';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 // ── Mappers: Local ↔ DB ─────────────────────────────────────

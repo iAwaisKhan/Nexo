@@ -4,11 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./components/ui/ErrorFallback";
 
-const Notes = lazy(() => import("./components/Notes"));
-const Tasks = lazy(() => import("./components/Tasks"));
-const Dashboard = lazy(() => import("./components/Dashboard"));
+// Eagerly loaded core routes for instant snappy navigation
+import Dashboard from "./components/Dashboard";
+import Notes from "./components/Notes";
+import Tasks from "./components/Tasks";
+import Focus from "./components/Focus";
+
+// Lazy loaded secondary routes to keep initial bundle smaller
 const Profile = lazy(() => import("./components/Profile"));
-const Focus = lazy(() => import("./components/Focus"));
 const Settings = lazy(() => import("./components/Settings"));
 const SharedNoteView = lazy(() => import("./components/SharedNoteView"));
 const Auth = lazy(() => import("./components/Auth"));
@@ -125,12 +128,12 @@ const App: React.FC = () => {
 
   // Reusable loading spinner
   const LoadingFallback = (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-transparent">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="flex flex-col items-center gap-4"
+        className="flex flex-col items-center gap-4 relative z-10"
       >
         <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
@@ -152,12 +155,23 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500`}>
+    <div className={`min-h-screen flex flex-col text-text transition-colors duration-500 relative`}>
+      {/* Background Video */}
+      <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-black">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+          src="/bg-clouds.mp4"
+        />
+      </div>
+
       <Header />
 
       <main className="flex-1 relative">
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-          <Suspense fallback={LoadingFallback}>
             <Routes>
               <Route
                 path="/"
@@ -202,7 +216,9 @@ const App: React.FC = () => {
             element={
               <PageTransition className="pt-32 px-8 pb-10">
                 <div className="max-w-[1600px] mx-auto">
-                  <Settings />
+                  <Suspense fallback={LoadingFallback}>
+                    <Settings />
+                  </Suspense>
                 </div>
               </PageTransition>
             }
@@ -212,16 +228,17 @@ const App: React.FC = () => {
             element={
               <PageTransition className="pt-32 px-8 pb-10">
                 <div className="max-w-[1600px] mx-auto">
-                  <Profile />
+                  <Suspense fallback={LoadingFallback}>
+                    <Profile />
+                  </Suspense>
                 </div>
               </PageTransition>
             }
           />
-          <Route path="/share/:noteId" element={<SharedNoteView />} />
+          <Route path="/share/:noteId" element={<Suspense fallback={LoadingFallback}><SharedNoteView /></Suspense>} />
           {/* Catch-all: redirect unknown routes to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </Suspense>
       </ErrorBoundary>
       </main>
 

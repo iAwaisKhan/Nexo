@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Sparkles, Volume2, VolumeX } from "lucide-react";
-import { useAppStore, AppFocusSession } from "../store/useAppStore";
+import { useAppStore } from "../store/useAppStore";
+import type { AppFocusSession } from "../types";
 
 const FocusMode: React.FC = () => {
   const [focusMinutes, setFocusMinutes] = useState(25);

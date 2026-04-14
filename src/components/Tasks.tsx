@@ -12,19 +12,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
-import { AppFocusSession } from "../store/useAppStore";
+import type { Task, AppFocusSession } from "../types";
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: "High" | "Medium" | "Low";
-  dueDate: string;
-  status: "To Do" | "Done";
-  createdAt: number;
-  timeSpent?: number; // Cumulative seconds
-  deleted_at?: string | null;
-}
+// Re-export so any file importing `Task` from this module still works.
+export type { Task };
 
 const Tasks: React.FC = () => {
   const tasks = useAppStore(state => state.tasks).sort((a, b) => b.createdAt - a.createdAt);

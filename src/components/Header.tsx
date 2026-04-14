@@ -54,7 +54,7 @@ const SyncBadge: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface/50 border border-border/10 ${config.color} cursor-default`}
+      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/20 backdrop-blur-md border border-white/10 ${config.color} cursor-default`}
       title={config.label}
     >
       {config.icon}
@@ -90,7 +90,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-background/60 backdrop-blur-2xl border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-transparent border-b border-white/10">
       {/* Left: Logo */}
       <div className="flex-1 flex items-center">
         <div

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import * as d3 from "d3";
-import { Note } from "./Notes";
+import type { Note } from "../types";
 import { motion } from "framer-motion";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 

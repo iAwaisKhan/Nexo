@@ -20,24 +20,15 @@ import {
   Share2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppStore, AppFocusSession } from "../store/useAppStore";
+import { useAppStore } from "../store/useAppStore";
+import type { Note, AppFocusSession } from "../types";
 import GraphView from "./GraphView";
 import NoteSharing from "./NoteSharing";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  isPinned: boolean;
-  lastModified: number;
-  timeSpent?: number; // Cumulative seconds
-  isPublic?: boolean;
-  publishedAt?: number;
-  slug?: string;
-  isBlog?: boolean;
-}
+// Re-export so existing consumers (e.g. GraphView, NoteSharing) that imported
+// `Note` from this file don't break during the transition.
+export type { Note };
 
 interface NotesProps {
 }

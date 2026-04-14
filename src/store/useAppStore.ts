@@ -1,20 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Task } from '../components/Tasks';
-import type { Note } from '../components/Notes';
+import type { Note, Task, AppFocusSession, SyncStatus } from '../types';
 
-export interface AppFocusSession {
-  id: string;
-  startTime: number;
-  endTime: number;
-  duration: number;
-  targetId?: string;
-  targetType?: 'task' | 'note' | string;
-  date: string;
-  hour: number;
-}
-
-export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+// Re-export types so existing consumers (Header, etc.) that import from
+// this file keep working during the transition.
+export type { AppFocusSession, SyncStatus };
 
 interface AppState {
   tasks: Task[];
