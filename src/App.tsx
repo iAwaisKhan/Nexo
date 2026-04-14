@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
@@ -54,9 +54,19 @@ const App: React.FC = () => {
   const [skippedAuth, setSkippedAuth] = useState(() => {
     return localStorage.getItem('nexo_skipped_auth') === 'true';
   });
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const navigate = useNavigate();
   const { user, isLoading: authLoading, isAuthenticated, initialize } = useAuthStore();
+
+  // Force playback for certain mobile browsers that ignore autoPlay attribute
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((e) => {
+        console.log("Auto-play was prevented by browser, waiting for user interaction.", e);
+      });
+    }
+  }, []);
 
   // Initialize auth on mount
   useEffect(() => {
@@ -108,24 +118,6 @@ const App: React.FC = () => {
     { id: "nv-settings", title: "Settings", icon: SettingsIcon, category: "Navigation", perform: () => navigate("/settings") },
   ];
 
-  // Show loading spinner while auth initializes
-  if (authLoading && isSupabaseConfigured()) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
-          <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
-            Initializing...
-          </span>
-        </motion.div>
-      </div>
-    );
-  }
-
   // Reusable loading spinner
   const LoadingFallback = (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
@@ -136,51 +128,55 @@ const App: React.FC = () => {
         className="flex flex-col items-center gap-4 relative z-10"
       >
         <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
+        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-white/70 drop-shadow-md">
           Loading...
         </span>
       </motion.div>
     </div>
   );
 
-  // Show auth screen if Supabase is configured but user is not signed in (and hasn't skipped)
-  if (isSupabaseConfigured() && !isAuthenticated && !skippedAuth) {
-    return (
-      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-        <Suspense fallback={LoadingFallback}>
-          <Auth />
-        </Suspense>
-      </ErrorBoundary>
-    );
-  }
-
   return (
     <div className={`min-h-screen flex flex-col text-text transition-colors duration-500 relative`}>
-      {/* Background Video */}
+      {/* Background Video ALWAYS mounted first */}
       <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-black">
         <video
+          ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
+          preload="auto"
+          className="w-full h-full object-cover opacity-80"
           src="/bg-clouds.mp4"
+          onContextMenu={(e) => e.preventDefault()}
         />
       </div>
 
-      <Header />
-
-      <main className="flex-1 relative">
+      {/* Show loading spinner while auth initializes */}
+      {authLoading && isSupabaseConfigured() ? (
+        LoadingFallback
+      ) : isSupabaseConfigured() && !isAuthenticated && !skippedAuth ? (
+        /* Show auth screen if Supabase is configured but user is not signed in */
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
-                    <Dashboard />
-                  </PageTransition>
-                }
-              />
+          <Suspense fallback={LoadingFallback}>
+            <Auth />
+          </Suspense>
+        </ErrorBoundary>
+      ) : (
+        /* Main application routes */
+        <React.Fragment>
+          <Header />
+          <main className="flex-1 relative">
+            <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
+                      <Dashboard />
+                    </PageTransition>
+                  }
+                />
           <Route
             path="/notes"
             element={
@@ -249,6 +245,8 @@ const App: React.FC = () => {
       />
       
       <PWAPrompt />
+        </React.Fragment>
+      )}
     </div>
   );
 };
