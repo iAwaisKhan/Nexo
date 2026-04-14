@@ -33,6 +33,7 @@ import {
 // Memoized Video Component to completely detach it from React Render Cycles
 const BackgroundVideo = memo(() => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -43,7 +44,7 @@ const BackgroundVideo = memo(() => {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-black">
+    <div className="fixed inset-0 w-full h-full z-[-2] pointer-events-none overflow-hidden bg-[#0a0a0f] transition-colors duration-1000">
       <video
         ref={videoRef}
         autoPlay
@@ -51,7 +52,8 @@ const BackgroundVideo = memo(() => {
         muted
         playsInline
         preload="auto"
-        className="w-full h-full object-cover opacity-80"
+        onLoadedData={() => setIsVideoLoaded(true)}
+        className={`w-full h-full object-cover opacity-80 mix-blend-screen transition-opacity duration-1000 ease-in-out ${isVideoLoaded ? 'opacity-80' : 'opacity-0'}`}
         style={{ transform: "translateZ(0)", willChange: "opacity, transform" }} // Hardware acceleration
         src="/bg-clouds.mp4"
         onContextMenu={(e) => e.preventDefault()}
