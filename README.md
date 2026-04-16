@@ -2,7 +2,8 @@
 
 A lightweight, modern personal productivity dashboard that combines a focus timer, notes, tasks, code snippets, and quick navigation into a sleek, responsive web app built for deep work and learning.
 
-<img width="3200" height="2000" alt="Screenshot (119)" src="https://github.com/user-attachments/assets/9d519c09-a51c-46b0-aa7e-f5c31e22c213" />
+<img width="3200" height="2000" alt="Screenshot (146)" src="https://github.com/user-attachments/assets/2c52413c-d89e-486d-b845-f08d6e93a591" />
+
 
 
 ## Quick Start
