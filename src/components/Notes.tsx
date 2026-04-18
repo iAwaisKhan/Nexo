@@ -17,7 +17,15 @@ import {
   Link as LinkIcon,
   Loader2,
   X,
-  Share2
+  Share2,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListTodo,
+  Quote,
+  Code,
+  Minus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
@@ -30,6 +38,17 @@ import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks
 // `Note` from this file don't break during the transition.
 export type { Note };
 
+const SLASH_COMMANDS = [
+  { id: 'h1', label: 'Heading 1', icon: Heading1, text: '# ' },
+  { id: 'h2', label: 'Heading 2', icon: Heading2, text: '## ' },
+  { id: 'h3', label: 'Heading 3', icon: Heading3, text: '### ' },
+  { id: 'bullet', label: 'Bulleted List', icon: List, text: '- ' },
+  { id: 'check', label: 'Checklist', icon: ListTodo, text: '- [ ] ' },
+  { id: 'quote', label: 'Quote', icon: Quote, text: '> ' },
+  { id: 'code', label: 'Code Block', icon: Code, text: '```\n\n```' },
+  { id: 'divider', label: 'Divider', icon: Minus, text: '\n---\n' }
+];
+
 interface NotesProps {
 }
 
@@ -40,7 +59,8 @@ const Notes: React.FC<NotesProps> = () => {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isGraphOpen, setIsGraphOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<{ titles: string[], index: number } | null>(null);
-  
+  const [slashCommand, setSlashCommand] = useState<{ query: string, index: number } | null>(null);
+
   const sessionStartRef = useRef<number | null>(null);
 
   const notes = useAppStore(state => state.notes);
@@ -164,6 +184,14 @@ const Notes: React.FC<NotesProps> = () => {
         } else {
           setSuggestions(null);
         }
+
+        // Handle slash commands
+        const slashMatch = textBeforeCursor.match(/(?:^|\n)\/([a-zA-Z]*)$/);
+        if (slashMatch) {
+          setSlashCommand({ query: slashMatch[1].toLowerCase(), index: cursorPosition });
+        } else {
+          setSlashCommand(null);
+        }
       }
     }
   };
@@ -175,9 +203,23 @@ const Notes: React.FC<NotesProps> = () => {
     const textBefore = content.slice(0, suggestions.index).replace(/\[\[[^\]]*$/, "");
     const textAfter = content.slice(suggestions.index);
     const newContent = `${textBefore}[[${title}]]${textAfter}`;
-    
+
     handleUpdateNote(selectedNote.id, { content: newContent });
     setSuggestions(null);
+  };
+
+  const insertSlashCommand = (textToInsert: string) => {
+    if (!selectedNote || !slashCommand) return;
+    
+    const content = selectedNote.content;
+    const matchLength = slashCommand.query.length + 1; // 1 for the '/'
+    
+    const textBefore = content.slice(0, slashCommand.index - matchLength);
+    const textAfter = content.slice(slashCommand.index);
+    const newContent = `${textBefore}${textToInsert}${textAfter}`;
+    
+    handleUpdateNote(selectedNote.id, { content: newContent });
+    setSlashCommand(null);
   };
 
   const handleDeleteNote = (id: string) => {
@@ -388,7 +430,40 @@ const Notes: React.FC<NotesProps> = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+                  <AnimatePresence>
+                    {slashCommand && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute left-8 bottom-8 bg-surface/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl p-2 min-w-64 z-[60]"
+                      >
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-text/50 px-3 py-2 border-b border-border/10 mb-2 flex items-center justify-between">
+                          Basic Blocks <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setSlashCommand(null)} />
+                        </div>
+                        <div className="max-h-60 overflow-y-auto scrollbar-hide space-y-1 pr-1">
+                          {SLASH_COMMANDS.filter(cmd => cmd.label.toLowerCase().includes(slashCommand.query) || cmd.id.includes(slashCommand.query)).map(cmd => (
+                            <button
+                              key={cmd.id}
+                              onClick={() => insertSlashCommand(cmd.text)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/5 text-text hover:text-white rounded-xl transition-all font-medium group"
+                            >
+                              <div className="p-1.5 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
+                                <cmd.icon className="w-4 h-4 text-text/70 group-hover:text-white transition-colors" />
+                              </div>
+                              {cmd.label}
+                            </button>
+                          ))}
+                          {SLASH_COMMANDS.filter(cmd => cmd.label.toLowerCase().includes(slashCommand.query) || cmd.id.includes(slashCommand.query)).length === 0 && (
+                            <div className="px-3 py-4 text-center text-sm text-text/40">
+                              No blocks match
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>              </div>
 
               <div className={`${isFocusMode ? "hidden md:block" : "hidden lg:block"} ${selectedNote.isBlog ? "w-full px-[10%] bg-surface/20" : "w-1/2 bg-surface/5 border-l border-border/10"} p-8 overflow-y-auto transition-all duration-700`}>
                 {selectedNote.isBlog && (

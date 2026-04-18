@@ -11,6 +11,12 @@ interface AppState {
   notes: Note[];
   focusSessions: AppFocusSession[];
 
+  // Daily Intention
+  dailyIntention: { text: string; completed: boolean } | null;
+  setDailyIntention: (text: string) => void;
+  toggleDailyIntention: () => void;
+  clearDailyIntention: () => void;
+
   // Sync metadata
   syncStatus: SyncStatus;
   lastSyncedAt: number | null;
@@ -45,6 +51,16 @@ export const useAppStore = create<AppState>()(
       focusSessions: [],
       syncStatus: 'idle' as SyncStatus,
       lastSyncedAt: null,
+      dailyIntention: null,
+
+      // ── Daily Intention ──
+      setDailyIntention: (text) => set({ dailyIntention: { text, completed: false } }),
+      toggleDailyIntention: () => set((state) => ({
+        dailyIntention: state.dailyIntention 
+          ? { ...state.dailyIntention, completed: !state.dailyIntention.completed }
+          : null
+      })),
+      clearDailyIntention: () => set({ dailyIntention: null }),
 
       // ── Tasks ──────────────────────────────────────────────
       addTask: (task) => {

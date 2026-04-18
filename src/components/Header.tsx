@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Avatar } from "./ui/Avatar";
+import { ZenMode } from "./ZenMode";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore, SyncStatus } from "../store/useAppStore";
 
@@ -117,8 +118,9 @@ const Header: React.FC = () => {
         ))}
       </nav>
 
-      {/* Right: Sync Badge + Avatar */}
+      {/* Right: ZenMode + Sync Badge + Avatar */}
       <div className="flex-1 flex items-center justify-end gap-2 md:gap-3">
+        <ZenMode />
         <SyncBadge />
         <div
           className="group cursor-pointer transition-all flex items-center"
