@@ -3,34 +3,24 @@ import { motion } from 'framer-motion';
 import {
   Play,
   FileText,
-  CheckCircle2,
   Code2,
   Copy,
-  Share2
+  Share2,
+  StickyNote
 } from 'lucide-react';
 import Footer from './Footer';
 import { useAppStore } from '../store/useAppStore';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const notes = useAppStore(state => state.notes);
-  const tasks = useAppStore(state => state.tasks);
+  const navigate = useNavigate();
 
-  const MOCK_NOTES = [
-    { id: 'm1', title: 'Rust Memory Safety', contentSnippet: 'Exploring Ownership and Borrowing rules in concurrent systems...' },
-    { id: 'm2', title: 'Next.js 15 Partial Prerendering', contentSnippet: 'How to combine static and dynamic content in a single route...' }
-  ];
-
-  const MOCK_TASKS = [
-    { id: 'mt1', title: 'Refactor state management', status: 'To Do' },
-    { id: 'mt2', title: 'Update documentation', status: 'To Do' }
-  ];
-
-  const recentNotes = notes.length > 0 ? notes.slice(0, 2) : MOCK_NOTES;
-  const pendingTasks = (tasks.length > 0 ? tasks.filter(t => t.status === 'To Do') : MOCK_TASKS).slice(0, 2);
-  
-  const completionRate = tasks.length > 0 
-    ? Math.round((tasks.filter(t => t.status === 'Done').length / tasks.length) * 100) 
-    : 65; // High completion rate for mock look
+  // Real data only — no mock fallbacks
+  const recentNotes = notes
+    .slice()
+    .sort((a, b) => b.lastModified - a.lastModified)
+    .slice(0, 2);
 
   return (
     <div className='min-h-full w-full pt-8 pb-2 px-2 md:px-8'>
@@ -69,7 +59,7 @@ const Dashboard: React.FC = () => {
           <div className='relative z-10'>
             <h3 className='text-3xl md:text-4xl font-serif font-medium text-text mb-1'>Current Session: Deep Work</h3>
             <p className='text-text-muted text-sm mb-4 md:mb-6 font-redhat'>Finalizing dashboard architecture</p>
-            
+
             <div className='flex items-end gap-4 md:gap-6 mb-2 md:mb-0'>
               <span className='text-6xl md:text-8xl font-sans font-bold text-text tracking-tighter'>24:52</span>
               <span className='text-xl md:text-3xl font-sans text-text-muted mb-2 md:mb-3 opacity-50 tracking-tight'>/ 45:00</span>
@@ -86,54 +76,72 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className='aura-list'>
-            {recentNotes.map((note: any) => (
-              <div key={note.id} className='aura-list-item group'>
-                <div className='item-indicator' />
-                <div className='item-content'>
-                  <h5 className='item-title'>{note.title}</h5>
-                  <p className='item-snippet'>{note.contentSnippet || note.content?.substring(0, 50)}...</p>
+          {recentNotes.length > 0 ? (
+            <div className='aura-list'>
+              {recentNotes.map((note) => (
+                <div key={note.id} className='aura-list-item group'>
+                  <div className='item-indicator' />
+                  <div className='item-content'>
+                    <h5 className='item-title'>{note.title || 'Untitled Note'}</h5>
+                    <p className='item-snippet'>{note.content?.substring(0, 60) || 'No content yet...'}...</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            /* Empty state — no mock data */
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className='flex flex-col items-center justify-center py-8 text-center'
+            >
+              <StickyNote className='w-10 h-10 text-text/20 mb-3 stroke-1' />
+              <p className='text-sm text-text/40 font-medium'>No notes yet</p>
+              <button
+                onClick={() => navigate('/notes')}
+                className='mt-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:underline'
+              >
+                Create your first note →
+              </button>
+            </motion.div>
+          )}
         </div>
 
-        {/* Snippet Card - Full Width */}
-        <div className='md:col-span-12 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] md:rounded-[3rem] p-5 md:p-6 shadow-xl overflow-hidden flex flex-col'>
+        {/* Snippet Card */}
+        <div className='col-span-1 md:col-span-12 bg-white rounded-[2rem] md:rounded-[3rem] p-5 md:p-6 shadow-xl overflow-hidden flex flex-col'>
           <div className='flex items-center justify-between mb-4'>
             <div className='flex items-center gap-3'>
-              <Code2 className='w-5 h-5 text-primary' />
-              <h4 className='font-serif font-bold text-text text-base md:text-lg'>Snippet: Next.js Middleware</h4>
+              <Code2 className='w-5 h-5 text-blue-600' />
+              <h4 className='font-serif font-bold text-slate-900 text-base md:text-lg'>Snippet: Next.js Middleware</h4>
             </div>
             <div className='flex gap-4'>
-              <Copy className='w-4 h-4 text-text-muted hover:text-primary cursor-pointer transition-colors' />
-              <Share2 className='w-4 h-4 text-text-muted hover:text-primary cursor-pointer transition-colors' />
+              <Copy className='w-4 h-4 text-slate-500 hover:text-blue-600 cursor-pointer transition-colors' />
+              <Share2 className='w-4 h-4 text-slate-500 hover:text-blue-600 cursor-pointer transition-colors' />
             </div>
           </div>
 
-          <div className='flex-1 bg-black/95 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 font-mono text-xs md:text-sm leading-relaxed overflow-hidden border border-white/5 relative shadow-inner'>
+          <div className='flex-1 bg-[#0a0a0a] rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 font-mono text-xs md:text-sm leading-relaxed overflow-hidden border border-white/5 relative shadow-inner'>
             <div className='flex gap-2 absolute top-4 left-6'>
-              <div className='w-2.5 h-2.5 rounded-full bg-red-500/30' />
-              <div className='w-2.5 h-2.5 rounded-full bg-yellow-500/30' />
-              <div className='w-2.5 h-2.5 rounded-full bg-green-500/30' />
+              <div className='w-2.5 h-2.5 rounded-full bg-[#ff5f56]' />
+              <div className='w-2.5 h-2.5 rounded-full bg-[#ffbd2e]' />
+              <div className='w-2.5 h-2.5 rounded-full bg-[#27c93f]' />
             </div>
             <div className='mt-8'>
               <pre className='text-[13px]'>
                 <code className='text-gray-400'>
-                  <span className='text-primary/80'>export function</span>{' '}
-                  <span className='text-blue-400/80'>middleware</span>(request) {'{'}
+                  <span className='text-blue-400'>export function</span>{' '}
+                  <span className='text-blue-400'>middleware</span>(request) {'{'}
                   {'\n'}{'  '}
-                  <span className='text-gray-600'>// Validate session sync</span>
+                  <span className='text-gray-500'>// Validate session sync</span>
                   {'\n'}{'  '}
-                  <span className='text-primary/80'>const</span> token = request.cookies.get(
-                  <span className='text-green-400/80'>'aura_token'</span>);
+                  <span className='text-blue-400'>const</span> token = request.cookies.get(
+                  <span className='text-green-400'>'nexo_token'</span>);
                   {'\n\n'}{'  '}
-                  <span className='text-primary/80'>if</span> (!token) {'{'}
+                  <span className='text-blue-400'>if</span> (!token) {'{'}
                   {'\n'}{'    '}
-                  <span className='text-primary/80'>return</span> Response.redirect(
-                  <span className='text-blue-400/80'>new</span> URL(
-                  <span className='text-green-400/80'>'/auth'</span>, request.url));
+                  <span className='text-blue-400'>return</span> Response.redirect(
+                  <span className='text-blue-400'>new</span> URL(
+                  <span className='text-green-400'>'/auth'</span>, request.url));
                   {'\n'}{'  '}
                   {'}'}
                   {'\n'}{'}'}
@@ -142,6 +150,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
       </motion.div>
       <Footer />
     </div>

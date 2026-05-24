@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Note } from '../types/focus';
-import { Task } from '../store/useAppStore';
+import type { Note } from '../types/note';
+import type { Task } from '../types/task';
 
 export function useSearch(userId: string | undefined, query: string) {
   return useQuery({

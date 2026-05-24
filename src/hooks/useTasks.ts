@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Task } from '../store/useAppStore'; // Temporarily assume Task is exported here
+import type { Task } from '../types/task';
 
 export function useInfiniteTasks(userId: string | undefined, pageSize: number = 20) {
   return useInfiniteQuery({

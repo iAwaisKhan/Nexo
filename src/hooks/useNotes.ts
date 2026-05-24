@@ -1,6 +1,6 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { Note } from '../types/focus';
+import type { Note } from '../types/note';
 
 export function useInfiniteNotes(userId: string | undefined, pageSize: number = 20) {
   return useInfiniteQuery({

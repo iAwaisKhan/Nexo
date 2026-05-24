@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { useAppStore, AppFocusSession } from "../store/useAppStore";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./ui/ErrorFallback";
 
 const FocusMode: React.FC = () => {
   const [focusMinutes, setFocusMinutes] = useState(25);
@@ -78,7 +80,7 @@ const FocusMode: React.FC = () => {
     if (duration < 10) return; // Prevent logging very short accidental sessions
 
     const session: AppFocusSession = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       startTime: sessionStartRef.current || Date.now(),
       endTime: Date.now(),
       duration: duration,
@@ -100,6 +102,7 @@ const FocusMode: React.FC = () => {
   const progress = mode === "focus" ? (timeLeft / (25 * 60)) : (timeLeft / (5 * 60));
 
   return (
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => { setIsActive(false); }}>
     <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-12">
       {/* Mode Switcher */}
       <div className="flex bg-surface/50 backdrop-blur-md p-1.5 rounded-2xl border border-border/10">
@@ -281,6 +284,8 @@ const FocusMode: React.FC = () => {
         )}
       </AnimatePresence>
     </div>
+
+    </ErrorBoundary>
   );
 };
 

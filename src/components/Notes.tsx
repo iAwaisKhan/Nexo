@@ -21,23 +21,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, AppFocusSession } from "../store/useAppStore";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./ui/ErrorFallback";
 import GraphView from "./GraphView";
 import NoteSharing from "./NoteSharing";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
 
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  isPinned: boolean;
-  lastModified: number;
-  timeSpent?: number; // Cumulative seconds
-  isPublic?: boolean;
-  publishedAt?: number;
-  slug?: string;
-  isBlog?: boolean;
-}
+import type { Note } from '../types/note';
+export type { Note };
 
 interface NotesProps {
 }
@@ -58,7 +49,8 @@ const Notes: React.FC<NotesProps> = () => {
   const updateNoteStore = useAppStore(state => state.updateNote);
   const deleteNoteStore = useAppStore(state => state.deleteNote);
   const addFocusSession = useAppStore(state => state.addFocusSession);
-  const isLoading = false;
+  const syncStatus = useAppStore(state => state.syncStatus);
+  const isLoading = syncStatus === 'syncing' && notes.length === 0;
 
   const selectedNote = useMemo(() => 
     notes.find(n => n.id === selectedId) || null
@@ -85,7 +77,7 @@ const Notes: React.FC<NotesProps> = () => {
             updateNoteStore({ ...note, timeSpent: updatedTime });
             
             const session: AppFocusSession = {
-              id: Date.now().toString(),
+              id: crypto.randomUUID(),
               startTime: sessionStartRef.current,
               endTime: Date.now(),
               duration: duration,
@@ -136,7 +128,7 @@ const Notes: React.FC<NotesProps> = () => {
 
   const handleAddNote = () => {
     const newNote: Note = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title: "",
       content: "",
       tags: [],
@@ -212,6 +204,7 @@ const Notes: React.FC<NotesProps> = () => {
   }
 
   return (
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setSelectedId(null)}>
     <div className={`flex h-full bg-surface/20 rounded-4xl border border-border/5 overflow-hidden transition-all duration-500 ${isFocusMode ? "fixed inset-4 z-50 bg-surface/95 backdrop-blur-3xl" : ""}`}>
       <AnimatePresence>
         {isSidebarOpen && !isFocusMode && (
@@ -528,7 +521,7 @@ const Notes: React.FC<NotesProps> = () => {
             >
               <FileText className="w-24 h-24 mb-6 stroke-1" />
             </motion.div>
-            <h3 className="text-2xl font-display uppercase tracking-widest">Aura Notes</h3>
+            <h3 className="text-2xl font-display uppercase tracking-widest">Nexo Notes</h3>
             <p className="text-sm font-medium mt-2">Every great thought deserves a beautiful place.</p>
           </div>
         )}
@@ -547,6 +540,8 @@ const Notes: React.FC<NotesProps> = () => {
         )}
       </AnimatePresence>
     </div>
+
+    </ErrorBoundary>
   );
 };
 

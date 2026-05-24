@@ -13,18 +13,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
 import { AppFocusSession } from "../store/useAppStore";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "./ui/ErrorFallback";
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: "High" | "Medium" | "Low";
-  dueDate: string;
-  status: "To Do" | "Done";
-  createdAt: number;
-  timeSpent?: number; // Cumulative seconds
-  deleted_at?: string | null;
-}
+import type { Task } from '../types/task';
+export type { Task };
 
 const Tasks: React.FC = () => {
   const tasks = useAppStore(state => state.tasks).sort((a, b) => b.createdAt - a.createdAt);
@@ -40,7 +33,8 @@ const Tasks: React.FC = () => {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const activeTaskStartRef = useRef<number | null>(null);
 
-  const isLoading = false;
+  const syncStatus = useAppStore(state => state.syncStatus);
+  const isLoading = syncStatus === 'syncing' && tasks.length === 0;
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -54,7 +48,7 @@ const Tasks: React.FC = () => {
   const addTask = () => {
     if (!newTask.title.trim()) return;
     const task: Task = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       ...newTask,
       status: "To Do",
       createdAt: Date.now()
@@ -87,7 +81,7 @@ const Tasks: React.FC = () => {
             updateTaskStore({ ...task, timeSpent: updatedTime });
             
             const session: AppFocusSession = {
-              id: Date.now().toString(),
+              id: crypto.randomUUID(),
               startTime: activeTaskStartRef.current,
               endTime: Date.now(),
               duration: duration,
@@ -144,6 +138,7 @@ const Tasks: React.FC = () => {
   }
 
   return (
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setIsAdding(false)}>
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -305,6 +300,8 @@ const Tasks: React.FC = () => {
         )}
       </div>
     </div>
+
+    </ErrorBoundary>
   );
 };
 
