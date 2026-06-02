@@ -70,7 +70,7 @@ const navItems = [
   { path: "/notes", label: "Notes", icon: StickyNote },
   { path: "/tasks", label: "Tasks", icon: CheckCircle },
   { path: "/focus", label: "Focus", icon: Brain },
-  { path: "/settings", label: "Config", icon: SettingsIcon },
+
 ];
 
 const Header: React.FC = () => {
@@ -90,7 +90,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-background/60 backdrop-blur-2xl border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-transparent border-b border-border/10">
       {/* Left: Logo */}
       <div className="flex-1 flex items-center">
         <div
@@ -118,11 +118,20 @@ const Header: React.FC = () => {
       </nav>
 
       {/* Right: Sync Badge + Avatar */}
-      <div className="flex-1 flex items-center justify-end gap-2 md:gap-3">
+      <div className="flex-1 flex items-center justify-end gap-3 md:gap-4">
         <SyncBadge />
+        <button
+          onClick={() => navigate("/settings")}
+          className={`flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
+            isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
+          }`}
+          title="Settings"
+        >
+          <SettingsIcon className="w-5 h-5" />
+        </button>
         <div
           className="group cursor-pointer transition-all flex items-center"
-          onClick={() => navigate(isAuthenticated ? "/settings" : "/profile")}
+          onClick={() => navigate(isAuthenticated ? "/profile" : "/profile")}
         >
           {isAuthenticated && avatarUrl ? (
             <img

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, LogIn, Github, Chrome, UserPlus, ArrowRight, Loader2, CheckCircle2, User, Shield } from "lucide-react";
 import { Avatar } from "./ui/Avatar";
+import FocusAnalytics from "./FocusAnalytics";
 
 const Profile: React.FC = () => {
   const [mode, setMode] = useState<"login" | "signup" | "account">("login");
@@ -86,6 +87,11 @@ const Profile: React.FC = () => {
             </button>
           </div>
         </motion.div>
+
+        {/* Heatmap Section */}
+        <div className="w-full max-w-sm lg:max-w-3xl lg:ml-8 mt-8 lg:mt-0 flex flex-col justify-center">
+          <FocusAnalytics />
+        </div>
       </div>
     );
   }

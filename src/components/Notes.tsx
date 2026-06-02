@@ -195,14 +195,6 @@ const Notes: React.FC<NotesProps> = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
-  }
-
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setSelectedId(null)}>
     <div className={`flex h-full bg-surface/20 rounded-4xl border border-border/5 overflow-hidden transition-all duration-500 ${isFocusMode ? "fixed inset-4 z-50 bg-surface/95 backdrop-blur-3xl" : ""}`}>

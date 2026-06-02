@@ -1,16 +1,20 @@
 import React, { useState, useEffect, Suspense, lazy } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./components/ui/ErrorFallback";
+import { useThemeStore } from "./store/useThemeStore";
 
-const Notes = lazy(() => import("./components/Notes"));
-const Tasks = lazy(() => import("./components/Tasks"));
-const Dashboard = lazy(() => import("./components/Dashboard"));
-const Profile = lazy(() => import("./components/Profile"));
-const Focus = lazy(() => import("./components/Focus"));
-const Settings = lazy(() => import("./components/Settings"));
-const SharedNoteView = lazy(() => import("./components/SharedNoteView"));
+// ─── Eager imports → zero loading spinner on navigation ─────────────────────
+import Notes from "./components/Notes";
+import Tasks from "./components/Tasks";
+import Dashboard from "./components/Dashboard";
+import Profile from "./components/Profile";
+import Focus from "./components/Focus";
+import Settings from "./components/Settings";
+import SharedNoteView from "./components/SharedNoteView";
+
+// Auth is still lazy — only shown once, before the app loads
 const Auth = lazy(() => import("./components/Auth"));
 
 import Header from "./components/Header";
@@ -27,63 +31,59 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 
-// Animated page wrapper
-const PageTransition: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => {
+// ─── Page wrapper: instant cross-fade, no "wait" blocking ───────────────────
+const PageTransition: React.FC<{ children: React.ReactNode; className?: string }> = ({
+  children,
+  className = "",
+}) => {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.4 }}
-        className={className}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={location.pathname}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 };
 
 const App: React.FC = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [skippedAuth, setSkippedAuth] = useState(() => {
-    return localStorage.getItem('nexo_skipped_auth') === 'true';
+    return localStorage.getItem("nexo_skipped_auth") === "true";
   });
 
   const navigate = useNavigate();
   const { user, isLoading: authLoading, isAuthenticated, initialize } = useAuthStore();
 
-  // Initialize auth on mount
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
+  useEffect(() => { initialize(); }, [initialize]);
 
-  // Initialize sync engine when user is authenticated
+  useEffect(() => {
+    const { theme } = useThemeStore.getState();
+    if (theme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated && user) {
       syncEngine.initialize(user.id);
-      // If user was in skipped mode, clear it
-      localStorage.removeItem('nexo_skipped_auth');
+      localStorage.removeItem("nexo_skipped_auth");
       setSkippedAuth(false);
     }
-
-    return () => {
-      if (!isAuthenticated) {
-        syncEngine.destroy();
-      }
-    };
+    return () => { if (!isAuthenticated) syncEngine.destroy(); };
   }, [isAuthenticated, user]);
 
-  // Listen for skip-auth event from Auth component
   useEffect(() => {
     const handler = () => {
-      localStorage.setItem('nexo_skipped_auth', 'true');
+      localStorage.setItem("nexo_skipped_auth", "true");
       setSkippedAuth(true);
     };
-    window.addEventListener('nexo:skip-auth', handler);
-    return () => window.removeEventListener('nexo:skip-auth', handler);
+    window.addEventListener("nexo:skip-auth", handler);
+    return () => window.removeEventListener("nexo:skip-auth", handler);
   }, []);
 
   useEffect(() => {
@@ -98,14 +98,14 @@ const App: React.FC = () => {
   }, []);
 
   const actions = [
-    { id: "nv-dash", title: "Dashboard", icon: Home, category: "Navigation", perform: () => navigate("/") },
-    { id: "nv-notes", title: "Notes", icon: StickyNote, category: "Navigation", perform: () => navigate("/notes") },
-    { id: "nv-tasks", title: "Tasks", icon: CheckSquare, category: "Navigation", perform: () => navigate("/tasks") },
-    { id: "nv-focus", title: "Focus Mode", icon: Brain, category: "Navigation", perform: () => navigate("/focus") },
-    { id: "nv-settings", title: "Settings", icon: SettingsIcon, category: "Navigation", perform: () => navigate("/settings") },
+    { id: "nv-dash",     title: "Dashboard",  icon: Home,         category: "Navigation", perform: () => navigate("/") },
+    { id: "nv-notes",    title: "Notes",       icon: StickyNote,   category: "Navigation", perform: () => navigate("/notes") },
+    { id: "nv-tasks",    title: "Tasks",       icon: CheckSquare,  category: "Navigation", perform: () => navigate("/tasks") },
+    { id: "nv-focus",    title: "Focus Mode",  icon: Brain,        category: "Navigation", perform: () => navigate("/focus") },
+    { id: "nv-settings", title: "Settings",    icon: SettingsIcon, category: "Navigation", perform: () => navigate("/settings") },
   ];
 
-  // Show loading spinner while auth initializes
+  // Auth initialisation loader (only shown once on app start when Supabase is configured)
   if (authLoading && isSupabaseConfigured()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -114,37 +114,20 @@ const App: React.FC = () => {
           animate={{ opacity: 1 }}
           className="flex flex-col items-center gap-4"
         >
-          <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
-            Initializing...
+          <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/30">
+            Starting…
           </span>
         </motion.div>
       </div>
     );
   }
 
-  // Reusable loading spinner
-  const LoadingFallback = (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="flex flex-col items-center gap-4"
-      >
-        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-text/40">
-          Loading...
-        </span>
-      </motion.div>
-    </div>
-  );
-
-  // Show auth screen if Supabase is configured but user is not signed in (and hasn't skipped)
+  // Auth screen — lazy-loaded (shown only once before the app)
   if (isSupabaseConfigured() && !isAuthenticated && !skippedAuth) {
     return (
       <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-        <Suspense fallback={LoadingFallback}>
+        <Suspense fallback={null}>
           <Auth />
         </Suspense>
       </ErrorBoundary>
@@ -152,77 +135,91 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col bg-background text-text transition-colors duration-500`}>
+    <div className="min-h-screen flex flex-col text-text transition-colors duration-500 relative">
+      {/* Video Background */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        className="fixed inset-0 w-full h-full object-cover -z-20 pointer-events-none select-none will-change-transform"
+      >
+        <source src="/Backgrounnd.mp4" type="video/mp4" />
+      </video>
+
+      {/* Dynamic Overlay for readability in Light/Dark mode */}
+      <div className="fixed inset-0 w-full h-full bg-background/60 dark:bg-background/90 transition-colors duration-500 -z-10 pointer-events-none" />
+
       <Header />
 
-      <main className="flex-1 relative">
+      <main className="flex-1 relative z-0">
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
-          <Suspense fallback={LoadingFallback}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
-                    <Dashboard />
-                  </PageTransition>
-                }
-              />
-          <Route
-            path="/notes"
-            element={
-              <PageTransition className="pt-32 px-8 pb-10">
-                <div className="max-w-[1600px] mx-auto h-[calc(100vh-8rem)]">
-                  <Notes />
-                </div>
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <PageTransition className="pt-32 px-8 pb-10">
-                <div className="max-w-[1600px] mx-auto h-[calc(100vh-8rem)]">
-                  <Tasks />
-                </div>
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/focus"
-            element={
-              <PageTransition className="pt-32 px-8 pb-10">
-                <div className="max-w-[1600px] mx-auto">
-                  <Focus />
-                </div>
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <PageTransition className="pt-32 px-8 pb-10">
-                <div className="max-w-[1600px] mx-auto">
-                  <Settings />
-                </div>
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <PageTransition className="pt-32 px-8 pb-10">
-                <div className="max-w-[1600px] mx-auto">
-                  <Profile />
-                </div>
-              </PageTransition>
-            }
-          />
-          <Route path="/share/:noteId" element={<SharedNoteView />} />
-          {/* Catch-all: redirect unknown routes to dashboard */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        </Suspense>
-      </ErrorBoundary>
+          {/* No Suspense needed — all route components are eagerly imported */}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <PageTransition className="pt-24 md:pt-32 px-4 md:px-8 pb-6 md:pb-10">
+                  <Dashboard />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/notes"
+              element={
+                <PageTransition className="pt-32 px-8 pb-10">
+                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-8rem)]">
+                    <Notes />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <PageTransition className="pt-32 px-8 pb-10">
+                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-8rem)]">
+                    <Tasks />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/focus"
+              element={
+                <PageTransition className="pt-32 px-8 pb-10">
+                  <div className="max-w-[95%] w-full mx-auto">
+                    <Focus />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <PageTransition className="pt-32 px-8 pb-10">
+                  <div className="max-w-[95%] w-full mx-auto">
+                    <Settings />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PageTransition className="pt-32 px-8 pb-10">
+                  <div className="max-w-[95%] w-full mx-auto">
+                    <Profile />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route path="/share/:noteId" element={<SharedNoteView />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
 
       <CommandPalette
@@ -230,7 +227,7 @@ const App: React.FC = () => {
         onClose={() => setIsCommandPaletteOpen(false)}
         actions={actions}
       />
-      
+
       <PWAPrompt />
     </div>
   );

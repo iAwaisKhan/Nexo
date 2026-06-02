@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className='max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8'
+        className='max-w-[95%] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8'
       >
         {/* Focus Card */}
         <div className='md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] md:rounded-[3rem] p-5 md:p-6 relative overflow-hidden group shadow-xl'>
@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
 
           <div className='relative z-10'>
             <h3 className='text-3xl md:text-4xl font-serif font-medium text-text mb-1'>Current Session: Deep Work</h3>
-            <p className='text-text-muted text-sm mb-4 md:mb-6 font-redhat'>Finalizing dashboard architecture</p>
+            <p className='text-text-muted text-sm mb-4 md:mb-6 font-redhat'>In the zone, getting things done.</p>
 
             <div className='flex items-end gap-4 md:gap-6 mb-2 md:mb-0'>
               <span className='text-6xl md:text-8xl font-sans font-bold text-text tracking-tighter'>24:52</span>
@@ -99,9 +99,10 @@ const Dashboard: React.FC = () => {
               <p className='text-sm text-text/40 font-medium'>No notes yet</p>
               <button
                 onClick={() => navigate('/notes')}
-                className='mt-3 text-[10px] font-bold uppercase tracking-widest text-primary hover:underline'
+                className='relative mt-3 text-[10px] font-bold uppercase tracking-widest text-primary group pb-0.5'
               >
                 Create your first note →
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary transition-all duration-300 ease-out group-hover:w-full"></span>
               </button>
             </motion.div>
           )}

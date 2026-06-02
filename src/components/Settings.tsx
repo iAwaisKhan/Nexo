@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
+import { useThemeStore } from "../store/useThemeStore";
 import { syncEngine } from "../lib/syncEngine";
 import { isSupabaseConfigured } from "../lib/supabase";
 
@@ -78,6 +79,7 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = () => {
   const { user, isAuthenticated, signInWithGoogle, signOut } = useAuthStore();
   const { syncStatus, lastSyncedAt } = useAppStore();
+  const { theme, toggleTheme } = useThemeStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
   const clearData = () => {
@@ -240,6 +242,23 @@ const Settings: React.FC<SettingsProps> = () => {
             label="Notifications"
             description="Manage system alerts and break reminders"
             action={<div className="w-12 h-6 rounded-full bg-border/20 relative cursor-not-allowed"><div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-text/20" /></div>}
+          />
+        </SettingSection>
+
+        {/* Appearance */}
+        <SettingSection title="Appearance">
+          <SettingItem
+            icon={theme === 'dark' ? Sun : Moon}
+            label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            description={theme === 'dark' ? 'Eye-friendly dark theme for night work' : 'Bright theme for daytime'}
+            onClick={toggleTheme}
+            action={
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-6 rounded-full bg-primary/20 relative transition-all duration-300">
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-primary transition-all duration-300 ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
+                </div>
+              </div>
+            }
           />
         </SettingSection>
 

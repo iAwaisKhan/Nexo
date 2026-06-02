@@ -88,7 +88,7 @@ const LandingHero: React.FC = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 relative"
+          className="w-full max-w-[95%] mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 relative"
         >
           {/* Main Focus Card (Top Left) - Height Reduced */}
           <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-5 md:p-6 relative overflow-hidden group shadow-2xl">
