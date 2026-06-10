@@ -3,9 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, LogIn, Github, Chrome, UserPlus, ArrowRight, Loader2, CheckCircle2, User, Shield } from "lucide-react";
 import { Avatar } from "./ui/Avatar";
 import FocusAnalytics from "./FocusAnalytics";
+import { useAuthStore } from "../store/useAuthStore";
+import { isSupabaseConfigured } from "../lib/supabase";
 
 const Profile: React.FC = () => {
-  const [mode, setMode] = useState<"login" | "signup" | "account">("login");
+  const { user, isAuthenticated, signInWithGoogle, signOut } = useAuthStore();
+  
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -16,29 +20,32 @@ const Profile: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    setTimeout(() => {
-        setMode("account");
-        setIsSuccess(false);
-    }, 2000);
+    // Email/Password auth is not implemented in useAuthStore yet
+    alert("Email auth is disabled. Please use Google Sign In.");
   };
 
-  const handleOAuth = (provider: string) => {
+  const handleOAuth = async (provider: string) => {
+    if (provider !== "Google") {
+      alert(`${provider} login is not supported yet.`);
+      return;
+    }
+    
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await signInWithGoogle();
       setIsSuccess(true);
-      setTimeout(() => {
-        setMode("account");
-        setIsSuccess(false);
-      }, 1500);
-    }, 1000);
+    } catch (error) {
+      console.error("Sign-in failed", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (mode === "account") {
+  // If user is authenticated, we show their account instead of the forms!
+  if (isAuthenticated && user) {
+    const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || "User";
+    
     return (
       <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
         <motion.div 
@@ -49,10 +56,10 @@ const Profile: React.FC = () => {
           <header className="flex justify-center mb-10">
             <Avatar 
               size="lg" 
-              src="https://cdn.flyonui.com/fy-assets/avatar/avatar-1.png" 
-              fallback="AK" 
+              src={avatarUrl} 
+              fallback={fullName.substring(0, 2).toUpperCase()} 
               status="online"
-              label={{ name: "Awais Khan", email: "awais@aura.io" }}
+              label={{ name: fullName, email: user.email || "" }}
             />
           </header>
 
@@ -62,7 +69,7 @@ const Profile: React.FC = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center">
                   <Mail className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
                 </div>
-                <span className="text-sm font-medium text-text/80">awais@aura.io</span>
+                <span className="text-sm font-medium text-text/80">{user.email}</span>
               </div>
               <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 px-2 py-1 bg-primary/5 rounded-full">Verified</span>
             </div>
@@ -80,10 +87,10 @@ const Profile: React.FC = () => {
 
           <div className="mt-8 pt-6 border-t border-border/40">
             <button 
-              onClick={() => setMode("login")}
+              onClick={() => signOut()}
               className="w-full h-11 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted hover:text-red-500 transition-colors"
             >
-              Sign Out of Aura
+              Sign Out of Nexo
             </button>
           </div>
         </motion.div>
@@ -96,6 +103,7 @@ const Profile: React.FC = () => {
     );
   }
 
+  // Fallback for Users who 'skipped' Auth allowing them to login from Dashboard Profile directly
   return (
     <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
       <motion.div 
@@ -149,7 +157,7 @@ const Profile: React.FC = () => {
                   <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Email</label>
                   <input
                     type="email"
-                    placeholder="m@aura.io"
+                    placeholder="m@nexo.io"
                     required
                     className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
                   />

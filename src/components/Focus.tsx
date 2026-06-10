@@ -183,7 +183,7 @@ const FocusMode: React.FC = () => {
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   className="flex flex-col items-center"
                 >
-                  <span className={`text-[8rem] md:text-[10rem] font-light tabular-nums tracking-tighter leading-none transition-colors duration-700 ${isActive ? (mode === "focus" ? "text-primary" : "text-emerald-400") : "text-text group-hover:text-primary/80"}`}>
+                  <span className={`text-[5.5rem] sm:text-[7.5rem] md:text-[10rem] font-light tabular-nums tracking-tighter leading-none transition-colors duration-700 ${isActive ? (mode === "focus" ? "text-primary" : "text-emerald-400") : "text-text group-hover:text-primary/80"}`}>
                     {formatTime(timeLeft)}
                   </span>
                   

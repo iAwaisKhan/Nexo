@@ -8,8 +8,7 @@ import {
   Copy, 
   Check, 
   Zap, 
-  PenTool,
-  MessageSquare
+  PenTool
 } from "lucide-react";
 import { Note } from "./Notes";
 
@@ -44,13 +43,19 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
 
   return (
     <div className="relative">
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`p-2.5 rounded-xl transition-all ${note.isPublic ? "text-primary bg-primary/10 shadow-lg shadow-primary/10" : "text-text/50 hover:bg-primary/5"}`}
+        className={`p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 shadow-sm ${
+          note.isPublic 
+            ? "text-primary bg-primary/10 border-primary/20 shadow-primary/5" 
+            : "text-text/50 bg-surface/50 border-border/10 hover:text-text hover:border-border/20 hover:bg-surface"
+        }`}
         title="Share & Publish"
       >
-        <Share2 className="w-5 h-5" />
-      </button>
+        <Share2 className="w-4.5 h-4.5" />
+      </motion.button>
 
       <AnimatePresence>
         {isOpen && (
@@ -144,7 +149,7 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
 
             <div className="pt-2 flex items-center justify-center gap-4 text-text/20">
               <ExternalLink className="w-3 h-3" />
-              <span className="text-[8px] font-black uppercase tracking-[0.3em]">Aura Open Source Publishing</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.3em]">Nexo Open Source Publishing</span>
             </div>
           </motion.div>
         )}

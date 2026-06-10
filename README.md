@@ -42,7 +42,7 @@ npm run preview
 - **Command Palette** — Fast navigation and actions (press `Ctrl+K` or `Cmd+K`)
 - **Uiverse-Style Navigation** — Modern expanding sidebar with icon-to-label transitions
 - **Mobile Responsive** — Fully optimized for desktop and mobile devices
-- **Dark Theme** — Sophisticated dark mode with blue accent colors (Aura signature)
+- **Dark Theme** — Sophisticated dark mode with blue accent colors (Nexo signature)
 
 ## Project Structure
 

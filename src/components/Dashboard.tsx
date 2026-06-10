@@ -77,9 +77,9 @@ const Dashboard: React.FC = () => {
           </div>
 
           {recentNotes.length > 0 ? (
-            <div className='aura-list'>
+            <div className='nexo-list'>
               {recentNotes.map((note) => (
-                <div key={note.id} className='aura-list-item group'>
+                <div key={note.id} className='nexo-list-item group'>
                   <div className='item-indicator' />
                   <div className='item-content'>
                     <h5 className='item-title'>{note.title || 'Untitled Note'}</h5>

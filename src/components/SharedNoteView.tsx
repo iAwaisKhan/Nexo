@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
@@ -7,14 +7,64 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useAppStore } from "../store/useAppStore";
 import { Globe, ArrowLeft, GraduationCap } from "lucide-react";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
+import type { Note } from "../types/note";
 
 const SharedNoteView: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
 
   const notes = useAppStore(state => state.notes);
-  const note = notes.find(n => n.id === noteId && n.isPublic);
-  const isLoading = false;
+  const localNote = notes.find(n => n.id === noteId && n.isPublic);
+  
+  const [fetchedNote, setFetchedNote] = useState<Note | null>(null);
+  const [isLoading, setIsLoading] = useState(!localNote);
+
+  useEffect(() => {
+    if (localNote || !isSupabaseConfigured() || !noteId) {
+      if (!localNote) setIsLoading(false);
+      return;
+    }
+
+    const fetchNote = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('id', noteId)
+          .eq('is_public', true)
+          .single();
+
+        if (error) throw error;
+        
+        if (data) {
+          setFetchedNote({
+            id: data.id,
+            title: data.title,
+            content: data.content,
+            tags: data.tags || [],
+            isPinned: data.is_pinned,
+            lastModified: data.last_modified,
+            timeSpent: data.time_spent || 0,
+            version: data.version ?? 0,
+            isPublic: data.is_public || false,
+            publishedAt: data.published_at || undefined,
+            slug: data.slug || undefined,
+            isBlog: data.is_blog || false,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch public note:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNote();
+  }, [noteId, localNote]);
+
+  const note = localNote || fetchedNote;
 
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
@@ -30,7 +80,7 @@ const SharedNoteView: React.FC = () => {
       </div>
       <div className="text-center">
         <h3 className="text-2xl font-display italic mb-2">Private Frequency</h3>
-        <p className="text-sm text-text/40 max-w-xs mx-auto">This note is either private or does not exist in the Aura network.</p>
+        <p className="text-sm text-text/40 max-w-xs mx-auto">This note is either private or does not exist in the Nexo network.</p>
       </div>
       <button 
         onClick={() => navigate('/')}
@@ -46,7 +96,7 @@ const SharedNoteView: React.FC = () => {
       <header className="h-20 px-8 flex items-center justify-between border-b border-border/5 bg-surface/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <GraduationCap className="w-6 h-6 text-primary" />
-          <span className="text-sm font-display uppercase tracking-[0.3em]">Aura Portal</span>
+          <span className="text-sm font-display uppercase tracking-[0.3em]">Nexo Portal</span>
         </div>
         <div className="text-[10px] font-bold text-text/30 uppercase tracking-[0.2em] flex items-center gap-2">
           <Globe className="w-3 h-3 text-primary" />
@@ -103,7 +153,7 @@ const SharedNoteView: React.FC = () => {
       <footer className="py-20 border-t border-border/5 text-center space-y-8">
         <div className="w-12 h-px bg-primary/20 mx-auto" />
         <div className="space-y-2">
-          <p className="text-[10px] font-bold text-text/30 uppercase tracking-[0.4em]">Crafted in your personal Aura</p>
+          <p className="text-[10px] font-bold text-text/30 uppercase tracking-[0.4em]">Crafted in your personal Nexo</p>
           <p className="text-xs text-text/20">The minimalist home for your knowledge and growth.</p>
         </div>
         <button 

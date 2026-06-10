@@ -141,7 +141,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
             <div className="p-4 border-t border-border/5 bg-surface/50 flex items-center justify-between">
               <div className="flex items-center gap-4 text-[10px] font-bold text-text/20 uppercase tracking-widest">
-                <div className="flex items-center gap-1"><Zap className="w-3 h-3" /> Aura Command Engine</div>
+                <div className="flex items-center gap-1"><Zap className="w-3 h-3" /> Nexo Command Engine</div>
               </div>
               <div className="flex items-center gap-2 text-[10px] font-medium text-text/40">
                 <span>Select</span> <kbd className="bg-border/10 px-1.5 py-0.5 rounded-md">↵</kbd>

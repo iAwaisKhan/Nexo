@@ -169,8 +169,8 @@ const App: React.FC = () => {
             <Route
               path="/notes"
               element={
-                <PageTransition className="pt-32 px-8 pb-10">
-                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-8rem)]">
+                <PageTransition className="pt-20 md:pt-32 px-4 md:px-8 pb-24 md:pb-10">
+                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)]">
                     <Notes />
                   </div>
                 </PageTransition>
@@ -179,8 +179,8 @@ const App: React.FC = () => {
             <Route
               path="/tasks"
               element={
-                <PageTransition className="pt-32 px-8 pb-10">
-                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-8rem)]">
+                <PageTransition className="pt-20 md:pt-32 px-4 md:px-8 pb-24 md:pb-10">
+                  <div className="max-w-[95%] w-full mx-auto h-[calc(100vh-11rem)] md:h-[calc(100vh-8rem)]">
                     <Tasks />
                   </div>
                 </PageTransition>
@@ -189,7 +189,7 @@ const App: React.FC = () => {
             <Route
               path="/focus"
               element={
-                <PageTransition className="pt-32 px-8 pb-10">
+                <PageTransition className="pt-20 md:pt-32 px-4 md:px-8 pb-24 md:pb-10">
                   <div className="max-w-[95%] w-full mx-auto">
                     <Focus />
                   </div>
@@ -199,7 +199,7 @@ const App: React.FC = () => {
             <Route
               path="/settings"
               element={
-                <PageTransition className="pt-32 px-8 pb-10">
+                <PageTransition className="pt-20 md:pt-32 px-4 md:px-8 pb-24 md:pb-10">
                   <div className="max-w-[95%] w-full mx-auto">
                     <Settings />
                   </div>
@@ -209,7 +209,7 @@ const App: React.FC = () => {
             <Route
               path="/profile"
               element={
-                <PageTransition className="pt-32 px-8 pb-10">
+                <PageTransition className="pt-20 md:pt-32 px-4 md:px-8 pb-24 md:pb-10">
                   <div className="max-w-[95%] w-full mx-auto">
                     <Profile />
                   </div>

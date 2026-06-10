@@ -11,13 +11,21 @@ import {
   Tag as TagIcon, 
   FileText,
   ChevronRight,
+  ChevronLeft,
   Clock,
   Maximize2,
   Minimize2,
   Link as LinkIcon,
-  Loader2,
   X,
-  Share2
+  Share2,
+  Edit3,
+  Columns,
+  BookOpen,
+  Sparkles,
+  Terminal,
+  Brain,
+  LineChart,
+  ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, AppFocusSession } from "../store/useAppStore";
@@ -26,6 +34,7 @@ import { ErrorFallback } from "./ui/ErrorFallback";
 import GraphView from "./GraphView";
 import NoteSharing from "./NoteSharing";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
+import BlockEditor from "./BlockEditor";
 
 import type { Note } from '../types/note';
 export type { Note };
@@ -40,6 +49,33 @@ const Notes: React.FC<NotesProps> = () => {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isGraphOpen, setIsGraphOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<{ titles: string[], index: number } | null>(null);
+  const [viewMode, setViewMode] = useState<'edit' | 'split' | 'preview'>('edit');
+  const [isInsightMenuOpen, setIsInsightMenuOpen] = useState(false);
+  const insightMenuRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && !selectedId) {
+      setIsSidebarOpen(true);
+    }
+  }, [selectedId, isMobile]);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (insightMenuRef.current && !insightMenuRef.current.contains(event.target as Node)) {
+        setIsInsightMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   const sessionStartRef = useRef<number | null>(null);
 
@@ -49,8 +85,7 @@ const Notes: React.FC<NotesProps> = () => {
   const updateNoteStore = useAppStore(state => state.updateNote);
   const deleteNoteStore = useAppStore(state => state.deleteNote);
   const addFocusSession = useAppStore(state => state.addFocusSession);
-  const syncStatus = useAppStore(state => state.syncStatus);
-  const isLoading = syncStatus === 'syncing' && notes.length === 0;
+
 
   const selectedNote = useMemo(() => 
     notes.find(n => n.id === selectedId) || null
@@ -202,9 +237,9 @@ const Notes: React.FC<NotesProps> = () => {
         {isSidebarOpen && !isFocusMode && (
           <motion.div 
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
+            animate={{ width: isMobile ? "100%" : 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="border-r border-border/10 flex flex-col"
+            className={`border-r border-border/10 flex flex-col shrink-0 h-full ${isMobile ? "w-full" : "w-[320px]"}`}
           >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -251,7 +286,10 @@ const Notes: React.FC<NotesProps> = () => {
                 filteredNotes.map(note => (
                   <button
                     key={note.id}
-                    onClick={() => setSelectedId(note.id)}
+                    onClick={() => {
+                      setSelectedId(note.id);
+                      if (isMobile) setIsSidebarOpen(false);
+                    }}
                     className={`w-full text-left p-4 rounded-2xl transition-all duration-200 group relative ${
                       selectedId === note.id 
                         ? "bg-primary/10 border-l-4 border-primary shadow-sm shadow-primary/5" 
@@ -281,82 +319,201 @@ const Notes: React.FC<NotesProps> = () => {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col bg-surface/10">
+      <div className={`flex-1 flex flex-col bg-surface/10 min-w-0 ${isMobile && isSidebarOpen ? "hidden" : ""}`}>
         {selectedNote ? (
           <>
-            <div className="h-20 px-8 border-b border-border/10 flex items-center justify-between bg-surface/30 backdrop-blur-sm group/header">
-              <div className="flex items-center gap-4 flex-1">
-                {!isFocusMode && (
-                  <button 
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-2 rounded-lg hover:bg-primary/5 text-text/40 transition-colors"
+            <div className="h-20 px-4 md:px-8 border-b border-border/10 flex items-center justify-between bg-surface/80 backdrop-blur-md group/header">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                {isMobile ? (
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setIsSidebarOpen(true);
+                      setSelectedId(null);
+                    }}
+                    className="p-2 rounded-full bg-surface/50 border border-border/10 text-text/50 hover:text-text hover:border-border/20 hover:bg-surface transition-all flex items-center justify-center shadow-sm shrink-0"
+                    title="Back to notes list"
                   >
-                    <ChevronRight className={`w-5 h-5 transition-transform ${isSidebarOpen ? "rotate-180" : ""}`} />
-                  </button>
+                    <ChevronLeft className="w-4 h-4" />
+                  </motion.button>
+                ) : (
+                  !isFocusMode && (
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                      className="p-2 rounded-full bg-surface/50 border border-border/10 text-text/50 hover:text-text hover:border-border/20 hover:bg-surface transition-all flex items-center justify-center shadow-sm shrink-0"
+                      title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+                    >
+                      <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSidebarOpen ? "rotate-180" : ""}`} />
+                    </motion.button>
+                  )
                 )}
-                <input 
-                  type="text"
-                  value={selectedNote.title}
-                  placeholder="Note Title"
-                  onChange={(e) => handleUpdateNote(selectedNote.id, { title: e.target.value })}
-                  className="bg-transparent text-2xl font-display focus:outline-none w-full border-none text-text"
-                />
+                <div className="relative flex-1 min-w-0">
+                  <input 
+                    type="text"
+                    value={selectedNote.title}
+                    placeholder="Untitled Note"
+                    onChange={(e) => handleUpdateNote(selectedNote.id, { title: e.target.value })}
+                    className="bg-transparent text-xl md:text-2xl font-display font-semibold tracking-tight focus:outline-none w-full border-none text-text placeholder:text-text/25 py-1"
+                  />
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <div className="flex items-center bg-surface/50 border border-border/10 rounded-xl px-1 mr-2 opacity-0 group-hover/header:opacity-100 transition-all">
-                  <button 
-                    onClick={() => insertThoughtBlock('debug')}
-                    className="p-1.5 text-[8px] font-black uppercase tracking-tighter text-text/30 hover:text-red-500 transition-colors"
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Insight Blocks Dropdown */}
+                <div className="relative" ref={insightMenuRef}>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsInsightMenuOpen(!isInsightMenuOpen)}
+                    className="px-3 py-2 rounded-xl bg-surface/50 border border-border/10 text-xs font-semibold text-text/60 hover:text-text hover:border-border/20 transition-all flex items-center gap-1.5 shadow-sm"
+                    title="Insert specialized thought blocks"
                   >
-                    + Debug
-                  </button>
-                  <button 
-                    onClick={() => insertThoughtBlock('feynman')}
-                    className="p-1.5 text-[8px] font-black uppercase tracking-tighter text-text/30 hover:text-primary transition-colors"
-                  >
-                    + Feynman
-                  </button>
-                  <button 
-                    onClick={() => insertThoughtBlock('analytics')}
-                    className="p-1.5 text-[8px] font-black uppercase tracking-tighter text-text/30 hover:text-primary transition-colors"
-                  >
-                    + Analytics
-                  </button>
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span className="hidden sm:inline">Insight Blocks</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isInsightMenuOpen ? "rotate-180" : ""}`} />
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {isInsightMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-52 bg-surface/95 backdrop-blur-xl border border-border/15 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-0.5"
+                      >
+                        <div className="text-[9px] font-bold text-text/40 uppercase tracking-wider px-3 py-1.5 border-b border-border/10 mb-1">
+                          Insert Thought Block
+                        </div>
+                        <button
+                          onClick={() => {
+                            insertThoughtBlock('debug');
+                            setIsInsightMenuOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-text/70 hover:text-red-500 hover:bg-red-500/5 rounded-xl transition-all flex items-center gap-2"
+                        >
+                          <Terminal className="w-3.5 h-3.5 text-red-500/80" />
+                          <span>Debug Journal</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            insertThoughtBlock('feynman');
+                            setIsInsightMenuOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-text/70 hover:text-primary hover:bg-primary/5 rounded-xl transition-all flex items-center gap-2"
+                        >
+                          <Brain className="w-3.5 h-3.5 text-primary/80" />
+                          <span>Feynman Block</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            insertThoughtBlock('analytics');
+                            setIsInsightMenuOpen(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-text/70 hover:text-primary hover:bg-primary/5 rounded-xl transition-all flex items-center gap-2"
+                        >
+                          <LineChart className="w-3.5 h-3.5 text-primary/80" />
+                          <span>Focus Analytics</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
+
+                {/* View Mode Segmented Control */}
+                <div className="flex bg-surface/60 border border-border/10 rounded-xl p-1 gap-0.5 shadow-sm">
+                  {([
+                    { id: 'edit' as const, label: 'Write', icon: Edit3, tooltip: 'Editor Only' },
+                    { id: 'split' as const, label: 'Split', icon: Columns, tooltip: 'Split View' },
+                    { id: 'preview' as const, label: 'Read', icon: BookOpen, tooltip: 'Preview Mode' }
+                  ]).map((mode) => {
+                    const Icon = mode.icon;
+                    const isActive = viewMode === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        onClick={() => setViewMode(mode.id)}
+                        title={mode.tooltip}
+                        className={`relative px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold tracking-wide transition-all z-10 duration-200 select-none ${
+                          isActive 
+                            ? "text-primary shadow-sm" 
+                            : "text-text/50 hover:text-text/80 hover:bg-surface/30"
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeViewMode"
+                            className="absolute inset-0 bg-primary/10 rounded-lg -z-10 border border-primary/25"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          />
+                        )}
+                        <Icon className="w-3.5 h-3.5" />
+                        <span className="hidden md:inline">{mode.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <NoteSharing 
                   note={selectedNote} 
                   onUpdate={(updates) => handleUpdateNote(selectedNote.id, updates)} 
                 />
-                <button 
-                  onClick={() => setIsFocusMode(!isFocusMode)}
-                  title={isFocusMode ? "Exit Focus Mode" : "Focus Mode"}
-                  className={`p-2.5 rounded-xl transition-colors ${isFocusMode ? "text-primary bg-primary/10" : "text-text/50 hover:bg-primary/5"}`}
-                >
-                  {isFocusMode ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-                </button>
-                <button 
-                  onClick={() => togglePin(selectedNote.id)}
-                  className={`p-2.5 rounded-xl transition-colors ${selectedNote.isPinned ? "text-primary bg-primary/10" : "text-text/50 hover:bg-primary/5"}`}
-                >
-                  <Pin className="w-5 h-5" />
-                </button>
-                <button 
-                  onClick={() => handleDeleteNote(selectedNote.id)}
-                  className="p-2.5 rounded-xl text-text/50 hover:text-red-500 hover:bg-red-500/10 transition-colors"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+
+                <div className="h-5 w-px bg-border/10 mx-1 hidden sm:block" />
+
+                <div className="flex items-center gap-1.5">
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsFocusMode(!isFocusMode)}
+                    title={isFocusMode ? "Exit Focus Mode" : "Focus Mode"}
+                    className={`p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 shadow-sm ${
+                      isFocusMode 
+                        ? "text-primary bg-primary/10 border-primary/20 shadow-primary/5" 
+                        : "text-text/50 bg-surface/50 border-border/10 hover:text-text hover:border-border/20 hover:bg-surface"
+                    }`}
+                  >
+                    {isFocusMode ? <Minimize2 className="w-4.5 h-4.5" /> : <Maximize2 className="w-4.5 h-4.5" />}
+                  </motion.button>
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => togglePin(selectedNote.id)}
+                    title={selectedNote.isPinned ? "Unpin Note" : "Pin Note"}
+                    className={`p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 shadow-sm ${
+                      selectedNote.isPinned 
+                        ? "text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-amber-500/5" 
+                        : "text-text/50 bg-surface/50 border-border/10 hover:text-text hover:border-border/20 hover:bg-surface"
+                    }`}
+                  >
+                    <Pin className="w-4.5 h-4.5" />
+                  </motion.button>
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDeleteNote(selectedNote.id)}
+                    title="Delete Note"
+                    className="p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 shadow-sm text-text/50 bg-surface/50 border-border/10 hover:text-red-500 hover:border-red-500/20 hover:bg-red-500/5"
+                  >
+                    <Trash2 className="w-4.5 h-4.5" />
+                  </motion.button>
+                </div>
               </div>
             </div>
 
             <div className={`flex-1 flex overflow-hidden ${isFocusMode ? "max-w-4xl mx-auto w-full" : ""}`}>
-              <div className="flex-1 p-8 overflow-y-auto relative">
-                <textarea 
-                  value={selectedNote.content}
-                  onChange={(e) => handleUpdateNote(selectedNote.id, { content: e.target.value })}
-                  placeholder="Start writing in markdown... Use [[Title]] for backlinks."
-                  className="w-full h-full bg-transparent resize-none focus:outline-none font-mono text-sm leading-relaxed text-text scrollbar-hide"
+              <div className={`p-4 md:p-8 overflow-y-auto relative transition-all duration-300 ${
+                viewMode === 'edit' ? "flex-1 w-full" : 
+                viewMode === 'split' ? "w-1/2 border-r border-border/10" : 
+                "hidden"
+              }`}>
+                <BlockEditor
+                  noteId={selectedNote.id}
+                  initialContent={selectedNote.content}
+                  onChange={(content) => handleUpdateNote(selectedNote.id, { content })}
                 />
 
                 <AnimatePresence>
@@ -372,9 +529,9 @@ const Notes: React.FC<NotesProps> = () => {
                       </div>
                       {suggestions.titles.map(title => (
                         <button
-                          key={title}
-                          onClick={() => insertSuggestion(title)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-xl transition-colors font-medium truncate"
+                           key={title}
+                           onClick={() => insertSuggestion(title)}
+                           className="w-full text-left px-4 py-2 text-sm hover:bg-primary/10 hover:text-primary rounded-xl transition-colors font-medium truncate"
                         >
                           [[{title}]]
                         </button>
@@ -384,7 +541,11 @@ const Notes: React.FC<NotesProps> = () => {
                 </AnimatePresence>
               </div>
 
-              <div className={`${isFocusMode ? "hidden md:block" : "hidden lg:block"} ${selectedNote.isBlog ? "w-full px-[10%] bg-surface/20" : "w-1/2 bg-surface/5 border-l border-border/10"} p-8 overflow-y-auto transition-all duration-700`}>
+              <div className={`p-4 md:p-8 overflow-y-auto transition-all duration-300 ${
+                viewMode === 'edit' ? "hidden" : 
+                viewMode === 'split' ? "w-1/2 bg-surface/5" : 
+                `w-full bg-surface/20 ${selectedNote.isBlog ? "px-[10%]" : "px-8"}`
+              }`}>
                 {selectedNote.isBlog && (
                   <motion.div 
                     initial={{ opacity: 0, y: -20 }}
@@ -473,7 +634,7 @@ const Notes: React.FC<NotesProps> = () => {
               </div>
             </div>
 
-            <div className="p-4 px-8 border-t border-border/10 flex items-center gap-4 bg-surface/30">
+            <div className="p-4 px-4 md:px-8 border-t border-border/10 flex items-center gap-4 bg-surface/30">
               <TagIcon className="w-4 h-4 text-primary shrink-0 opacity-60" />
               <div className="flex flex-wrap gap-2">
                 {selectedNote.tags.map((tag, idx) => (

@@ -84,7 +84,7 @@ const Settings: React.FC<SettingsProps> = () => {
 
   const clearData = () => {
     if (confirm("Are you sure? This will permanently delete all your notes, tasks, and focus history.")) {
-      indexedDB.deleteDatabase("AuraDB_Modern");
+      indexedDB.deleteDatabase("NexoDB_Modern");
       localStorage.clear();
       window.location.reload();
     }

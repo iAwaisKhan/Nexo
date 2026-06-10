@@ -79,6 +79,14 @@ const Header: React.FC = () => {
   const user = useAuthStore((s) => s.user);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Build avatar props from auth state
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'U';
@@ -90,61 +98,93 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-transparent border-b border-border/10">
-      {/* Left: Logo */}
-      <div className="flex-1 flex items-center">
-        <div
-          className="flex items-center cursor-pointer group"
-          onClick={() => navigate("/")}
-        >
-          <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Nexo</span>
-        </div>
-      </div>
-
-      {/* Center: Uiverse Nav */}
-      <nav className="uiverse-menu shadow-2xl shadow-primary/5 flex max-md:overflow-x-auto max-md:max-w-[50vw] scrollbar-hide">
-        {navItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className={`uiverse-link ${isActive(item.path) ? "active" : ""}`}
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-transparent border-b border-border/10">
+        {/* Left: Logo */}
+        <div className="flex-1 flex items-center">
+          <div
+            className="flex items-center cursor-pointer group"
+            onClick={() => navigate("/")}
           >
-            <span className="uiverse-link-icon flex-shrink-0">
-              <item.icon className="w-5 h-5" />
-            </span>
-            <span className="uiverse-link-title font-redhat hidden md:block">{item.label}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* Right: Sync Badge + Avatar */}
-      <div className="flex-1 flex items-center justify-end gap-3 md:gap-4">
-        <SyncBadge />
-        <button
-          onClick={() => navigate("/settings")}
-          className={`flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
-            isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
-          }`}
-          title="Settings"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
-        <div
-          className="group cursor-pointer transition-all flex items-center"
-          onClick={() => navigate(isAuthenticated ? "/profile" : "/profile")}
-        >
-          {isAuthenticated && avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={displayName}
-              className="w-8 h-8 rounded-full object-cover border-2 border-primary/20 hover:border-primary/40 transition-all"
-            />
-          ) : (
-            <Avatar size="sm" fallback={fallback} />
-          )}
+            <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Nexo</span>
+          </div>
         </div>
-      </div>
-    </header>
+
+        {/* Center: Uiverse Nav (Desktop only) */}
+        {!isMobile && (
+          <nav className="uiverse-menu shadow-2xl shadow-primary/5 flex max-md:overflow-x-auto max-md:max-w-[50vw] scrollbar-hide">
+            {navItems.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`uiverse-link ${isActive(item.path) ? "active" : ""}`}
+              >
+                <span className="uiverse-link-icon flex-shrink-0">
+                  <item.icon className="w-5 h-5" />
+                </span>
+                <span className="uiverse-link-title font-redhat hidden md:block">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+
+        {/* Right: Sync Badge + Avatar */}
+        <div className="flex-1 flex items-center justify-end gap-3 md:gap-4">
+          <SyncBadge />
+          <button
+            onClick={() => navigate("/settings")}
+            className={`flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
+              isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
+            }`}
+            title="Settings"
+          >
+            <SettingsIcon className="w-5 h-5" />
+          </button>
+          <div
+            className="group cursor-pointer transition-all flex items-center"
+            onClick={() => navigate(isAuthenticated ? "/profile" : "/profile")}
+          >
+            {isAuthenticated && avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                className="w-8 h-8 rounded-full object-cover border-2 border-primary/20 hover:border-primary/40 transition-all"
+              />
+            ) : (
+              <Avatar size="sm" fallback={fallback} />
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Floating Bottom Navigation Tab Bar (Mobile only) */}
+      {isMobile && (
+        <nav className="fixed bottom-4 left-4 right-4 z-50 bg-surface/85 backdrop-blur-xl border border-border/10 rounded-2xl p-1.5 shadow-2xl flex justify-around items-center">
+          {navItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-xl flex-1 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
+                  active ? "text-primary" : "text-text-muted hover:text-text/80"
+                }`}
+              >
+                {active && (
+                  <motion.div
+                    layoutId="activeMobileTab"
+                    className="absolute inset-0 bg-primary/10 rounded-xl -z-10 border border-primary/20"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <item.icon className="w-5 h-5 mb-1" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
+    </>
   );
 };
 

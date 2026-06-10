@@ -8,7 +8,8 @@ import {
   Calendar, 
   Loader2,
   Play,
-  Pause
+  Pause,
+  Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "../store/useAppStore";
@@ -141,7 +142,7 @@ const Tasks: React.FC = () => {
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setIsAdding(false)}>
     <div className="flex flex-col h-full space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
           <div className="relative group flex-1 md:w-80">
             <input 
               type="text" 
@@ -155,7 +156,7 @@ const Tasks: React.FC = () => {
           <select 
             value={filterStatus}
             onChange={(e: any) => setFilterStatus(e.target.value)}
-            className="bg-surface/50 border border-border/15 rounded-2xl px-4 py-2.5 text-sm focus:outline-none text-text/80 font-medium"
+            className="bg-surface/50 border border-border/15 rounded-2xl px-4 py-2.5 text-sm focus:outline-none text-text/80 font-medium sm:w-40"
           >
             <option value="All">All Status</option>
             <option value="To Do">To Do</option>
@@ -282,7 +283,7 @@ const Tasks: React.FC = () => {
 
                 <button 
                   onClick={() => deleteTask(task.id)}
-                  className="opacity-0 group-hover:opacity-100 p-2 text-text/30 hover:text-red-500 transition-all"
+                  className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-text/30 hover:text-red-500 transition-all"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
