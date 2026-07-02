@@ -73,9 +73,9 @@ const LandingHero: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center max-w-6xl mx-auto mb-12 md:mb-16 px-4"
         >
-          <h1 className="text-3xl md:text-6xl font-serif font-medium text-text mb-2 tracking-[-0.02em] leading-tight">
+          <h1 className="text-2xl md:text-6xl font-serif font-medium text-text mb-2 tracking-[-0.02em] leading-tight">
             Nexo: Your Single
-            <span className="block mt-2 text-primary font-handwriting py-2 leading-[1.1] text-5xl md:text-9xl">
+            <span className="block mt-2 text-primary font-handwriting py-2 leading-[1.1] text-4xl md:text-9xl">
               Dashboard for Deep Flow
             </span>
           </h1>
@@ -91,7 +91,7 @@ const LandingHero: React.FC = () => {
           className="w-full max-w-[95%] mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 relative"
         >
           {/* Main Focus Card (Top Left) - Height Reduced */}
-          <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-5 md:p-6 relative overflow-hidden group shadow-2xl">
+          <div className="md:col-span-8 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2rem] p-4 md:p-6 relative overflow-hidden group shadow-2xl">
             {/* Wavy Background Pattern */}
             <div className="absolute inset-0 opacity-10 pointer-events-none">
               <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-primary/20 to-transparent" />
@@ -101,12 +101,12 @@ const LandingHero: React.FC = () => {
             </div>
 
             <div className="relative z-10">
-              <h3 className="text-3xl font-serif font-medium text-text mb-1">Current Session: Deep Work</h3>
+              <h3 className="text-2xl md:text-3xl font-serif font-medium text-text mb-1">Current Session: Deep Work</h3>
               <p className="text-text-muted mb-4 font-redhat">Analyzing the new backend architecture</p>
               
-              <div className="flex items-end gap-4 mb-0">
-                <span className="text-7xl font-sans font-bold text-text tracking-tighter">24:52</span>
-                <span className="text-2xl font-sans text-text-muted mb-1 tracking-tight">/ 45:00</span>
+              <div className="flex items-end gap-3 md:gap-4 mb-0">
+                <span className="text-5xl md:text-7xl font-sans font-bold text-text tracking-tighter">24:52</span>
+                <span className="text-lg md:text-2xl font-sans text-text-muted mb-1 tracking-tight">/ 45:00</span>
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@ const LandingHero: React.FC = () => {
           </div>
 
           {/* Code Snippet (Full Width) */}
-          <div className="md:col-span-12 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-5 md:p-6 shadow-2xl overflow-hidden flex flex-col">
+          <div className="hidden md:flex md:col-span-12 bg-surface/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-5 md:p-6 shadow-2xl overflow-hidden flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Code2 className="w-5 h-5 text-primary" />

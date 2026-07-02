@@ -46,10 +46,10 @@ const Dashboard: React.FC = () => {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className='max-w-[95%] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8'
+        className='max-w-[95%] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8'
       >
         {/* Focus Card */}
-        <div className='md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] md:rounded-[3rem] p-5 md:p-6 relative overflow-hidden group shadow-xl'>
+        <div className='md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-3xl md:rounded-[3rem] p-4 md:p-6 relative overflow-hidden group shadow-xl'>
           <div className='absolute inset-0 opacity-10 pointer-events-none'>
             <svg className='absolute bottom-0 left-0 w-full scale-y-150 origin-bottom' viewBox='0 0 1440 320'>
               <path fill='var(--color-primary)' d='M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'></path>
@@ -57,18 +57,18 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className='relative z-10'>
-            <h3 className='text-3xl md:text-4xl font-serif font-medium text-text mb-1'>Current Session: Deep Work</h3>
-            <p className='text-text-muted text-sm mb-4 md:mb-6 font-redhat'>In the zone, getting things done.</p>
+            <h3 className='text-2xl md:text-4xl font-serif font-medium text-text mb-1'>Current Session: Deep Work</h3>
+            <p className='text-text-muted text-sm mb-3 md:mb-6 font-redhat'>In the zone, getting things done.</p>
 
-            <div className='flex items-end gap-4 md:gap-6 mb-2 md:mb-0'>
-              <span className='text-6xl md:text-8xl font-sans font-bold text-text tracking-tighter'>24:52</span>
-              <span className='text-xl md:text-3xl font-sans text-text-muted mb-2 md:mb-3 opacity-50 tracking-tight'>/ 45:00</span>
+            <div className='flex items-end gap-3 md:gap-6 mb-1 md:mb-0'>
+              <span className='text-5xl md:text-8xl font-sans font-bold text-text tracking-tighter'>24:52</span>
+              <span className='text-lg md:text-3xl font-sans text-text-muted mb-1 md:mb-3 opacity-50 tracking-tight'>/ 45:00</span>
             </div>
           </div>
         </div>
 
         {/* Recent Notes Card */}
-        <div className='md:col-span-4 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] p-6 md:p-8 shadow-xl'>
+        <div className='md:col-span-4 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] p-4 md:p-8 shadow-xl'>
           <div className='flex items-center justify-between mb-6'>
             <div className='flex items-center gap-3'>
               <FileText className='w-6 h-6 text-primary' />
@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Snippet Card */}
-        <div className='col-span-1 md:col-span-12 bg-white rounded-[2rem] md:rounded-[3rem] p-5 md:p-6 shadow-xl overflow-hidden flex flex-col'>
+        <div className='hidden md:flex col-span-1 md:col-span-12 bg-white rounded-3xl md:rounded-[3rem] p-4 md:p-6 shadow-xl overflow-hidden flex-col'>
           <div className='flex items-center justify-between mb-4'>
             <div className='flex items-center gap-3'>
               <Code2 className='w-5 h-5 text-blue-600' />
@@ -121,7 +121,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className='flex-1 bg-[#0a0a0a] rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 font-mono text-xs md:text-sm leading-relaxed overflow-hidden border border-white/5 relative shadow-inner'>
+          <div className='flex-1 bg-[#0a0a0a] rounded-2xl md:rounded-[2rem] p-4 md:p-6 font-mono text-[11px] md:text-sm leading-relaxed overflow-auto max-h-48 md:max-h-none border border-white/5 relative shadow-inner'>
             <div className='flex gap-2 absolute top-4 left-6'>
               <div className='w-2.5 h-2.5 rounded-full bg-[#ff5f56]' />
               <div className='w-2.5 h-2.5 rounded-full bg-[#ffbd2e]' />

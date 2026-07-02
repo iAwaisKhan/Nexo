@@ -241,7 +241,7 @@ const Notes: React.FC<NotesProps> = () => {
             exit={{ width: 0, opacity: 0 }}
             className={`border-r border-border/10 flex flex-col shrink-0 h-full ${isMobile ? "w-full" : "w-[320px]"}`}
           >
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-display text-text px-2">My Notes</h3>
                 <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ const Notes: React.FC<NotesProps> = () => {
                       setSelectedId(note.id);
                       if (isMobile) setIsSidebarOpen(false);
                     }}
-                    className={`w-full text-left p-4 rounded-2xl transition-all duration-200 group relative ${
+                    className={`w-full text-left p-3 md:p-4 rounded-2xl transition-all duration-200 group relative ${
                       selectedId === note.id 
                         ? "bg-primary/10 border-l-4 border-primary shadow-sm shadow-primary/5" 
                         : "hover:bg-primary/5 border-l-4 border-transparent"
@@ -322,7 +322,7 @@ const Notes: React.FC<NotesProps> = () => {
       <div className={`flex-1 flex flex-col bg-surface/10 min-w-0 ${isMobile && isSidebarOpen ? "hidden" : ""}`}>
         {selectedNote ? (
           <>
-            <div className="h-20 px-4 md:px-8 border-b border-border/10 flex items-center justify-between bg-surface/80 backdrop-blur-md group/header">
+            <div className="h-14 md:h-20 px-3 md:px-8 border-b border-border/10 flex items-center justify-between bg-surface/80 backdrop-blur-md group/header">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 {isMobile ? (
                   <motion.button 
@@ -356,12 +356,12 @@ const Notes: React.FC<NotesProps> = () => {
                     value={selectedNote.title}
                     placeholder="Untitled Note"
                     onChange={(e) => handleUpdateNote(selectedNote.id, { title: e.target.value })}
-                    className="bg-transparent text-xl md:text-2xl font-display font-semibold tracking-tight focus:outline-none w-full border-none text-text placeholder:text-text/25 py-1"
+                    className="bg-transparent text-lg md:text-2xl font-display font-semibold tracking-tight focus:outline-none w-full border-none text-text placeholder:text-text/25 py-1"
                   />
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 {/* Insight Blocks Dropdown */}
                 <div className="relative" ref={insightMenuRef}>
                   <motion.button
@@ -424,7 +424,7 @@ const Notes: React.FC<NotesProps> = () => {
                 </div>
 
                 {/* View Mode Segmented Control */}
-                <div className="flex bg-surface/60 border border-border/10 rounded-xl p-1 gap-0.5 shadow-sm">
+                <div className="hidden md:flex bg-surface/60 border border-border/10 rounded-xl p-1 gap-0.5 shadow-sm">
                   {([
                     { id: 'edit' as const, label: 'Write', icon: Edit3, tooltip: 'Editor Only' },
                     { id: 'split' as const, label: 'Split', icon: Columns, tooltip: 'Split View' },
@@ -462,15 +462,15 @@ const Notes: React.FC<NotesProps> = () => {
                   onUpdate={(updates) => handleUpdateNote(selectedNote.id, updates)} 
                 />
 
-                <div className="h-5 w-px bg-border/10 mx-1 hidden sm:block" />
+                <div className="h-5 w-px bg-border/10 mx-1 hidden md:block" />
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 md:gap-1.5">
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsFocusMode(!isFocusMode)}
                     title={isFocusMode ? "Exit Focus Mode" : "Focus Mode"}
-                    className={`p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 shadow-sm ${
+                    className={`p-2.5 rounded-xl border hidden md:flex items-center justify-center transition-all duration-200 shadow-sm ${
                       isFocusMode 
                         ? "text-primary bg-primary/10 border-primary/20 shadow-primary/5" 
                         : "text-text/50 bg-surface/50 border-border/10 hover:text-text hover:border-border/20 hover:bg-surface"
@@ -505,7 +505,7 @@ const Notes: React.FC<NotesProps> = () => {
             </div>
 
             <div className={`flex-1 flex overflow-hidden ${isFocusMode ? "max-w-4xl mx-auto w-full" : ""}`}>
-              <div className={`p-4 md:p-8 overflow-y-auto relative transition-all duration-300 ${
+              <div className={`p-3 md:p-8 overflow-y-auto relative transition-all duration-300 ${
                 viewMode === 'edit' ? "flex-1 w-full" : 
                 viewMode === 'split' ? "w-1/2 border-r border-border/10" : 
                 "hidden"
@@ -541,7 +541,7 @@ const Notes: React.FC<NotesProps> = () => {
                 </AnimatePresence>
               </div>
 
-              <div className={`p-4 md:p-8 overflow-y-auto transition-all duration-300 ${
+              <div className={`p-3 md:p-8 overflow-y-auto transition-all duration-300 ${
                 viewMode === 'edit' ? "hidden" : 
                 viewMode === 'split' ? "w-1/2 bg-surface/5" : 
                 `w-full bg-surface/20 ${selectedNote.isBlog ? "px-[10%]" : "px-8"}`
@@ -634,7 +634,7 @@ const Notes: React.FC<NotesProps> = () => {
               </div>
             </div>
 
-            <div className="p-4 px-4 md:px-8 border-t border-border/10 flex items-center gap-4 bg-surface/30">
+            <div className="p-3 px-3 md:px-8 border-t border-border/10 flex items-center gap-4 bg-surface/30">
               <TagIcon className="w-4 h-4 text-primary shrink-0 opacity-60" />
               <div className="flex flex-wrap gap-2">
                 {selectedNote.tags.map((tag, idx) => (
@@ -660,7 +660,7 @@ const Notes: React.FC<NotesProps> = () => {
                   }}
                 />
               </div>
-              <div className="ml-auto text-[10px] flex items-center gap-2 text-text/50 font-bold uppercase tracking-widest italic">
+              <div className="ml-auto text-[10px] hidden md:flex items-center gap-2 text-text/50 font-bold uppercase tracking-widest italic">
                 <Clock className="w-3 h-3" />
                 Auto-saved
               </div>

@@ -75,7 +75,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="w-full max-w-2xl bg-surface border border-border/10 rounded-3xl shadow-2xl overflow-hidden relative z-10"
+            className="w-full max-w-2xl mx-2 md:mx-0 bg-surface border border-border/10 rounded-3xl shadow-2xl overflow-hidden relative z-10"
           >
             <div className="p-6 border-b border-border/5 flex items-center gap-4">
               <Command className="w-5 h-5 text-primary" />
@@ -85,14 +85,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                 placeholder="Type a command or search workspace..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="flex-1 bg-transparent text-lg font-display outline-none text-text placeholder:text-text/20"
+                className="flex-1 bg-transparent text-base md:text-lg font-display outline-none text-text placeholder:text-text/20"
               />
               <div className="px-2 py-1 rounded-lg bg-surface/50 border border-border/10 text-[10px] font-bold text-text/30">
                 ESC
               </div>
             </div>
 
-            <div className="max-h-[50vh] overflow-y-auto p-4 custom-scrollbar">
+            <div className="max-h-[60vh] md:max-h-[50vh] overflow-y-auto p-3 md:p-4 custom-scrollbar">
               {filteredActions.length === 0 ? (
                 <div className="py-10 text-center text-text/30 space-y-2">
                   <Terminal className="w-8 h-8 mx-auto opacity-20" />
@@ -115,7 +115,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                               key={action.id}
                               onMouseEnter={() => setSelectedIndex(globalIndex)}
                               onClick={() => { action.perform(); onClose(); }}
-                              className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200 group ${
+                              className={`w-full flex items-center justify-between p-3 md:p-4 rounded-2xl transition-all duration-200 group ${
                                 isSelected ? "bg-primary text-white scale-[1.02]" : "hover:bg-primary/5 text-text/70"
                               }`}
                             >

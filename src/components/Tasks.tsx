@@ -168,7 +168,7 @@ const Tasks: React.FC = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setIsAdding(true)}
-          className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl shadow-lg shadow-primary/20 font-bold uppercase tracking-wider text-xs"
+          className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl shadow-lg shadow-primary/20 font-bold uppercase tracking-wider text-xs w-full md:w-auto"
         >
           <Plus className="w-4 h-4" />
           Add Task
@@ -182,7 +182,7 @@ const Tasks: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              className="p-8 rounded-4xl bg-surface border-2 border-primary/20 shadow-xl space-y-4"
+              className="p-5 md:p-8 rounded-4xl bg-surface border-2 border-primary/20 shadow-xl space-y-4"
             >
               <input 
                 autoFocus
@@ -190,7 +190,7 @@ const Tasks: React.FC = () => {
                 placeholder="What needs to be done?"
                 value={newTask.title}
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
-                className="w-full bg-transparent text-2xl font-display focus:outline-none text-text"
+                className="w-full bg-transparent text-xl md:text-2xl font-display focus:outline-none text-text"
               />
               <textarea 
                 placeholder="Add a description..."
@@ -218,7 +218,7 @@ const Tasks: React.FC = () => {
                   onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
                   className="bg-surface/50 border border-border/10 rounded-xl px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest focus:outline-none text-text/80"
                 />
-                <div className="ml-auto flex gap-3">
+                <div className="ml-auto flex gap-3 w-full md:w-auto justify-end">
                   <button onClick={() => setIsAdding(false)} className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-text/50 hover:text-text/80">Cancel</button>
                   <button onClick={addTask} className="bg-primary text-white px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20">Create Task</button>
                 </div>
@@ -233,9 +233,9 @@ const Tasks: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className={`group p-6 rounded-4xl bg-surface border border-border/10 hover:border-primary/20 transition-all ${task.status === "Done" ? "opacity-70" : "shadow-sm shadow-primary/5"}`}
+              className={`group p-4 md:p-6 rounded-3xl md:rounded-4xl bg-surface border border-border/10 hover:border-primary/20 transition-all ${task.status === "Done" ? "opacity-70" : "shadow-sm shadow-primary/5"}`}
             >
-              <div className="flex items-start gap-5">
+              <div className="flex items-start gap-3 md:gap-5">
                 <button 
                   onClick={() => toggleTask(task.id)}
                   className={`mt-1 transition-all duration-300 scale-110 ${task.status === "Done" ? "text-primary" : "text-text/30 hover:text-primary/50"}`}
@@ -245,7 +245,7 @@ const Tasks: React.FC = () => {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h4 className={`text-xl font-display transition-all ${task.status === "Done" ? "line-through text-text/50" : "text-text"}`}>
+                    <h4 className={`text-base md:text-xl font-display transition-all ${task.status === "Done" ? "line-through text-text/50" : "text-text"}`}>
                       {task.title}
                     </h4>
                     <button 

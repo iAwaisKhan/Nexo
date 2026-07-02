@@ -27,7 +27,7 @@ export const PWAPrompt: React.FC = () => {
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9 }}
-          className="fixed bottom-6 right-6 z-50 p-4 bg-background border border-primary/20 shadow-2xl rounded-xl max-w-sm"
+          className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 z-50 p-4 bg-background border border-primary/20 shadow-2xl rounded-xl max-w-sm"
         >
           <div className="flex flex-col gap-3">
             <div className="flex justify-between items-start gap-4">

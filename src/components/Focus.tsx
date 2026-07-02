@@ -171,7 +171,7 @@ const FocusMode: React.FC = () => {
                     onChange={handleDurationChange}
                     onBlur={() => setIsEditing(false)}
                     onKeyDown={(e) => e.key === "Enter" && setIsEditing(false)}
-                    className="w-48 bg-transparent text-[8rem] leading-none font-light tracking-tighter text-center outline-none border-b-2 border-primary/30 focus:border-primary text-text transition-colors"
+                    className="w-36 md:w-48 bg-transparent text-[5rem] md:text-[8rem] leading-none font-light tracking-tighter text-center outline-none border-b-2 border-primary/30 focus:border-primary text-text transition-colors"
                   />
                 </motion.div>
               ) : (
@@ -183,7 +183,7 @@ const FocusMode: React.FC = () => {
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   className="flex flex-col items-center"
                 >
-                  <span className={`text-[5.5rem] sm:text-[7.5rem] md:text-[10rem] font-light tabular-nums tracking-tighter leading-none transition-colors duration-700 ${isActive ? (mode === "focus" ? "text-primary" : "text-emerald-400") : "text-text group-hover:text-primary/80"}`}>
+                  <span className={`text-[4rem] sm:text-[5.5rem] md:text-[10rem] font-light tabular-nums tracking-tighter leading-none transition-colors duration-700 ${isActive ? (mode === "focus" ? "text-primary" : "text-emerald-400") : "text-text group-hover:text-primary/80"}`}>
                     {formatTime(timeLeft)}
                   </span>
                   
@@ -211,7 +211,7 @@ const FocusMode: React.FC = () => {
 
             <button
               onClick={toggleTimer}
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 shadow-lg ${isActive ? "bg-surface/50 text-text border border-border/20 backdrop-blur-xl" : "bg-text text-background hover:scale-105"}`}
+              className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all duration-500 shadow-lg ${isActive ? "bg-surface/50 text-text border border-border/20 backdrop-blur-xl" : "bg-text text-background hover:scale-105"}`}
             >
               {isActive ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
             </button>
@@ -231,7 +231,7 @@ const FocusMode: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="flex items-center gap-6 text-xs uppercase tracking-[0.1em] font-medium text-text-muted"
+                className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-xs uppercase tracking-[0.1em] font-medium text-text-muted"
               >
                 <div className="flex items-center gap-2">
                   <Waves className="w-3.5 h-3.5" />
@@ -261,7 +261,7 @@ const FocusMode: React.FC = () => {
         </div>
 
         {/* Analytics Section */}
-        <div className="w-full mt-24">
+        <div className="w-full mt-12 md:mt-24">
           <FocusAnalytics />
         </div>
 

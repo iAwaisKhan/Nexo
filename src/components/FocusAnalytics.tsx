@@ -1,10 +1,18 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Flame, Clock } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 
 const FocusAnalytics: React.FC = () => {
   const focusSessions = useAppStore(state => state.focusSessions);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const { totalHours, currentStreak, days } = useMemo(() => {
     const today = new Date();
@@ -78,18 +86,21 @@ const FocusAnalytics: React.FC = () => {
     }
   };
 
+  const displayDays = isMobile ? days.slice(-84) : days;
+  const cellSize = isMobile ? 'w-2 h-2' : 'w-2.5 h-2.5';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full bg-surface/30 backdrop-blur-3xl border border-border/20 rounded-3xl p-6 md:p-8"
+      className="w-full bg-surface/30 backdrop-blur-3xl border border-border/20 rounded-3xl p-4 md:p-8"
     >
       {/* Header row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-base font-semibold text-text mb-1">Focus Activity</p>
-          <p className="text-xs text-text-muted">A timeline of your 24 latest weeks</p>
+          <p className="text-xs text-text-muted">A timeline of your {isMobile ? "12" : "24"} latest weeks</p>
         </div>
 
         <div className="flex items-center gap-6">
@@ -117,17 +128,17 @@ const FocusAnalytics: React.FC = () => {
       <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
         <div className="min-w-max">
           <div
-            className="grid grid-flow-col gap-1.5 justify-start"
+            className={`grid grid-flow-col ${isMobile ? 'gap-1' : 'gap-1.5'} justify-start`}
             style={{ gridTemplateRows: "repeat(7, 10px)" }}
           >
-            {days.map((day, i) => (
+            {displayDays.map((day, i) => (
               <motion.div
                 key={day.date}
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.001, duration: 0.3 }}
                 title={`${day.date}: ${formatDuration(day.duration)}`}
-                className={`w-2.5 h-2.5 rounded-[2px] transition-transform duration-200 ${getIntensityClass(day.intensity)} ${day.duration > 0 ? "cursor-pointer" : "cursor-default"}`}
+                className={`${cellSize} rounded-[2px] transition-transform duration-200 ${getIntensityClass(day.intensity)} ${day.duration > 0 ? "cursor-pointer" : "cursor-default"}`}
                 whileHover={day.duration > 0 ? { scale: 1.5 } : {}}
               />
             ))}
@@ -135,12 +146,12 @@ const FocusAnalytics: React.FC = () => {
 
           {/* Legend */}
           <div className="flex items-center justify-between mt-4">
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">24w ago</span>
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{isMobile ? "12w ago" : "24w ago"}</span>
             <div className="flex items-center gap-1.5">
               {[0, 1, 2, 3, 4].map((intensity) => (
                 <div
                   key={intensity}
-                  className={`w-2.5 h-2.5 rounded-[2px] ${getIntensityClass(intensity)}`}
+                  className={`${cellSize} rounded-[2px] ${getIntensityClass(intensity)}`}
                 />
               ))}
             </div>

@@ -47,7 +47,7 @@ const Profile: React.FC = () => {
     const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || "User";
     
     return (
-      <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
+      <div className="flex flex-col md:flex-row items-center md:items-center justify-center min-h-0 md:min-h-[70vh] p-4 md:p-6 lg:p-12">
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -96,7 +96,7 @@ const Profile: React.FC = () => {
         </motion.div>
 
         {/* Heatmap Section */}
-        <div className="w-full max-w-sm lg:max-w-3xl lg:ml-8 mt-8 lg:mt-0 flex flex-col justify-center">
+        <div className="w-full max-w-full md:max-w-sm lg:max-w-3xl lg:ml-8 mt-6 lg:mt-0 flex flex-col justify-center">
           <FocusAnalytics />
         </div>
       </div>
@@ -105,7 +105,7 @@ const Profile: React.FC = () => {
 
   // Fallback for Users who 'skipped' Auth allowing them to login from Dashboard Profile directly
   return (
-    <div className="flex items-center justify-center min-h-[70vh] p-6 lg:p-12">
+    <div className="flex items-center justify-center min-h-0 md:min-h-[70vh] p-4 md:p-6 lg:p-12">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

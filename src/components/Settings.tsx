@@ -55,10 +55,10 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, descriptio
   <motion.div
     whileHover={onClick ? { x: 4 } : {}}
     onClick={onClick}
-    className={`group flex items-center justify-between p-4 rounded-2xl border border-border/5 bg-surface/30 backdrop-blur-sm transition-all ${onClick ? 'cursor-pointer hover:bg-surface/50 hover:border-border/20' : ''}`}
+    className={`group flex items-center justify-between p-3 md:p-4 rounded-2xl border border-border/5 bg-surface/30 backdrop-blur-sm transition-all ${onClick ? 'cursor-pointer hover:bg-surface/50 hover:border-border/20' : ''}`}
   >
     <div className="flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${danger ? 'bg-red-500/10 text-red-500 group-hover:bg-red-500/20' : 'bg-primary/10 text-primary group-hover:bg-primary/20'}`}>
+      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-colors ${danger ? 'bg-red-500/10 text-red-500 group-hover:bg-red-500/20' : 'bg-primary/10 text-primary group-hover:bg-primary/20'}`}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
@@ -141,8 +141,8 @@ const Settings: React.FC<SettingsProps> = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-10">
-      <div className="flex flex-col gap-12">
+    <div className="max-w-full md:max-w-3xl mx-auto py-6 md:py-10">
+      <div className="flex flex-col gap-8 md:gap-12">
 
         {/* Cloud & Sync */}
         <SettingSection title="Cloud & Sync">

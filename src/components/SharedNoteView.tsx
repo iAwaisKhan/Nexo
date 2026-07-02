@@ -93,7 +93,7 @@ const SharedNoteView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-text selection:bg-primary/20 selection:text-primary">
-      <header className="h-20 px-8 flex items-center justify-between border-b border-border/5 bg-surface/30 backdrop-blur-xl sticky top-0 z-50">
+      <header className="h-16 md:h-20 px-4 md:px-8 flex items-center justify-between border-b border-border/5 bg-surface/30 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <GraduationCap className="w-6 h-6 text-primary" />
           <span className="text-sm font-display uppercase tracking-[0.3em]">Nexo Portal</span>
@@ -104,14 +104,14 @@ const SharedNoteView: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-8 py-20">
+      <main className="max-w-3xl mx-auto px-4 md:px-8 py-10 md:py-20">
         <motion.article 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="space-y-12"
         >
           <div className="space-y-4 text-center">
-            <h1 className="text-6xl font-display italic tracking-tight">{note.title}</h1>
+            <h1 className="text-3xl md:text-6xl font-display italic tracking-tight">{note.title}</h1>
             <div className="flex items-center justify-center gap-4 text-[10px] text-text/40 font-bold uppercase tracking-[0.2em]">
               <span>Last Modified {new Date(note.lastModified).toLocaleDateString()}</span>
               <span>•</span>
@@ -150,7 +150,7 @@ const SharedNoteView: React.FC = () => {
         </motion.article>
       </main>
 
-      <footer className="py-20 border-t border-border/5 text-center space-y-8">
+      <footer className="py-10 md:py-20 border-t border-border/5 text-center space-y-8">
         <div className="w-12 h-px bg-primary/20 mx-auto" />
         <div className="space-y-2">
           <p className="text-[10px] font-bold text-text/30 uppercase tracking-[0.4em]">Crafted in your personal Nexo</p>

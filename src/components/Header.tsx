@@ -70,7 +70,14 @@ const navItems = [
   { path: "/notes", label: "Notes", icon: StickyNote },
   { path: "/tasks", label: "Tasks", icon: CheckCircle },
   { path: "/focus", label: "Focus", icon: Brain },
+];
 
+const mobileNavItems = [
+  { path: "/", label: "Home", icon: Home },
+  { path: "/notes", label: "Notes", icon: StickyNote },
+  { path: "/tasks", label: "Tasks", icon: CheckCircle },
+  { path: "/focus", label: "Focus", icon: Brain },
+  { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 const Header: React.FC = () => {
@@ -99,7 +106,7 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-3 bg-transparent border-b border-border/10">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-2 md:py-3 bg-transparent border-b border-border/10">
         {/* Left: Logo */}
         <div className="flex-1 flex items-center">
           <div
@@ -133,7 +140,7 @@ const Header: React.FC = () => {
           <SyncBadge />
           <button
             onClick={() => navigate("/settings")}
-            className={`flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
+            className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
               isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
             }`}
             title="Settings"
@@ -159,14 +166,14 @@ const Header: React.FC = () => {
 
       {/* Floating Bottom Navigation Tab Bar (Mobile only) */}
       {isMobile && (
-        <nav className="fixed bottom-4 left-4 right-4 z-50 bg-surface/85 backdrop-blur-xl border border-border/10 rounded-2xl p-1.5 shadow-2xl flex justify-around items-center">
-          {navItems.map((item) => {
+        <nav className="fixed bottom-4 left-4 right-4 z-50 bg-surface/85 backdrop-blur-xl border border-border/10 rounded-2xl p-1.5 shadow-2xl flex justify-around items-center safe-bottom">
+          {mobileNavItems.map((item) => {
             const active = isActive(item.path);
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-xl flex-1 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-xl flex-1 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
                   active ? "text-primary" : "text-text-muted hover:text-text/80"
                 }`}
               >
@@ -177,7 +184,7 @@ const Header: React.FC = () => {
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                <item.icon className="w-5 h-5 mb-1" />
+                <item.icon className="w-5 h-5 mb-0.5" />
                 <span>{item.label}</span>
               </button>
             );

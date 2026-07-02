@@ -606,3 +606,33 @@
 .bn-root[data-color-scheme="light"] {
   --bn-colors-editor-text: var(--color-text) !important;
 }
+
+/* ─── Mobile Optimizations ─────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Thinner scrollbar on mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  /* Safe area padding for notched phones */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Ensure uiverse desktop nav is hidden on mobile (CSS safety net) */
+  .uiverse-menu {
+    display: none !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .focus-ring-wrap {
+    width: 240px;
+    height: 240px;
+  }
+  .focus-time {
+    font-size: 2.5rem;
+  }
+}
+
