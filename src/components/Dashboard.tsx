@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Play,
   FileText,
   Code2,
   Copy,
@@ -11,138 +10,221 @@ import {
 import Footer from './Footer';
 import { useAppStore } from '../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
+import { localDateKey } from '../lib/date';
 
 const Dashboard: React.FC = () => {
   const notes = useAppStore(state => state.notes);
+  const focusSessions = useAppStore(state => state.focusSessions);
   const navigate = useNavigate();
+  const [snippetFeedback, setSnippetFeedback] = useState('');
 
-  // Real data only — no mock fallbacks
+  const snippetCode = `export function middleware(request) {
+  const token = request.cookies.get('nexo_token');
+
+  if (!token) {
+    return Response.redirect(new URL('/auth', request.url));
+  }
+}`;
+
+  const copySnippet = async () => {
+    try {
+      await navigator.clipboard.writeText(snippetCode);
+      setSnippetFeedback('Snippet copied');
+    } catch {
+      setSnippetFeedback('Copy unavailable');
+    }
+    window.setTimeout(() => setSnippetFeedback(''), 2200);
+  };
+
+  const shareSnippet = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Nexo snippet', text: snippetCode });
+        setSnippetFeedback('Snippet shared');
+      } else {
+        await navigator.clipboard.writeText(snippetCode);
+        setSnippetFeedback('Snippet copied');
+      }
+    } catch {
+      setSnippetFeedback('Share cancelled');
+    }
+    window.setTimeout(() => setSnippetFeedback(''), 2200);
+  };
+
   const recentNotes = notes
     .slice()
     .sort((a, b) => b.lastModified - a.lastModified)
     .slice(0, 2);
 
+  const today = localDateKey();
+  const todayFocusSeconds = focusSessions
+    .filter(session => session.date === today)
+    .reduce((total, session) => total + session.duration, 0);
+
+  const formatTimer = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className='min-h-full w-full pt-8 pb-2 px-2 md:px-8'>
-      {/* Hero Header Section */}
-      <div className='flex flex-col items-center text-center mb-10 md:mb-16'>
+    <div className="min-h-full w-full pt-3 md:pt-8 pb-24 md:pb-2 px-1.5 sm:px-3 md:px-8">
+      <div className="flex flex-col items-center text-center mb-7 md:mb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="max-w-5xl mx-auto"
         >
-          <h1 className='text-2xl md:text-5xl font-serif font-medium text-text mb-2 tracking-[-0.02em] leading-tight px-2'>
+          <h1 className="text-[1.7rem] sm:text-4xl md:text-5xl font-serif font-medium text-text mb-2 tracking-[-0.02em] leading-tight px-2">
             Nexo: Your Single
-            <span className='block mt-2 text-primary font-handwriting py-1 leading-[1.1] text-4xl md:text-7xl'>
+            <span className="block mt-1.5 md:mt-2 text-primary font-handwriting py-1 leading-[1.1] text-[3rem] sm:text-6xl md:text-7xl break-words">
               Dashboard for Deep Flow
             </span>
           </h1>
         </motion.div>
       </div>
 
-      {/* Main Dashboard Grid */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className='max-w-[95%] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8'
+        className="max-w-full md:max-w-[95%] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8"
       >
-        {/* Focus Card */}
-        <div className='md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-3xl md:rounded-[3rem] p-4 md:p-6 relative overflow-hidden group shadow-xl'>
-          <div className='absolute inset-0 opacity-10 pointer-events-none'>
-            <svg className='absolute bottom-0 left-0 w-full scale-y-150 origin-bottom' viewBox='0 0 1440 320'>
-              <path fill='var(--color-primary)' d='M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'></path>
+        <div className="md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[1.75rem] md:rounded-[3rem] p-4 sm:p-5 md:p-6 relative overflow-hidden group shadow-xl min-h-[14rem] sm:min-h-[16rem] md:min-h-[22rem]">
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <svg className="absolute bottom-0 left-0 w-full scale-y-150 origin-bottom" viewBox="0 0 1440 320">
+              <path fill="var(--color-primary)" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
             </svg>
           </div>
 
-          <div className='relative z-10'>
-            <h3 className='text-2xl md:text-4xl font-serif font-medium text-text mb-1'>Current Session: Deep Work</h3>
-            <p className='text-text-muted text-sm mb-3 md:mb-6 font-redhat'>In the zone, getting things done.</p>
+          <div className="relative z-10">
+            <h3 className="text-[1.55rem] sm:text-3xl md:text-4xl font-serif font-medium text-text mb-1 leading-tight">
+              Current Session: Deep Work
+            </h3>
+            <p className="text-text-muted text-xs sm:text-sm mb-8 md:mb-12 font-redhat">
+              In the zone, getting things done.
+            </p>
 
-            <div className='flex items-end gap-3 md:gap-6 mb-1 md:mb-0'>
-              <span className='text-5xl md:text-8xl font-sans font-bold text-text tracking-tighter'>24:52</span>
-              <span className='text-lg md:text-3xl font-sans text-text-muted mb-1 md:mb-3 opacity-50 tracking-tight'>/ 45:00</span>
+            <div className="flex items-end gap-2 sm:gap-3 md:gap-6 min-w-0">
+              <span className="text-[4rem] sm:text-7xl md:text-8xl font-sans font-bold text-text tracking-tighter tabular-nums leading-none min-w-0">
+                {formatTimer(todayFocusSeconds)}
+              </span>
+              <span className="text-base sm:text-lg md:text-3xl font-sans text-text-muted mb-1.5 md:mb-3 opacity-50 tracking-tight whitespace-nowrap">
+                / 45:00
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Recent Notes Card */}
-        <div className='md:col-span-4 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[2rem] p-4 md:p-8 shadow-xl'>
-          <div className='flex items-center justify-between mb-6'>
-            <div className='flex items-center gap-3'>
-              <FileText className='w-6 h-6 text-primary' />
-              <h4 className='font-serif font-bold text-text text-xl'>Recent Notes</h4>
+        <div className="md:col-span-4 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[1.75rem] md:rounded-[2rem] p-4 sm:p-5 md:p-8 shadow-xl min-h-[13rem] md:min-h-[22rem]">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+              <h4 className="font-serif font-bold text-text text-lg md:text-xl">Recent Notes</h4>
             </div>
           </div>
 
           {recentNotes.length > 0 ? (
-            <div className='nexo-list'>
+            <div className="nexo-list">
               {recentNotes.map((note) => (
-                <div key={note.id} className='nexo-list-item group'>
-                  <div className='item-indicator' />
-                  <div className='item-content'>
-                    <h5 className='item-title'>{note.title || 'Untitled Note'}</h5>
-                    <p className='item-snippet'>{note.content?.substring(0, 60) || 'No content yet...'}...</p>
+                <button
+                  key={note.id}
+                  onClick={() => navigate(`/notes?note=${encodeURIComponent(note.id)}`)}
+                  className="nexo-list-item group text-left w-full"
+                >
+                  <div className="item-indicator" />
+                  <div className="item-content min-w-0">
+                    <h5 className="item-title truncate">{note.title || 'Untitled Note'}</h5>
+                    <p className="item-snippet line-clamp-2">{note.content?.substring(0, 60) || 'No content yet'}...</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
-            /* Empty state — no mock data */
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className='flex flex-col items-center justify-center py-8 text-center'
+              className="flex flex-col items-center justify-center py-8 md:py-12 text-center"
             >
-              <StickyNote className='w-10 h-10 text-text/20 mb-3 stroke-1' />
-              <p className='text-sm text-text/40 font-medium'>No notes yet</p>
+              <StickyNote className="w-10 h-10 text-text/20 mb-3 stroke-1" />
+              <p className="text-sm text-text/40 font-medium">No notes yet</p>
               <button
                 onClick={() => navigate('/notes')}
-                className='relative mt-3 text-[10px] font-bold uppercase tracking-widest text-primary group pb-0.5'
+                className="relative mt-3 text-[10px] font-bold uppercase tracking-widest text-primary group pb-0.5"
               >
-                Create your first note →
-                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary transition-all duration-300 ease-out group-hover:w-full"></span>
+                Create your first note -&gt;
+                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-primary transition-all duration-300 ease-out group-hover:w-full" />
               </button>
             </motion.div>
           )}
         </div>
 
-        {/* Snippet Card */}
-        <div className='hidden md:flex col-span-1 md:col-span-12 bg-white rounded-3xl md:rounded-[3rem] p-4 md:p-6 shadow-xl overflow-hidden flex-col'>
-          <div className='flex items-center justify-between mb-4'>
-            <div className='flex items-center gap-3'>
-              <Code2 className='w-5 h-5 text-blue-600' />
-              <h4 className='font-serif font-bold text-slate-900 text-base md:text-lg'>Snippet: Next.js Middleware</h4>
-            </div>
-            <div className='flex gap-4'>
-              <Copy className='w-4 h-4 text-slate-500 hover:text-blue-600 cursor-pointer transition-colors' />
-              <Share2 className='w-4 h-4 text-slate-500 hover:text-blue-600 cursor-pointer transition-colors' />
+        <div className="md:hidden bg-white rounded-[1.75rem] p-4 shadow-xl overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Code2 className="w-5 h-5 text-blue-600" />
+              <h4 className="font-serif font-bold text-slate-900 text-base">Snippet: Next.js Middleware</h4>
             </div>
           </div>
 
-          <div className='flex-1 bg-[#0a0a0a] rounded-2xl md:rounded-[2rem] p-4 md:p-6 font-mono text-[11px] md:text-sm leading-relaxed overflow-auto max-h-48 md:max-h-none border border-white/5 relative shadow-inner'>
-            <div className='flex gap-2 absolute top-4 left-6'>
-              <div className='w-2.5 h-2.5 rounded-full bg-[#ff5f56]' />
-              <div className='w-2.5 h-2.5 rounded-full bg-[#ffbd2e]' />
-              <div className='w-2.5 h-2.5 rounded-full bg-[#27c93f]' />
+          <div className="bg-[#0a0a0a] rounded-2xl p-4 font-mono text-[10px] leading-relaxed overflow-x-auto border border-white/5 relative shadow-inner">
+            <div className="flex gap-2 absolute top-4 left-4">
+              <div className="w-2 h-2 rounded-full bg-[#ff5f56]" />
+              <div className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
+              <div className="w-2 h-2 rounded-full bg-[#27c93f]" />
             </div>
-            <div className='mt-8'>
-              <pre className='text-[13px]'>
-                <code className='text-gray-400'>
-                  <span className='text-blue-400'>export function</span>{' '}
-                  <span className='text-blue-400'>middleware</span>(request) {'{'}
+            <pre className="mt-7 min-w-[26rem]">
+              <code className="text-gray-400">
+                <span className="text-blue-400">export function</span>{' '}
+                <span className="text-blue-400">middleware</span>(request) {'{'}
+                {'\n'}{'  '}
+                <span className="text-gray-500">// Validate session sync</span>
+                {'\n'}{'}'}
+              </code>
+            </pre>
+          </div>
+        </div>
+
+        <div className="hidden md:flex col-span-12 bg-white rounded-3xl md:rounded-[3rem] p-4 md:p-6 shadow-xl overflow-hidden flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Code2 className="w-5 h-5 text-blue-600" />
+              <h4 className="font-serif font-bold text-slate-900 text-base md:text-lg">Snippet: Next.js Middleware</h4>
+            </div>
+            <div className="flex items-center gap-3">
+              {snippetFeedback && <span className="text-[10px] font-semibold text-blue-600" role="status">{snippetFeedback}</span>}
+              <button type="button" onClick={copySnippet} title="Copy snippet" aria-label="Copy snippet" className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <Copy className="w-4 h-4" />
+              </button>
+              <button type="button" onClick={shareSnippet} title="Share snippet" aria-label="Share snippet" className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 bg-[#0a0a0a] rounded-2xl md:rounded-[2rem] p-4 md:p-6 font-mono text-[11px] md:text-sm leading-relaxed overflow-auto max-h-48 md:max-h-none border border-white/5 relative shadow-inner">
+            <div className="flex gap-2 absolute top-4 left-6">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+            </div>
+            <div className="mt-8">
+              <pre className="text-[13px]">
+                <code className="text-gray-400">
+                  <span className="text-blue-400">export function</span>{' '}
+                  <span className="text-blue-400">middleware</span>(request) {'{'}
                   {'\n'}{'  '}
-                  <span className='text-gray-500'>// Validate session sync</span>
+                  <span className="text-gray-500">// Validate session sync</span>
                   {'\n'}{'  '}
-                  <span className='text-blue-400'>const</span> token = request.cookies.get(
-                  <span className='text-green-400'>'nexo_token'</span>);
+                  <span className="text-blue-400">const</span> token = request.cookies.get(
+                  <span className="text-green-400">'nexo_token'</span>);
                   {'\n\n'}{'  '}
-                  <span className='text-blue-400'>if</span> (!token) {'{'}
+                  <span className="text-blue-400">if</span> (!token) {'{'}
                   {'\n'}{'    '}
-                  <span className='text-blue-400'>return</span> Response.redirect(
-                  <span className='text-blue-400'>new</span> URL(
-                  <span className='text-green-400'>'/auth'</span>, request.url));
+                  <span className="text-blue-400">return</span> Response.redirect(
+                  <span className="text-blue-400">new</span> URL(
+                  <span className="text-green-400">'/auth'</span>, request.url));
                   {'\n'}{'  '}
                   {'}'}
                   {'\n'}{'}'}
@@ -151,8 +233,8 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-
       </motion.div>
+
       <Footer />
     </div>
   );

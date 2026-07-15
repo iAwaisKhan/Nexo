@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 @layer base {
   :root {
@@ -609,6 +610,10 @@
 
 /* ─── Mobile Optimizations ─────────────────────────────────────── */
 @media (max-width: 767px) {
+  .nexo-bg-video {
+    display: none;
+  }
+
   /* Thinner scrollbar on mobile */
   ::-webkit-scrollbar {
     width: 4px;
@@ -623,6 +628,12 @@
   /* Ensure uiverse desktop nav is hidden on mobile (CSS safety net) */
   .uiverse-menu {
     display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
+  .nexo-bg-video {
+    display: none;
   }
 }
 

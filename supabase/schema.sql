@@ -60,12 +60,15 @@ CREATE TABLE IF NOT EXISTS notes (
   published_at BIGINT,
   slug TEXT,
   is_blog BOOLEAN DEFAULT FALSE,
+  version INTEGER NOT NULL DEFAULT 0,
   deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   fts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(content, ''))) STORED,
   PRIMARY KEY (id, user_id)
 );
+
+ALTER TABLE notes ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 
@@ -109,12 +112,15 @@ CREATE TABLE IF NOT EXISTS tasks (
   status task_status NOT NULL DEFAULT 'To Do',
   created_at_ts BIGINT NOT NULL DEFAULT 0,
   time_spent INTEGER DEFAULT 0,
+  version INTEGER NOT NULL DEFAULT 0,
   deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
   fts tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))) STORED,
   PRIMARY KEY (id, user_id)
 );
+
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 
@@ -160,9 +166,19 @@ CREATE POLICY "Users can delete their own sessions"
 
 -- 5. ENABLE REALTIME
 -- This allows Supabase Realtime to broadcast changes on these tables.
-ALTER PUBLICATION supabase_realtime ADD TABLE notes;
-ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE focus_sessions;
+-- Keep this migration re-runnable when setting up staging and production.
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE notes;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE focus_sessions;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 6. FULL TEXT SEARCH INDEXES (GIN)
 CREATE INDEX IF NOT EXISTS notes_fts_idx ON notes USING GIN (fts);

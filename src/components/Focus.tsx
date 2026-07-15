@@ -6,6 +6,7 @@ import { useAppStore, AppFocusSession } from "../store/useAppStore";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./ui/ErrorFallback";
 import FocusAnalytics from "./FocusAnalytics";
+import { localDateKey, localHour } from "../lib/date";
 
 const FocusMode: React.FC = () => {
   const [focusMinutes, setFocusMinutes] = useState(25);
@@ -18,7 +19,6 @@ const FocusMode: React.FC = () => {
   const [isStrictMode, setIsStrictMode] = useState(false);
   const [showStrictWarning, setShowStrictWarning] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [completedSessions, setCompletedSessions] = useState(0);
 
   useAmbientSound(isActive, isMuted, soundType);
 
@@ -59,8 +59,8 @@ const FocusMode: React.FC = () => {
       duration,
       targetId: "manual-focus",
       targetType: "focus",
-      date: new Date().toISOString().split("T")[0],
-      hour: new Date().getHours(),
+      date: localDateKey(),
+      hour: localHour(),
     };
     addFocusSession(session);
   }, [addFocusSession]);
@@ -71,7 +71,6 @@ const FocusMode: React.FC = () => {
     if (mode === "focus" && sessionStartRef.current) {
       const duration = Math.floor((Date.now() - sessionStartRef.current) / 1000);
       await logSession(duration);
-      setCompletedSessions((p) => p + 1);
     }
     const next = mode === "focus" ? "break" : "focus";
     setMode(next);

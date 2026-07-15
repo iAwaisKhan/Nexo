@@ -18,10 +18,12 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./ui/ErrorFallback";
 
 import type { Task } from '../types/task';
+import { localDateKey, localHour } from '../lib/date';
 export type { Task };
 
 const Tasks: React.FC = () => {
-  const tasks = useAppStore(state => state.tasks).sort((a, b) => b.createdAt - a.createdAt);
+  const rawTasks = useAppStore(state => state.tasks);
+  const tasks = useMemo(() => rawTasks.slice().sort((a, b) => b.createdAt - a.createdAt), [rawTasks]);
   const addTaskStore = useAppStore(state => state.addTask);
   const updateTaskStore = useAppStore(state => state.updateTask);
   const deleteTaskStore = useAppStore(state => state.deleteTask);
@@ -33,6 +35,16 @@ const Tasks: React.FC = () => {
   const [newTask, setNewTask] = useState({ title: "", description: "", priority: "Medium" as "High" | "Medium" | "Low", dueDate: "" });
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const activeTaskStartRef = useRef<number | null>(null);
+  const activeTaskIdRef = useRef<string | null>(null);
+  const tasksRef = useRef(tasks);
+
+  useEffect(() => {
+    activeTaskIdRef.current = activeTaskId;
+  }, [activeTaskId]);
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
 
   const syncStatus = useAppStore(state => state.syncStatus);
   const isLoading = syncStatus === 'syncing' && tasks.length === 0;
@@ -88,8 +100,8 @@ const Tasks: React.FC = () => {
               duration: duration,
               targetId: id,
               targetType: 'task',
-              date: new Date().toISOString().split('T')[0],
-              hour: new Date(activeTaskStartRef.current).getHours()
+              date: localDateKey(),
+              hour: localHour(new Date(activeTaskStartRef.current))
             };
             addFocusSession(session);
           }
@@ -108,19 +120,28 @@ const Tasks: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      // Cleanup on unmount
-      if (activeTaskId && activeTaskStartRef.current) {
+      const activeId = activeTaskIdRef.current;
+      if (activeId && activeTaskStartRef.current) {
         const duration = Math.floor((Date.now() - activeTaskStartRef.current) / 1000);
-        const task = tasks.find(t => t.id === activeTaskId);
+        const task = tasksRef.current.find(t => t.id === activeId);
         if (task && duration > 0) {
           const updatedTime = (task.timeSpent || 0) + duration;
           updateTaskStore({ ...task, timeSpent: updatedTime });
-          // Save session too but might be tricky with async delete during unmount?
-          // Usually we want to save before unmount.
+          const session: AppFocusSession = {
+            id: crypto.randomUUID(),
+            startTime: activeTaskStartRef.current,
+            endTime: Date.now(),
+            duration,
+            targetId: activeId,
+            targetType: 'task',
+            date: localDateKey(),
+            hour: localHour(new Date(activeTaskStartRef.current))
+          };
+          addFocusSession(session);
         }
       }
     };
-  }, [activeTaskId, tasks]);
+  }, [updateTaskStore, addFocusSession]);
 
   const getPriorityColor = (p: string) => {
     switch(p) {

@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCcw } from 'lucide-react';
 import { FallbackProps } from 'react-error-boundary';
 
 export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
+  const message = error instanceof Error ? error.message : String(error || "Unknown error component crash");
   return (
     <div className="min-h-[400px] h-full flex flex-col items-center justify-center p-8 bg-background text-text text-center rounded-xl border border-primary/10 shadow-sm">
       <motion.div
@@ -24,7 +25,7 @@ export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBounda
 
         <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 w-full text-left overflow-auto max-h-32 mb-8">
           <code className="text-xs text-red-400 font-mono break-words">
-            {error.message || "Unknown error component crash"}
+            {message}
           </code>
         </div>
 

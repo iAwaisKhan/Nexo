@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Flame, Clock } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { localDateKey } from "../lib/date";
 
 const FocusAnalytics: React.FC = () => {
   const focusSessions = useAppStore(state => state.focusSessions);
@@ -26,7 +27,7 @@ const FocusAnalytics: React.FC = () => {
       let dateStr = session.date;
       if (!dateStr) {
         const d = new Date(session.startTime);
-        dateStr = d.toISOString().split("T")[0];
+        dateStr = localDateKey(d);
       }
       sessionsByDate[dateStr] = (sessionsByDate[dateStr] || 0) + session.duration;
       totalSeconds += session.duration;
@@ -37,7 +38,7 @@ const FocusAnalytics: React.FC = () => {
     for (let i = 167; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = localDateKey(d);
       const durationSeconds = sessionsByDate[dateStr] || 0;
 
       let intensity = 0;
@@ -55,7 +56,7 @@ const FocusAnalytics: React.FC = () => {
     for (let i = 0; i < 168; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = localDateKey(d);
       if (sessionsByDate[dateStr] && sessionsByDate[dateStr] > 0) {
         streak++;
       } else {

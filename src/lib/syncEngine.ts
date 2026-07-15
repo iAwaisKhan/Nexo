@@ -4,8 +4,8 @@
  * Strategy:
  *  1. Local writes go to Zustand immediately (instant UI).
  *  2. Background push to Supabase after each local write.
- *  3. On failure: optimistic rollback restores previous state.
- *  4. When offline: writes are queued in memory and flushed on reconnect.
+ *  3. On failure: local state is preserved and the write is queued for retry.
+ *  4. When offline: writes are persisted and flushed on reconnect.
  *  5. On app load + auth: pull full state from cloud and merge.
  *  6. Realtime subscriptions apply changes from other devices live.
  *
@@ -29,6 +29,36 @@ type QueuedWrite =
   | { type: 'delete_task'; taskId: string; userId: string }
   | { type: 'upsert_session'; session: AppFocusSession; userId: string };
 
+const QUEUE_STORAGE_KEY = 'nexo_sync_write_queue_v2';
+
+function readPersistedQueue(): QueuedWrite[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(QUEUE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error('[SyncEngine] Failed to read persisted queue:', error);
+    return [];
+  }
+}
+
+function persistQueue(queue: QueuedWrite[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (queue.length === 0) {
+      window.localStorage.removeItem(QUEUE_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
+    }
+  } catch (error) {
+    console.error('[SyncEngine] Failed to persist queue:', error);
+  }
+}
+
+function assertNoError(result: { error?: unknown | null }): void {
+  if (result.error) throw result.error;
+}
+
 // ── Mappers: Local ↔ DB ──────────────────────────────────────
 
 function noteToRow(note: Note, userId: string) {
@@ -45,7 +75,7 @@ function noteToRow(note: Note, userId: string) {
     published_at: note.publishedAt || null,
     slug: note.slug || null,
     is_blog: note.isBlog || false,
-    version: (note.version ?? 0) + 1,
+    version: note.version ?? 0,
     updated_at: new Date().toISOString(),
   };
 }
@@ -78,7 +108,7 @@ function taskToRow(task: Task, userId: string) {
     status: task.status,
     created_at_ts: task.createdAt,
     time_spent: task.timeSpent || 0,
-    version: (task.version ?? 0) + 1,
+    version: task.version ?? 0,
     updated_at: new Date().toISOString(),
   };
 }
@@ -131,12 +161,14 @@ class SyncEngine {
   private channel: RealtimeChannel | null = null;
   private isInitialized = false;
 
-  // In-memory offline write queue — flushed when back online
-  private writeQueue: QueuedWrite[] = [];
-  private isOnline = navigator.onLine;
+  // Persisted offline write queue, flushed when back online.
+  private writeQueue: QueuedWrite[] = readPersistedQueue();
+  private isOnline = typeof navigator === 'undefined' ? true : navigator.onLine;
   private draining = false;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
+    if (typeof window === 'undefined') return;
     window.addEventListener('online', () => {
       this.isOnline = true;
       this.drainQueue();
@@ -155,6 +187,12 @@ class SyncEngine {
 
     this.userId = userId;
     const store = useAppStore.getState();
+
+    if (!this.isOnline) {
+      store._setSyncStatus('offline');
+      store._setIsLoading(false);
+      return;
+    }
 
     // Only show loading spinner if we have no local data yet
     const hasLocalData = store.notes.length > 0 || store.tasks.length > 0;
@@ -178,6 +216,10 @@ class SyncEngine {
   }
 
   async destroy(): Promise<void> {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
     if (this.channel) {
       await supabase.removeChannel(this.channel);
       this.channel = null;
@@ -196,6 +238,10 @@ class SyncEngine {
       supabase.from('tasks').select('*').eq('user_id', this.userId),
       supabase.from('focus_sessions').select('*').eq('user_id', this.userId),
     ]);
+
+    assertNoError(notesRes);
+    assertNoError(tasksRes);
+    assertNoError(sessionsRes);
 
     const cloudNotes: Note[] = (notesRes.data || []).map(rowToNote);
     const cloudTasks: Task[] = (tasksRes.data || []).map(rowToTask);
@@ -280,7 +326,7 @@ class SyncEngine {
 
     const sessionsToPush = mergedSessions.filter(s => !cloudSessionIds.has(s.id));
 
-    const promises: Promise<any>[] = [];
+    const promises: PromiseLike<{ error?: unknown | null }>[] = [];
     if (notesToPush.length)
       promises.push(supabase.from('notes').upsert(notesToPush.map(n => noteToRow(n, this.userId!))));
     if (tasksToPush.length)
@@ -288,7 +334,13 @@ class SyncEngine {
     if (sessionsToPush.length)
       promises.push(supabase.from('focus_sessions').upsert(sessionsToPush.map(s => sessionToRow(s, this.userId!))));
 
-    await Promise.allSettled(promises);
+    const results = await Promise.allSettled(promises);
+    const failed = results.find((result) =>
+      result.status === 'rejected' || Boolean(result.value.error)
+    );
+    if (failed) {
+      throw failed.status === 'rejected' ? failed.reason : failed.value.error;
+    }
   }
 
   // ── Realtime ──────────────────────────────────────────────
@@ -297,7 +349,7 @@ class SyncEngine {
     if (!this.userId || this.channel) return;
 
     this.channel = supabase
-      .channel('nexo-sync')
+      .channel(`nexo-sync-${this.userId}`)
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'notes', filter: `user_id=eq.${this.userId}` },
         (payload) => this.handleRealtimeChange('notes', payload))
@@ -320,9 +372,10 @@ class SyncEngine {
           const note = rowToNote(newRow);
           const existing = store.notes.find(n => n.id === note.id);
           if (!existing) {
-            store.addNote(note);
+            useAppStore.setState(state => ({
+              notes: [...state.notes, note],
+            }));
           } else if ((note.version ?? 0) >= (existing.version ?? 0)) {
-            // Direct set to avoid re-triggering a cloud push
             useAppStore.setState(state => ({
               notes: state.notes.map(n => n.id === note.id ? note : n),
             }));
@@ -339,7 +392,9 @@ class SyncEngine {
           const task = rowToTask(newRow);
           const existing = store.tasks.find(t => t.id === task.id);
           if (!existing) {
-            store.addTask(task);
+            useAppStore.setState(state => ({
+              tasks: [...state.tasks, task],
+            }));
           } else if ((task.version ?? 0) >= (existing.version ?? 0)) {
             useAppStore.setState(state => ({
               tasks: state.tasks.map(t => t.id === task.id ? task : t),
@@ -372,49 +427,81 @@ class SyncEngine {
   // ── Offline Write Queue ───────────────────────────────────
 
   private enqueue(write: QueuedWrite): void {
+    const key = this.writeKey(write);
+    this.writeQueue = this.writeQueue.filter((queued) => this.writeKey(queued) !== key);
     this.writeQueue.push(write);
+    persistQueue(this.writeQueue);
+    useAppStore.getState()._setSyncStatus('error');
+    this.scheduleRetry();
+  }
+
+  private writeKey(write: QueuedWrite): string {
+    switch (write.type) {
+      case 'upsert_note': return `${write.userId}:note:${write.note.id}`;
+      case 'delete_note': return `${write.userId}:note:${write.noteId}`;
+      case 'upsert_task': return `${write.userId}:task:${write.task.id}`;
+      case 'delete_task': return `${write.userId}:task:${write.taskId}`;
+      case 'upsert_session': return `${write.userId}:session:${write.session.id}`;
+    }
+  }
+
+  private scheduleRetry(): void {
+    if (this.retryTimer || !this.isOnline || !this.userId) return;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      void this.drainQueue();
+    }, 5000);
   }
 
   private async drainQueue(): Promise<void> {
     if (this.draining || !this.isOnline || !this.userId) return;
     this.draining = true;
 
-    while (this.writeQueue.length > 0 && this.isOnline) {
-      const write = this.writeQueue[0];
+    const userQueue = this.writeQueue.filter((write) => write.userId === this.userId);
+    while (userQueue.length > 0 && this.isOnline) {
+      const write = userQueue[0];
       try {
         await this.executeWrite(write);
-        this.writeQueue.shift(); // only remove after successful execution
+        this.writeQueue = this.writeQueue.filter((queued) => queued !== write);
+        persistQueue(this.writeQueue);
+        userQueue.shift();
       } catch {
-        break; // stop draining on failure; will retry next time back online
+        useAppStore.getState()._setSyncStatus('error');
+        this.scheduleRetry();
+        break;
       }
     }
 
     this.draining = false;
+    if (this.writeQueue.length === 0) {
+      useAppStore.getState()._setSyncStatus('idle');
+      useAppStore.getState()._setLastSyncedAt(Date.now());
+    }
   }
 
   private async executeWrite(write: QueuedWrite): Promise<void> {
     switch (write.type) {
       case 'upsert_note':
-        await supabase.from('notes').upsert(noteToRow(write.note, write.userId));
+        assertNoError(await supabase.from('notes').upsert(noteToRow(write.note, write.userId)));
         break;
       case 'delete_note':
-        await supabase.from('notes').delete().eq('id', write.noteId).eq('user_id', write.userId);
+        assertNoError(await supabase.from('notes').delete().eq('id', write.noteId).eq('user_id', write.userId));
         break;
       case 'upsert_task':
-        await supabase.from('tasks').upsert(taskToRow(write.task, write.userId));
+        assertNoError(await supabase.from('tasks').upsert(taskToRow(write.task, write.userId)));
         break;
       case 'delete_task':
-        await supabase.from('tasks').delete().eq('id', write.taskId).eq('user_id', write.userId);
+        assertNoError(await supabase.from('tasks').delete().eq('id', write.taskId).eq('user_id', write.userId));
         break;
       case 'upsert_session':
-        await supabase.from('focus_sessions').upsert(sessionToRow(write.session, write.userId));
+        assertNoError(await supabase.from('focus_sessions').upsert(sessionToRow(write.session, write.userId)));
         break;
     }
   }
 
   // ── Cloud Push Methods (called by store actions) ──────────
 
-  async pushNote(note: Note, previousNote?: Note): Promise<void> {
+  async pushNote(note: Note, _previousNote?: Note): Promise<void> {
     if (!this.userId || !isSupabaseConfigured()) return;
 
     if (!this.isOnline) {
@@ -427,12 +514,11 @@ class SyncEngine {
       if (error) throw error;
     } catch (error) {
       console.error('[SyncEngine] pushNote failed — rolling back:', error);
-      useAppStore.getState()._rollbackNote(previousNote, note.id);
-      useAppStore.getState()._setSyncStatus('error');
+      this.enqueue({ type: 'upsert_note', note, userId: this.userId });
     }
   }
 
-  async deleteNoteCloud(noteId: string, deletedNote?: Note): Promise<void> {
+  async deleteNoteCloud(noteId: string, _deletedNote?: Note): Promise<void> {
     if (!this.userId || !isSupabaseConfigured()) return;
 
     if (!this.isOnline) {
@@ -445,12 +531,11 @@ class SyncEngine {
       if (error) throw error;
     } catch (error) {
       console.error('[SyncEngine] deleteNote failed — rolling back:', error);
-      if (deletedNote) useAppStore.getState()._rollbackDeleteNote(deletedNote);
-      useAppStore.getState()._setSyncStatus('error');
+      this.enqueue({ type: 'delete_note', noteId, userId: this.userId });
     }
   }
 
-  async pushTask(task: Task, previousTask?: Task): Promise<void> {
+  async pushTask(task: Task, _previousTask?: Task): Promise<void> {
     if (!this.userId || !isSupabaseConfigured()) return;
 
     if (!this.isOnline) {
@@ -463,12 +548,11 @@ class SyncEngine {
       if (error) throw error;
     } catch (error) {
       console.error('[SyncEngine] pushTask failed — rolling back:', error);
-      useAppStore.getState()._rollbackTask(previousTask, task.id);
-      useAppStore.getState()._setSyncStatus('error');
+      this.enqueue({ type: 'upsert_task', task, userId: this.userId });
     }
   }
 
-  async deleteTaskCloud(taskId: string, deletedTask?: Task): Promise<void> {
+  async deleteTaskCloud(taskId: string, _deletedTask?: Task): Promise<void> {
     if (!this.userId || !isSupabaseConfigured()) return;
 
     if (!this.isOnline) {
@@ -481,8 +565,7 @@ class SyncEngine {
       if (error) throw error;
     } catch (error) {
       console.error('[SyncEngine] deleteTask failed — rolling back:', error);
-      if (deletedTask) useAppStore.getState()._rollbackDeleteTask(deletedTask);
-      useAppStore.getState()._setSyncStatus('error');
+      this.enqueue({ type: 'delete_task', taskId, userId: this.userId });
     }
   }
 
@@ -498,7 +581,8 @@ class SyncEngine {
       const { error } = await supabase.from('focus_sessions').upsert(sessionToRow(session, this.userId));
       if (error) throw error;
     } catch (error) {
-      console.error('[SyncEngine] pushFocusSession failed:', error);
+      console.error('[SyncEngine] pushFocusSession failed; queued for retry:', error);
+      this.enqueue({ type: 'upsert_session', session, userId: this.userId });
       // Sessions are append-only; no rollback needed — just log
     }
   }
@@ -506,6 +590,10 @@ class SyncEngine {
   async forceSync(): Promise<void> {
     if (!this.userId || !isSupabaseConfigured()) return;
     const store = useAppStore.getState();
+    if (!this.isOnline) {
+      store._setSyncStatus('offline');
+      return;
+    }
     store._setSyncStatus('syncing');
     try {
       await this.pullAndMerge();

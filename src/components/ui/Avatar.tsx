@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { User } from "lucide-react";
 
 interface AvatarProps {
@@ -21,13 +20,6 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md",
     xl: "w-20 h-20",
   };
 
-  const textSizes = {
-    sm: "text-[10px]",
-    md: "text-xs",
-    lg: "text-base",
-    xl: "text-xl",
-  };
-
   return (
     <div className="flex items-center gap-3">
       <div className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/30`}>
@@ -37,11 +29,12 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md",
             alt={alt || "avatar"} 
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
+        ) : fallback ? (
+          <span className={`font-semibold text-text-muted ${size === 'sm' ? 'text-[10px]' : size === 'xl' ? 'text-xl' : 'text-sm'}`}>
+            {fallback}
+          </span>
         ) : (
-          <User 
-            className={`text-text-muted ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} 
-            strokeWidth={1.5}
-          />
+          <User className={`text-text-muted ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} strokeWidth={1.5} />
         )}
       </div>
 

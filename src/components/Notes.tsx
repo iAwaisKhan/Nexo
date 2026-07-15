@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { 
   Plus, 
   Search, 
@@ -31,13 +29,47 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore, AppFocusSession } from "../store/useAppStore";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./ui/ErrorFallback";
+import { useSearchParams } from "react-router-dom";
 import GraphView from "./GraphView";
 import NoteSharing from "./NoteSharing";
+import { localDateKey, localHour } from "../lib/date";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
 import BlockEditor from "./BlockEditor";
 
 import type { Note } from '../types/note';
 export type { Note };
+
+const LazySyntaxHighlighter = React.lazy(async () => {
+  const [{ default: PrismLight }, { default: javascript }, { default: typescript }, { default: jsx }, { default: tsx }, { default: json }, { default: bash }, { default: css }, { default: markup }, { oneLight }] = await Promise.all([
+    import("react-syntax-highlighter/dist/esm/prism-light"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/javascript"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/typescript"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/jsx"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/tsx"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/json"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/bash"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/css"),
+    import("react-syntax-highlighter/dist/esm/languages/prism/markup"),
+    import("react-syntax-highlighter/dist/esm/styles/prism"),
+  ]);
+
+  PrismLight.registerLanguage('javascript', javascript);
+  PrismLight.registerLanguage('js', javascript);
+  PrismLight.registerLanguage('typescript', typescript);
+  PrismLight.registerLanguage('ts', typescript);
+  PrismLight.registerLanguage('jsx', jsx);
+  PrismLight.registerLanguage('tsx', tsx);
+  PrismLight.registerLanguage('json', json);
+  PrismLight.registerLanguage('bash', bash);
+  PrismLight.registerLanguage('shell', bash);
+  PrismLight.registerLanguage('css', css);
+  PrismLight.registerLanguage('html', markup);
+  PrismLight.registerLanguage('markup', markup);
+
+  return {
+    default: (props: any) => <PrismLight {...props} style={oneLight as any} />,
+  };
+});
 
 interface NotesProps {
 }
@@ -51,7 +83,9 @@ const Notes: React.FC<NotesProps> = () => {
   const [suggestions, setSuggestions] = useState<{ titles: string[], index: number } | null>(null);
   const [viewMode, setViewMode] = useState<'edit' | 'split' | 'preview'>('edit');
   const [isInsightMenuOpen, setIsInsightMenuOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const insightMenuRef = useRef<HTMLDivElement>(null);
+  const handledSearchNoteIdRef = useRef<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -85,11 +119,25 @@ const Notes: React.FC<NotesProps> = () => {
   const updateNoteStore = useAppStore(state => state.updateNote);
   const deleteNoteStore = useAppStore(state => state.deleteNote);
   const addFocusSession = useAppStore(state => state.addFocusSession);
+  const notesRef = useRef(notes);
+
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
 
 
   const selectedNote = useMemo(() => 
     notes.find(n => n.id === selectedId) || null
   , [notes, selectedId]);
+
+  useEffect(() => {
+    const noteId = searchParams.get("note");
+    if (noteId && noteId !== handledSearchNoteIdRef.current && notes.some(note => note.id === noteId)) {
+      handledSearchNoteIdRef.current = noteId;
+      setSelectedId(noteId);
+      if (isMobile) setIsSidebarOpen(false);
+    }
+  }, [searchParams, notes, isMobile]);
 
   const insertThoughtBlock = (type: string) => {
     if (!selectedNote) return;
@@ -106,7 +154,7 @@ const Notes: React.FC<NotesProps> = () => {
       if (sessionStartRef.current) {
         const duration = Math.floor((Date.now() - sessionStartRef.current) / 1000);
         if (duration > 5) {
-          const note = notes.find(n => n.id === id);
+          const note = notesRef.current.find(n => n.id === id);
           if (note) {
             const updatedTime = (note.timeSpent || 0) + duration;
             updateNoteStore({ ...note, timeSpent: updatedTime });
@@ -118,8 +166,8 @@ const Notes: React.FC<NotesProps> = () => {
               duration: duration,
               targetId: id,
               targetType: 'note',
-              date: new Date().toISOString().split('T')[0],
-              hour: new Date(sessionStartRef.current).getHours()
+              date: localDateKey(),
+              hour: localHour(new Date(sessionStartRef.current))
             };
             addFocusSession(session);
           }
@@ -137,7 +185,7 @@ const Notes: React.FC<NotesProps> = () => {
         endSession(selectedId);
       }
     };
-  }, [selectedId, notes]);
+  }, [selectedId, updateNoteStore, addFocusSession]);
 
   const backlinks = useMemo(() => {
     if (!selectedNote) return [];
@@ -586,12 +634,13 @@ const Notes: React.FC<NotesProps> = () => {
                       code({node, className, children, ...props}) {
                         const match = /language-(\w+)/.exec(className || "")
                         return match ? (
-                          <SyntaxHighlighter
-                            children={String(children).replace(/\n$/, "")}
-                            style={oneLight as any}
-                            language={match[1]}
-                            PreTag="div"
-                          />
+                          <React.Suspense fallback={<code className="block overflow-x-auto rounded-xl bg-surface/60 p-4 text-xs">{String(children)}</code>}>
+                            <LazySyntaxHighlighter
+                              children={String(children).replace(/\n$/, "")}
+                              language={match[1]}
+                              PreTag="div"
+                            />
+                          </React.Suspense>
                         ) : (
                           <code className={className} {...props}>
                             {children}

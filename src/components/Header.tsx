@@ -6,6 +6,11 @@ import {
   StickyNote,
   CheckCircle,
   Brain,
+  CalendarDays,
+  FolderKanban,
+  Layers3,
+  BarChart3,
+  Sparkles,
   Settings as SettingsIcon,
   Cloud,
   CloudOff,
@@ -67,6 +72,11 @@ const SyncBadge: React.FC = () => {
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
+  { path: "/kanban", label: "Board", icon: FolderKanban },
+  { path: "/calendar", label: "Plan", icon: CalendarDays },
+  { path: "/spaces", label: "Spaces", icon: Layers3 },
+  { path: "/insights", label: "Insights", icon: BarChart3 },
+  { path: "/today", label: "Today", icon: Sparkles },
   { path: "/notes", label: "Notes", icon: StickyNote },
   { path: "/tasks", label: "Tasks", icon: CheckCircle },
   { path: "/focus", label: "Focus", icon: Brain },
@@ -74,8 +84,11 @@ const navItems = [
 
 const mobileNavItems = [
   { path: "/", label: "Home", icon: Home },
+  { path: "/kanban", label: "Board", icon: FolderKanban },
+  { path: "/calendar", label: "Plan", icon: CalendarDays },
+  { path: "/spaces", label: "Spaces", icon: Layers3 },
+  { path: "/insights", label: "Insights", icon: BarChart3 },
   { path: "/notes", label: "Notes", icon: StickyNote },
-  { path: "/tasks", label: "Tasks", icon: CheckCircle },
   { path: "/focus", label: "Focus", icon: Brain },
   { path: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -119,7 +132,7 @@ const Header: React.FC = () => {
 
         {/* Center: Uiverse Nav (Desktop only) */}
         {!isMobile && (
-          <nav className="uiverse-menu shadow-2xl shadow-primary/5 flex max-md:overflow-x-auto max-md:max-w-[50vw] scrollbar-hide">
+          <nav className="uiverse-menu shadow-2xl shadow-primary/5 flex max-w-[58vw] overflow-x-auto scrollbar-hide">
             {navItems.map((item) => (
               <button
                 key={item.path}
@@ -166,16 +179,17 @@ const Header: React.FC = () => {
 
       {/* Floating Bottom Navigation Tab Bar (Mobile only) */}
       {isMobile && (
-        <nav className="fixed bottom-4 left-4 right-4 z-50 bg-surface/85 backdrop-blur-xl border border-border/10 rounded-2xl p-1.5 shadow-2xl flex justify-around items-center safe-bottom">
+        <nav className="fixed bottom-4 left-4 right-4 z-50 bg-surface/85 backdrop-blur-xl border border-border/10 rounded-2xl p-1.5 shadow-2xl flex justify-start items-center gap-1 overflow-x-auto scrollbar-hide safe-bottom">
           {mobileNavItems.map((item) => {
             const active = isActive(item.path);
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-xl flex-1 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
+                className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-xl shrink-0 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
                   active ? "text-primary" : "text-text-muted hover:text-text/80"
                 }`}
+                style={{ width: 72 }}
               >
                 {active && (
                   <motion.div

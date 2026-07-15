@@ -7,11 +7,8 @@ import {
   Shield,
   Trash2,
   Download,
-  Info,
   ChevronRight,
   Bell,
-  Palette,
-  Database,
   Cloud,
   CloudOff,
   RefreshCw,
@@ -25,6 +22,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useThemeStore } from "../store/useThemeStore";
 import { syncEngine } from "../lib/syncEngine";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { localDateKey } from "../lib/date";
 
 interface SettingSectionProps {
   title: string;
@@ -85,7 +83,9 @@ const Settings: React.FC<SettingsProps> = () => {
   const clearData = () => {
     if (confirm("Are you sure? This will permanently delete all your notes, tasks, and focus history.")) {
       indexedDB.deleteDatabase("NexoDB_Modern");
-      localStorage.clear();
+      localStorage.removeItem("nexo_storage");
+      localStorage.removeItem("nexo_skipped_auth");
+      localStorage.removeItem("nexo_sync_write_queue");
       window.location.reload();
     }
   };
@@ -102,7 +102,7 @@ const Settings: React.FC<SettingsProps> = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `nexo-export-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `nexo-export-${localDateKey()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -283,9 +283,9 @@ const Settings: React.FC<SettingsProps> = () => {
         <div className="pt-8 border-t border-border/5 flex flex-col items-center gap-4">
           <div className="flex items-center gap-2 text-text/20">
             <Shield className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">End-to-End Encrypted</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Local-First Private Workspace</span>
           </div>
-          <p className="text-[10px] text-text/30 font-medium">Version 2.0.0 • Cloud Sync Enabled</p>
+          <p className="text-[10px] text-text/30 font-medium">Version 1.0.0 - Optional Cloud Sync</p>
         </div>
 
       </div>

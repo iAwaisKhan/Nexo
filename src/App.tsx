@@ -6,13 +6,18 @@ import { ErrorFallback } from "./components/ui/ErrorFallback";
 import { useThemeStore } from "./store/useThemeStore";
 
 // ─── Eager imports → zero loading spinner on navigation ─────────────────────
-import Notes from "./components/Notes";
-import Tasks from "./components/Tasks";
 import Dashboard from "./components/Dashboard";
-import Profile from "./components/Profile";
-import Focus from "./components/Focus";
-import Settings from "./components/Settings";
-import SharedNoteView from "./components/SharedNoteView";
+const Notes = lazy(() => import("./components/Notes"));
+const Tasks = lazy(() => import("./components/Tasks"));
+const Profile = lazy(() => import("./components/Profile"));
+const Focus = lazy(() => import("./components/Focus"));
+const Settings = lazy(() => import("./components/Settings"));
+const SharedNoteView = lazy(() => import("./components/SharedNoteView"));
+const KanbanBoard = lazy(() => import("./components/KanbanBoard"));
+const CalendarView = lazy(() => import("./components/CalendarView"));
+const Spaces = lazy(() => import("./components/Spaces"));
+const InsightsDashboard = lazy(() => import("./components/InsightsDashboard"));
+const DailyCommandCenter = lazy(() => import("./components/DailyCommandCenter"));
 
 // Auth is still lazy — only shown once, before the app loads
 const Auth = lazy(() => import("./components/Auth"));
@@ -21,6 +26,7 @@ import Header from "./components/Header";
 import { CommandPalette } from "./components/ui/CommandPalette";
 import { PWAPrompt } from "./components/ui/PWAPrompt";
 import { useAuthStore } from "./store/useAuthStore";
+import { useAppStore } from "./store/useAppStore";
 import { isSupabaseConfigured } from "./lib/supabase";
 import { syncEngine } from "./lib/syncEngine";
 import {
@@ -28,6 +34,11 @@ import {
   StickyNote,
   CheckSquare,
   Brain,
+  CalendarDays,
+  FolderKanban,
+  Layers3,
+  BarChart3,
+  Sparkles,
   Settings as SettingsIcon,
 } from "lucide-react";
 
@@ -50,6 +61,12 @@ const PageTransition: React.FC<{ children: React.ReactNode; className?: string }
   );
 };
 
+const RouteLoading: React.FC = () => (
+  <div className="min-h-[40vh] flex items-center justify-center" role="status" aria-label="Loading">
+    <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+  </div>
+);
+
 const App: React.FC = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [skippedAuth, setSkippedAuth] = useState(() => {
@@ -57,6 +74,9 @@ const App: React.FC = () => {
   });
 
   const navigate = useNavigate();
+  const notes = useAppStore((state) => state.notes);
+  const tasks = useAppStore((state) => state.tasks);
+  const theme = useThemeStore((state) => state.theme);
   const { user, isLoading: authLoading, isAuthenticated, initialize } = useAuthStore();
 
   useEffect(() => { initialize(); }, [initialize]);
@@ -70,11 +90,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      syncEngine.initialize(user.id);
+      void syncEngine.initialize(user.id);
       localStorage.removeItem("nexo_skipped_auth");
       setSkippedAuth(false);
     }
-    return () => { if (!isAuthenticated) syncEngine.destroy(); };
+    return () => { void syncEngine.destroy(); };
   }, [isAuthenticated, user]);
 
   useEffect(() => {
@@ -101,8 +121,27 @@ const App: React.FC = () => {
     { id: "nv-dash",     title: "Dashboard",  icon: Home,         category: "Navigation", perform: () => navigate("/") },
     { id: "nv-notes",    title: "Notes",       icon: StickyNote,   category: "Navigation", perform: () => navigate("/notes") },
     { id: "nv-tasks",    title: "Tasks",       icon: CheckSquare,  category: "Navigation", perform: () => navigate("/tasks") },
+    { id: "nv-kanban",   title: "Kanban Board", icon: FolderKanban, category: "Navigation", perform: () => navigate("/kanban") },
+    { id: "nv-calendar", title: "Calendar",    icon: CalendarDays, category: "Navigation", perform: () => navigate("/calendar") },
+    { id: "nv-spaces",   title: "Spaces",      icon: Layers3,      category: "Navigation", perform: () => navigate("/spaces") },
+    { id: "nv-insights", title: "Insights",    icon: BarChart3,    category: "Navigation", perform: () => navigate("/insights") },
+    { id: "nv-today", title: "Daily Command Center", icon: Sparkles, category: "Navigation", perform: () => navigate("/today") },
     { id: "nv-focus",    title: "Focus Mode",  icon: Brain,        category: "Navigation", perform: () => navigate("/focus") },
     { id: "nv-settings", title: "Settings",    icon: SettingsIcon, category: "Navigation", perform: () => navigate("/settings") },
+    ...notes.map((note) => ({
+      id: `note-${note.id}`,
+      title: note.title || "Untitled Note",
+      icon: StickyNote,
+      category: "Notes",
+      perform: () => navigate(`/notes?note=${encodeURIComponent(note.id)}`),
+    })),
+    ...tasks.map((task) => ({
+      id: `task-${task.id}`,
+      title: task.title,
+      icon: CheckSquare,
+      category: "Tasks",
+      perform: () => navigate("/tasks"),
+    })),
   ];
 
   // Auth initialisation loader (only shown once on app start when Supabase is configured)
@@ -142,21 +181,23 @@ const App: React.FC = () => {
         loop
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         disablePictureInPicture
-        className="fixed inset-0 w-full h-full object-cover -z-20 pointer-events-none select-none will-change-transform"
+        aria-hidden="true"
+        className="nexo-bg-video fixed inset-0 w-full h-full object-cover -z-20 pointer-events-none select-none will-change-transform"
       >
         <source src="/Backgrounnd.mp4" type="video/mp4" />
       </video>
 
       {/* Dynamic Overlay for readability in Light/Dark mode */}
-      <div className="fixed inset-0 w-full h-full bg-background/60 dark:bg-background/90 transition-colors duration-500 -z-10 pointer-events-none" />
+      <div className={`fixed inset-0 w-full h-full transition-colors duration-500 -z-10 pointer-events-none ${theme === "dark" ? "bg-background/90" : "bg-white/65"}`} />
 
       <Header />
 
       <main className="flex-1 relative z-0">
         <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
           {/* No Suspense needed — all route components are eagerly imported */}
+          <Suspense fallback={<RouteLoading />}>
           <Routes>
             <Route
               path="/"
@@ -182,6 +223,56 @@ const App: React.FC = () => {
                 <PageTransition className="pt-20 md:pt-32 px-2 md:px-8 pb-20 md:pb-10">
                   <div className="max-w-full md:max-w-[95%] w-full mx-auto h-[calc(100vh-9rem)] md:h-[calc(100vh-8rem)]">
                     <Tasks />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/kanban"
+              element={
+                <PageTransition className="pt-[4.5rem] md:pt-28 px-3 md:px-8 pb-20 md:pb-6">
+                  <div className="max-w-full md:max-w-[95%] w-full mx-auto">
+                    <KanbanBoard />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <PageTransition className="pt-[4.5rem] md:pt-28 px-3 md:px-8 pb-20 md:pb-6">
+                  <div className="max-w-full md:max-w-[95%] w-full mx-auto">
+                    <CalendarView />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/spaces"
+              element={
+                <PageTransition className="pt-20 md:pt-32 px-3 md:px-8 pb-24 md:pb-10">
+                  <div className="max-w-full md:max-w-[95%] w-full mx-auto">
+                    <Spaces />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/insights"
+              element={
+                <PageTransition className="pt-20 md:pt-32 px-3 md:px-8 pb-24 md:pb-10">
+                  <div className="max-w-full md:max-w-[95%] w-full mx-auto">
+                    <InsightsDashboard />
+                  </div>
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/today"
+              element={
+                <PageTransition className="pt-20 md:pt-32 px-3 md:px-8 pb-24 md:pb-10">
+                  <div className="max-w-full md:max-w-[95%] w-full mx-auto">
+                    <DailyCommandCenter />
                   </div>
                 </PageTransition>
               }
@@ -219,6 +310,7 @@ const App: React.FC = () => {
             <Route path="/share/:noteId" element={<SharedNoteView />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </ErrorBoundary>
       </main>
 

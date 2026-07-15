@@ -9,8 +9,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Nexo Dashboard',
         short_name: 'Nexo',
@@ -21,13 +21,13 @@ export default defineConfig({
         start_url: '.',
         icons: [
           {
-            src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f4da.svg',
+            src: '/favicon.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
             purpose: 'any'
           },
           {
-            src: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f4da.svg',
+            src: '/favicon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
             purpose: 'maskable'
@@ -35,7 +35,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 6291456, // 6 MiB
@@ -48,8 +48,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    chunkSizeWarningLimit: 2000
+    sourcemap: false,
+    chunkSizeWarningLimit: 900
   },
   test: {
     globals: true,

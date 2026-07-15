@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
+let authSubscription: { unsubscribe: () => void } | null = null;
+
 interface AuthState {
   user: User | null;
   session: Session | null;
@@ -10,11 +12,13 @@ interface AuthState {
   
   initialize: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, fullName?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   setSession: (session: Session | null) => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   session: null,
   isLoading: true,
@@ -35,14 +39,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      // Listen for auth changes (sign in, sign out, token refresh)
-      supabase.auth.onAuthStateChange((_event, session) => {
+      authSubscription?.unsubscribe();
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
         set({
           session,
           user: session?.user ?? null,
           isAuthenticated: !!session?.user,
         });
       });
+      authSubscription = data.subscription;
     } catch (error) {
       console.error('Auth initialization failed:', error);
       set({ isLoading: false });
@@ -73,7 +78,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (error) {
       console.error('Sign-out error:', error.message);
     }
+    authSubscription?.unsubscribe();
+    authSubscription = null;
     set({ user: null, session: null, isAuthenticated: false });
+  },
+
+  signInWithEmail: async (email, password) => {
+    if (!isSupabaseConfigured()) throw new Error('Cloud authentication is not configured.');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  },
+
+  signUpWithEmail: async (email, password, fullName) => {
+    if (!isSupabaseConfigured()) throw new Error('Cloud authentication is not configured.');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: fullName ? { full_name: fullName } : undefined },
+    });
+    if (error) throw error;
+    return !data.session;
   },
 
   setSession: (session) => {

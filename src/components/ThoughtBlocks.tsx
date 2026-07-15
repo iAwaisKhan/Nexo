@@ -3,19 +3,9 @@ import { motion } from "framer-motion";
 import { 
   Bug, 
   Lightbulb, 
-  Activity, 
-  Target, 
-  Terminal, 
-  CheckCircle2, 
   AlertCircle,
-  HelpCircle,
   BarChart3
 } from "lucide-react";
-
-interface ThoughtBlockProps {
-  type: 'debug' | 'feynman' | 'analytics';
-  data?: any;
-}
 
 export const DebugJournal: React.FC = () => (
   <div className="my-8 p-6 rounded-3xl bg-red-500/5 border border-red-500/10 space-y-4">

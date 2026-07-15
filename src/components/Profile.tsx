@@ -1,27 +1,46 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, LogIn, Github, Chrome, UserPlus, ArrowRight, Loader2, CheckCircle2, User, Shield } from "lucide-react";
+import { Mail, Chrome, ArrowRight, Loader2, CheckCircle2, Shield } from "lucide-react";
 import { Avatar } from "./ui/Avatar";
 import FocusAnalytics from "./FocusAnalytics";
 import { useAuthStore } from "../store/useAuthStore";
-import { isSupabaseConfigured } from "../lib/supabase";
 
 const Profile: React.FC = () => {
-  const { user, isAuthenticated, signInWithGoogle, signOut } = useAuthStore();
+  const { user, isAuthenticated, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuthStore();
   
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
     setIsSuccess(false);
+    setErrorMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Email/Password auth is not implemented in useAuthStore yet
-    alert("Email auth is disabled. Please use Google Sign In.");
+    const form = new FormData(e.currentTarget as HTMLFormElement);
+    const email = String(form.get("email") || "").trim();
+    const password = String(form.get("password") || "");
+    const fullName = String(form.get("name") || "").trim();
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      if (mode === "login") {
+        await signInWithEmail(email, password);
+        setIsSuccess(true);
+      } else {
+        const requiresConfirmation = await signUpWithEmail(email, password, fullName);
+        setIsSuccess(!requiresConfirmation);
+        if (requiresConfirmation) setErrorMessage("Check your email to confirm your account.");
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to complete authentication.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleOAuth = async (provider: string) => {
@@ -58,7 +77,6 @@ const Profile: React.FC = () => {
               size="lg" 
               src={avatarUrl} 
               fallback={fullName.substring(0, 2).toUpperCase()} 
-              status="online"
               label={{ name: fullName, email: user.email || "" }}
             />
           </header>
@@ -180,6 +198,12 @@ const Profile: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {errorMessage && (
+                <p role="status" className="text-[10px] leading-relaxed text-red-500/80" aria-live="polite">
+                  {errorMessage}
+                </p>
+              )}
 
               {/* Card Footer */}
               <div className="flex flex-col gap-3 pt-2">

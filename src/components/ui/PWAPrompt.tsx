@@ -1,67 +1,31 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, X } from 'lucide-react';
 
 export const PWAPrompt: React.FC = () => {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      console.log('SW Registered: ', r);
-    },
     onRegisterError(error) {
-      console.log('SW registration error', error);
+      console.error('Service worker registration failed', error);
     },
   });
 
-  const close = () => {
-    setNeedRefresh(false);
-  };
+  if (!needRefresh) return null;
 
   return (
-    <AnimatePresence>
-      {needRefresh && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.9 }}
-          className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 z-50 p-4 bg-background border border-primary/20 shadow-2xl rounded-xl max-w-sm"
-        >
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-start gap-4">
-              <div>
-                <h3 className="font-semibold text-text">Update Available</h3>
-                <p className="text-sm text-text/70 mt-1">
-                  A new version of Nexo is available. Refresh to apply updates.
-                </p>
-              </div>
-              <button
-                onClick={close}
-                className="text-text/40 hover:text-text transition-colors p-1"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={() => updateServiceWorker(true)}
-                className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                <RefreshCw size={14} className="animate-spin-slow" />
-                Reload Now
-              </button>
-              <button
-                onClick={close}
-                className="flex-1 bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                Later
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="fixed bottom-24 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[24rem] z-[60] rounded-2xl border border-primary/20 bg-surface/95 backdrop-blur-xl p-4 shadow-2xl" role="status" aria-live="polite">
+      <div className="flex items-start gap-3">
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-text">A new Nexo version is ready</p>
+          <p className="text-xs text-text/50 mt-1">Refresh when your current work is saved.</p>
+        </div>
+        <button aria-label="Dismiss update notification" onClick={() => setNeedRefresh(false)} className="text-text/40 hover:text-text text-lg leading-none">×</button>
+      </div>
+      <div className="flex gap-2 mt-3">
+        <button onClick={() => void updateServiceWorker(true)} className="flex-1 rounded-xl bg-primary px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Refresh</button>
+        <button onClick={() => setNeedRefresh(false)} className="rounded-xl bg-primary/10 px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-primary">Later</button>
+      </div>
+    </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from "react";
-import { Github, Twitter, Linkedin, Heart } from "lucide-react";
+import { Heart, ShieldCheck } from "lucide-react";
 
 const Footer: React.FC = () => {
   return (
@@ -15,17 +15,10 @@ const Footer: React.FC = () => {
           </p>
         </div>
 
-        {/* Center: Socials */}
-        <div className="flex items-center gap-6">
-          <a href="#" className="text-text-muted hover:text-primary transition-colors">
-            <Twitter className="w-4 h-4" />
-          </a>
-          <a href="#" className="text-text-muted hover:text-primary transition-colors">
-            <Github className="w-4 h-4" />
-          </a>
-          <a href="#" className="text-text-muted hover:text-primary transition-colors">
-            <Linkedin className="w-4 h-4" />
-          </a>
+        {/* Center: Product status */}
+        <div className="flex items-center gap-2 text-xs text-text-muted/80" aria-label="Workspace status">
+          <ShieldCheck className="w-4 h-4 text-primary" aria-hidden="true" />
+          <span>Private workspace</span>
         </div>
 
         {/* Right: Message */}

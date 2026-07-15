@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, 
   Command, 
   Terminal, 
-  Brain, 
-  StickyNote, 
-  CheckSquare, 
-  Settings, 
-  User,
   Zap
 } from "lucide-react";
 
@@ -43,8 +37,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       if (!isOpen) return;
 
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowDown") setSelectedIndex((prev) => (prev + 1) % filteredActions.length);
-      if (e.key === "ArrowUp") setSelectedIndex((prev) => (prev - 1 + filteredActions.length) % filteredActions.length);
+      if (e.key === "ArrowDown" && filteredActions.length > 0) {
+        setSelectedIndex((prev) => (prev + 1) % filteredActions.length);
+      }
+      if (e.key === "ArrowUp" && filteredActions.length > 0) {
+        setSelectedIndex((prev) => (prev - 1 + filteredActions.length) % filteredActions.length);
+      }
       if (e.key === "Enter" && filteredActions[selectedIndex]) {
         filteredActions[selectedIndex].perform();
         onClose();
@@ -59,11 +57,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     setSelectedIndex(0);
   }, [query]);
 
+  useEffect(() => {
+    if (isOpen) setQuery("");
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -75,6 +77,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Nexo command palette"
             className="w-full max-w-2xl mx-2 md:mx-0 bg-surface border border-border/10 rounded-3xl shadow-2xl overflow-hidden relative z-10"
           >
             <div className="p-6 border-b border-border/5 flex items-center gap-4">
@@ -82,6 +87,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
               <input
                 autoFocus
                 type="text"
+                aria-label="Search commands"
                 placeholder="Type a command or search workspace..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -107,7 +113,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                       </div>
                       {filteredActions
                         .filter((a) => a.category === category)
-                        .map((action, index) => {
+                        .map((action) => {
                           const globalIndex = filteredActions.indexOf(action);
                           const isSelected = globalIndex === selectedIndex;
                           return (
@@ -115,6 +121,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                               key={action.id}
                               onMouseEnter={() => setSelectedIndex(globalIndex)}
                               onClick={() => { action.perform(); onClose(); }}
+                              aria-current={isSelected ? "true" : undefined}
                               className={`w-full flex items-center justify-between p-3 md:p-4 rounded-2xl transition-all duration-200 group ${
                                 isSelected ? "bg-primary text-white scale-[1.02]" : "hover:bg-primary/5 text-text/70"
                               }`}

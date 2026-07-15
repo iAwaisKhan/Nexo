@@ -71,15 +71,20 @@ export const useAppStore = create<AppState>()(
 
       // ── Tasks ──────────────────────────────────────────────
       addTask: (task) => {
-        set((state) => ({ tasks: [...state.tasks, task] }));
-        getSyncEngine().then(se => se.pushTask(task));
+        const nextTask = { ...task, version: task.version ?? 1 };
+        set((state) => ({ tasks: [...state.tasks, nextTask] }));
+        getSyncEngine().then(se => se.pushTask(nextTask));
       },
       updateTask: (updatedTask) => {
         const previous = get().tasks.find(t => t.id === updatedTask.id);
+        const nextTask = {
+          ...updatedTask,
+          version: Math.max(updatedTask.version ?? 0, (previous?.version ?? 0) + 1),
+        };
         set((state) => ({
-          tasks: state.tasks.map(t => t.id === updatedTask.id ? updatedTask : t),
+          tasks: state.tasks.map(t => t.id === updatedTask.id ? nextTask : t),
         }));
-        getSyncEngine().then(se => se.pushTask(updatedTask, previous));
+        getSyncEngine().then(se => se.pushTask(nextTask, previous));
       },
       deleteTask: (id) => {
         const deletedTask = get().tasks.find(t => t.id === id);
@@ -89,15 +94,20 @@ export const useAppStore = create<AppState>()(
 
       // ── Notes ──────────────────────────────────────────────
       addNote: (note) => {
-        set((state) => ({ notes: [...state.notes, note] }));
-        getSyncEngine().then(se => se.pushNote(note));
+        const nextNote = { ...note, version: note.version ?? 1 };
+        set((state) => ({ notes: [...state.notes, nextNote] }));
+        getSyncEngine().then(se => se.pushNote(nextNote));
       },
       updateNote: (updatedNote) => {
         const previous = get().notes.find(n => n.id === updatedNote.id);
+        const nextNote = {
+          ...updatedNote,
+          version: Math.max(updatedNote.version ?? 0, (previous?.version ?? 0) + 1),
+        };
         set((state) => ({
-          notes: state.notes.map(n => n.id === updatedNote.id ? updatedNote : n),
+          notes: state.notes.map(n => n.id === updatedNote.id ? nextNote : n),
         }));
-        getSyncEngine().then(se => se.pushNote(updatedNote, previous));
+        getSyncEngine().then(se => se.pushNote(nextNote, previous));
       },
       deleteNote: (id) => {
         const deletedNote = get().notes.find(n => n.id === id);
