@@ -35,41 +35,10 @@ import NoteSharing from "./NoteSharing";
 import { localDateKey, localHour } from "../lib/date";
 import { DebugJournal, FeynmanBlock, FocusAnalyticsBlock } from "./ThoughtBlocks";
 import BlockEditor from "./BlockEditor";
+import { LazySyntaxHighlighter } from "./ui/LazySyntaxHighlighter";
 
 import type { Note } from '../types/note';
 export type { Note };
-
-const LazySyntaxHighlighter = React.lazy(async () => {
-  const [{ default: PrismLight }, { default: javascript }, { default: typescript }, { default: jsx }, { default: tsx }, { default: json }, { default: bash }, { default: css }, { default: markup }, { oneLight }] = await Promise.all([
-    import("react-syntax-highlighter/dist/esm/prism-light"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/javascript"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/typescript"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/jsx"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/tsx"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/json"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/bash"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/css"),
-    import("react-syntax-highlighter/dist/esm/languages/prism/markup"),
-    import("react-syntax-highlighter/dist/esm/styles/prism"),
-  ]);
-
-  PrismLight.registerLanguage('javascript', javascript);
-  PrismLight.registerLanguage('js', javascript);
-  PrismLight.registerLanguage('typescript', typescript);
-  PrismLight.registerLanguage('ts', typescript);
-  PrismLight.registerLanguage('jsx', jsx);
-  PrismLight.registerLanguage('tsx', tsx);
-  PrismLight.registerLanguage('json', json);
-  PrismLight.registerLanguage('bash', bash);
-  PrismLight.registerLanguage('shell', bash);
-  PrismLight.registerLanguage('css', css);
-  PrismLight.registerLanguage('html', markup);
-  PrismLight.registerLanguage('markup', markup);
-
-  return {
-    default: (props: any) => <PrismLight {...props} style={oneLight as any} />,
-  };
-});
 
 interface NotesProps {
 }
@@ -293,7 +262,9 @@ const Notes: React.FC<NotesProps> = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-display text-text px-2">My Notes</h3>
                 <div className="flex items-center gap-2">
-                  <motion.button 
+                  <motion.button
+                    type="button"
+                    aria-label="Open knowledge graph"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsGraphOpen(true)}
@@ -302,6 +273,8 @@ const Notes: React.FC<NotesProps> = () => {
                     <Share2 className="w-5 h-5" />
                   </motion.button>
                   <motion.button 
+                    type="button"
+                    aria-label="Create note"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleAddNote}
@@ -374,6 +347,8 @@ const Notes: React.FC<NotesProps> = () => {
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 {isMobile ? (
                   <motion.button 
+                    type="button"
+                    aria-label="Open notes list"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
@@ -387,7 +362,9 @@ const Notes: React.FC<NotesProps> = () => {
                   </motion.button>
                 ) : (
                   !isFocusMode && (
-                    <motion.button 
+                    <motion.button
+                      type="button"
+                      aria-label={isSidebarOpen ? "Hide notes list" : "Show notes list"}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -413,6 +390,9 @@ const Notes: React.FC<NotesProps> = () => {
                 {/* Insight Blocks Dropdown */}
                 <div className="relative" ref={insightMenuRef}>
                   <motion.button
+                    type="button"
+                    aria-label="Toggle insight blocks menu"
+                    aria-expanded={isInsightMenuOpen}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setIsInsightMenuOpen(!isInsightMenuOpen)}
@@ -514,6 +494,8 @@ const Notes: React.FC<NotesProps> = () => {
 
                 <div className="flex items-center gap-1 md:gap-1.5">
                   <motion.button 
+                    type="button"
+                    aria-label={isFocusMode ? "Exit focus mode" : "Enter focus mode"}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsFocusMode(!isFocusMode)}
@@ -527,6 +509,8 @@ const Notes: React.FC<NotesProps> = () => {
                     {isFocusMode ? <Minimize2 className="w-4.5 h-4.5" /> : <Maximize2 className="w-4.5 h-4.5" />}
                   </motion.button>
                   <motion.button 
+                    type="button"
+                    aria-label={selectedNote.isPinned ? "Unpin note" : "Pin note"}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => togglePin(selectedNote.id)}
@@ -540,6 +524,8 @@ const Notes: React.FC<NotesProps> = () => {
                     <Pin className="w-4.5 h-4.5" />
                   </motion.button>
                   <motion.button 
+                    type="button"
+                    aria-label="Delete note"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleDeleteNote(selectedNote.id)}
@@ -690,6 +676,8 @@ const Notes: React.FC<NotesProps> = () => {
                   <span key={idx} className="bg-primary/10 text-primary text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 group border border-primary/20">
                     {tag}
                     <button 
+                      type="button"
+                      aria-label={`Remove ${tag} tag`}
                       onClick={() => handleUpdateNote(selectedNote.id, { tags: selectedNote.tags.filter((_, i) => i !== idx) })}
                       className="hover:text-red-500 transition-colors"
                     >

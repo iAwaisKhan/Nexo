@@ -3,66 +3,89 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useAppStore } from "../store/useAppStore";
 import { Globe, ArrowLeft, GraduationCap } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import type { Note } from "../types/note";
+import { LazySyntaxHighlighter } from "./ui/LazySyntaxHighlighter";
+
+interface PublicNoteRow {
+  id: string;
+  title: string;
+  content: string;
+  tags: string[] | null;
+  is_pinned: boolean | null;
+  last_modified: number;
+  time_spent: number | null;
+  is_public: boolean | null;
+  published_at: number | null;
+  slug: string | null;
+  is_blog: boolean | null;
+  version: number | null;
+}
 
 const SharedNoteView: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
 
   const notes = useAppStore(state => state.notes);
-  const localNote = notes.find(n => n.id === noteId && n.isPublic);
+  const activeWorkspaceId = useAppStore(state => state.activeWorkspaceId);
+  const cloudEnabled = isSupabaseConfigured();
+  // Local fallback is intentionally guest-only. An authenticated user's
+  // unsynced private workspace must never become a public data source.
+  const isGuestWorkspace = activeWorkspaceId === 'guest';
+  const localNote = isGuestWorkspace ? notes.find(n => n.id === noteId && n.isPublic) : undefined;
+  const shouldFetchCloud = cloudEnabled && !isGuestWorkspace;
   
   const [fetchedNote, setFetchedNote] = useState<Note | null>(null);
-  const [isLoading, setIsLoading] = useState(!localNote);
+  const [isLoading, setIsLoading] = useState(shouldFetchCloud && !!noteId);
 
   useEffect(() => {
-    if (localNote || !isSupabaseConfigured() || !noteId) {
-      if (!localNote) setIsLoading(false);
-      return;
+    let cancelled = false;
+
+    if (!shouldFetchCloud || !noteId) {
+      setFetchedNote(null);
+      setIsLoading(false);
+      return () => { cancelled = true; };
     }
 
     const fetchNote = async () => {
       setIsLoading(true);
+      setFetchedNote(null);
       try {
         const { data, error } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('id', noteId)
-          .eq('is_public', true)
-          .single();
+          .rpc('get_public_note', { p_note_id: noteId })
+          .maybeSingle();
 
         if (error) throw error;
         
-        if (data) {
+        const row = data as PublicNoteRow | null;
+        if (row && !cancelled) {
           setFetchedNote({
-            id: data.id,
-            title: data.title,
-            content: data.content,
-            tags: data.tags || [],
-            isPinned: data.is_pinned,
-            lastModified: data.last_modified,
-            timeSpent: data.time_spent || 0,
-            version: data.version ?? 0,
-            isPublic: data.is_public || false,
-            publishedAt: data.published_at || undefined,
-            slug: data.slug || undefined,
-            isBlog: data.is_blog || false,
+            id: row.id,
+            title: row.title,
+            content: row.content,
+            tags: row.tags || [],
+            isPinned: row.is_pinned || false,
+            lastModified: row.last_modified,
+            timeSpent: row.time_spent || 0,
+            version: row.version ?? 0,
+            isPublic: row.is_public || false,
+            publishedAt: row.published_at || undefined,
+            slug: row.slug || undefined,
+            isBlog: row.is_blog || false,
           });
         }
       } catch (err) {
-        console.error("Failed to fetch public note:", err);
+        if (!cancelled) console.error("Failed to fetch public note:", err);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
-    fetchNote();
-  }, [noteId, localNote]);
+    void fetchNote();
+    return () => { cancelled = true; };
+  }, [noteId, shouldFetchCloud]);
 
   const note = localNote || fetchedNote;
 
@@ -130,12 +153,14 @@ const SharedNoteView: React.FC = () => {
                 code({node, className, children, ...props}) {
                   const match = /language-(\w+)/.exec(className || "")
                   return match ? (
-                    <SyntaxHighlighter
-                      children={String(children).replace(/\n$/, "")}
-                      style={oneLight as any}
-                      language={match[1]}
-                      PreTag="div"
-                    />
+                    <React.Suspense fallback={<code className="block overflow-x-auto rounded-xl bg-surface/60 p-4 text-xs">{String(children)}</code>}>
+                      <LazySyntaxHighlighter
+                        language={match[1]}
+                        PreTag="div"
+                      >
+                        {String(children).replace(/\n$/, "")}
+                      </LazySyntaxHighlighter>
+                    </React.Suspense>
                   ) : (
                     <code className={className} {...props}>
                       {children}

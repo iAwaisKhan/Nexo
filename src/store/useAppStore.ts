@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { Task } from '../types/task';
 import type { Note } from '../types/note';
 
@@ -16,152 +15,231 @@ export interface AppFocusSession {
   hour: number;
 }
 
-export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
-
-interface AppState {
+export interface WorkspaceData {
   tasks: Task[];
   notes: Note[];
   focusSessions: AppFocusSession[];
+}
 
-  // Sync metadata
+export type WorkspaceId = 'guest' | `user:${string}`;
+export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
+
+interface AppState extends WorkspaceData {
+  activeWorkspaceId: WorkspaceId | null;
   syncStatus: SyncStatus;
   lastSyncedAt: number | null;
-
-  // isLoading: true while syncStatus is 'syncing' AND we have no local data yet
   isLoading: boolean;
 
-  // Tasks Actions
   addTask: (task: Task) => void;
   updateTask: (task: Task) => void;
   deleteTask: (id: string) => void;
-
-  // Notes Actions
   addNote: (note: Note) => void;
   updateNote: (note: Note) => void;
   deleteNote: (id: string) => void;
-
-  // Focus Session Actions
   addFocusSession: (session: AppFocusSession) => void;
 
-  // Internal sync actions
+  _switchWorkspace: (workspaceId: WorkspaceId) => void;
+  _clearActiveWorkspace: () => void;
   _setSyncStatus: (status: SyncStatus) => void;
-  _setLastSyncedAt: (timestamp: number) => void;
+  _setLastSyncedAt: (timestamp: number | null) => void;
   _setIsLoading: (loading: boolean) => void;
   _hydrateFromCloud: (notes: Note[], tasks: Task[], sessions: AppFocusSession[]) => void;
-
-  // Optimistic rollback helpers (used by SyncEngine on push failure)
-  _rollbackNote: (previousNote: Note | undefined, noteId: string) => void;
-  _rollbackTask: (previousTask: Task | undefined, taskId: string) => void;
-  _rollbackDeleteNote: (note: Note) => void;
-  _rollbackDeleteTask: (task: Task) => void;
 }
 
-// Lazy import to avoid circular dependency
-const getSyncEngine = () => import('../lib/syncEngine').then(m => m.syncEngine);
+const STORAGE_VERSION = 1;
+const STORAGE_PREFIX = 'nexo_workspace_v1:';
+const LEGACY_STORAGE_KEY = 'nexo_storage';
+const emptyWorkspace = (): WorkspaceData => ({ tasks: [], notes: [], focusSessions: [] });
+const getStorageKey = (workspaceId: WorkspaceId) => `${STORAGE_PREFIX}${workspaceId}`;
 
-export const useAppStore = create<AppState>()(
-  persist(
-    (set, get) => ({
-      tasks: [],
-      notes: [],
-      focusSessions: [],
-      syncStatus: 'idle' as SyncStatus,
+const isRecord = (value: unknown): value is Record<string, unknown> => (
+  typeof value === 'object' && value !== null
+);
+
+const parseWorkspace = (raw: string | null): WorkspaceData => {
+  if (!raw) return emptyWorkspace();
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return emptyWorkspace();
+
+    // Zustand's legacy persist format wrapped data in a `state` property.
+    const candidate = isRecord(parsed.state) ? parsed.state : parsed;
+    return {
+      tasks: Array.isArray(candidate.tasks) ? candidate.tasks as Task[] : [],
+      notes: Array.isArray(candidate.notes) ? candidate.notes as Note[] : [],
+      focusSessions: Array.isArray(candidate.focusSessions)
+        ? candidate.focusSessions as AppFocusSession[]
+        : [],
+    };
+  } catch (error) {
+    console.error('[WorkspaceStorage] Failed to read workspace:', error);
+    return emptyWorkspace();
+  }
+};
+
+const writeWorkspace = (workspaceId: WorkspaceId, data: WorkspaceData): void => {
+  try {
+    localStorage.setItem(getStorageKey(workspaceId), JSON.stringify({
+      version: STORAGE_VERSION,
+      ...data,
+    }));
+  } catch (error) {
+    console.error('[WorkspaceStorage] Failed to persist workspace:', error);
+  }
+};
+
+const readWorkspace = (workspaceId: WorkspaceId): WorkspaceData => {
+  const key = getStorageKey(workspaceId);
+  const existing = localStorage.getItem(key);
+  if (existing) return parseWorkspace(existing);
+
+  // Ownership of the old shared store cannot be proven. Preserve it as guest
+  // data so it can never be uploaded into whichever account signs in next.
+  if (workspaceId === 'guest') {
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacy) {
+      const migrated = parseWorkspace(legacy);
+      writeWorkspace('guest', migrated);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      return migrated;
+    }
+  }
+
+  return emptyWorkspace();
+};
+
+const getSyncEngine = () => import('../lib/syncEngine').then((module) => module.syncEngine);
+
+export const useAppStore = create<AppState>((set, get) => ({
+  ...emptyWorkspace(),
+  activeWorkspaceId: null,
+  syncStatus: 'idle',
+  lastSyncedAt: null,
+  isLoading: false,
+
+  addTask: (task) => {
+    const now = Date.now();
+    const nextTask: Task = {
+      ...task,
+      version: task.version ?? 1,
+      lastModified: task.lastModified ?? now,
+    };
+    set((state) => ({ tasks: [...state.tasks, nextTask] }));
+    void getSyncEngine().then((engine) => engine.pushTask(nextTask));
+  },
+
+  updateTask: (updatedTask) => {
+    const previous = get().tasks.find((task) => task.id === updatedTask.id);
+    if (!previous) return;
+    const nextTask: Task = {
+      ...updatedTask,
+      version: Math.max(updatedTask.version ?? 0, (previous?.version ?? 0) + 1),
+      lastModified: Math.max(Date.now(), updatedTask.lastModified ?? 0),
+    };
+    set((state) => ({
+      tasks: state.tasks.map((task) => task.id === updatedTask.id ? nextTask : task),
+    }));
+    void getSyncEngine().then((engine) => engine.pushTask(nextTask));
+  },
+
+  deleteTask: (id) => {
+    const deletedTask = get().tasks.find((task) => task.id === id);
+    if (!deletedTask) return;
+    const deletedVersion = (deletedTask.version ?? 0) + 1;
+    const deletedAt = Date.now();
+    set((state) => ({ tasks: state.tasks.filter((task) => task.id !== id) }));
+    void getSyncEngine().then((engine) => engine.deleteTaskCloud(id, deletedVersion, deletedAt));
+  },
+
+  addNote: (note) => {
+    const nextNote: Note = {
+      ...note,
+      version: note.version ?? 1,
+      lastModified: note.lastModified || Date.now(),
+    };
+    set((state) => ({ notes: [...state.notes, nextNote] }));
+    void getSyncEngine().then((engine) => engine.pushNote(nextNote));
+  },
+
+  updateNote: (updatedNote) => {
+    const previous = get().notes.find((note) => note.id === updatedNote.id);
+    if (!previous) return;
+    const nextNote: Note = {
+      ...updatedNote,
+      version: Math.max(updatedNote.version ?? 0, (previous?.version ?? 0) + 1),
+      lastModified: Math.max(Date.now(), updatedNote.lastModified || 0),
+    };
+    set((state) => ({
+      notes: state.notes.map((note) => note.id === updatedNote.id ? nextNote : note),
+    }));
+    void getSyncEngine().then((engine) => engine.pushNote(nextNote));
+  },
+
+  deleteNote: (id) => {
+    const deletedNote = get().notes.find((note) => note.id === id);
+    if (!deletedNote) return;
+    const deletedVersion = (deletedNote.version ?? 0) + 1;
+    const deletedAt = Date.now();
+    set((state) => ({ notes: state.notes.filter((note) => note.id !== id) }));
+    void getSyncEngine().then((engine) => engine.deleteNoteCloud(id, deletedVersion, deletedAt));
+  },
+
+  addFocusSession: (session) => {
+    set((state) => ({ focusSessions: [...state.focusSessions, session] }));
+    void getSyncEngine().then((engine) => engine.pushFocusSession(session));
+  },
+
+  _switchWorkspace: (workspaceId) => {
+    const state = get();
+    if (state.activeWorkspaceId === workspaceId) return;
+
+    if (state.activeWorkspaceId) writeWorkspace(state.activeWorkspaceId, state);
+
+    const workspace = readWorkspace(workspaceId);
+    set({
+      ...workspace,
+      activeWorkspaceId: workspaceId,
+      syncStatus: navigator.onLine ? 'idle' : 'offline',
       lastSyncedAt: null,
       isLoading: false,
+    });
+  },
 
-      // ── Tasks ──────────────────────────────────────────────
-      addTask: (task) => {
-        const nextTask = { ...task, version: task.version ?? 1 };
-        set((state) => ({ tasks: [...state.tasks, nextTask] }));
-        getSyncEngine().then(se => se.pushTask(nextTask));
-      },
-      updateTask: (updatedTask) => {
-        const previous = get().tasks.find(t => t.id === updatedTask.id);
-        const nextTask = {
-          ...updatedTask,
-          version: Math.max(updatedTask.version ?? 0, (previous?.version ?? 0) + 1),
-        };
-        set((state) => ({
-          tasks: state.tasks.map(t => t.id === updatedTask.id ? nextTask : t),
-        }));
-        getSyncEngine().then(se => se.pushTask(nextTask, previous));
-      },
-      deleteTask: (id) => {
-        const deletedTask = get().tasks.find(t => t.id === id);
-        set((state) => ({ tasks: state.tasks.filter(t => t.id !== id) }));
-        getSyncEngine().then(se => se.deleteTaskCloud(id, deletedTask));
-      },
+  _clearActiveWorkspace: () => {
+    const workspaceId = get().activeWorkspaceId;
+    if (workspaceId) localStorage.removeItem(getStorageKey(workspaceId));
+    set({ ...emptyWorkspace(), lastSyncedAt: null, syncStatus: 'idle' });
+  },
 
-      // ── Notes ──────────────────────────────────────────────
-      addNote: (note) => {
-        const nextNote = { ...note, version: note.version ?? 1 };
-        set((state) => ({ notes: [...state.notes, nextNote] }));
-        getSyncEngine().then(se => se.pushNote(nextNote));
-      },
-      updateNote: (updatedNote) => {
-        const previous = get().notes.find(n => n.id === updatedNote.id);
-        const nextNote = {
-          ...updatedNote,
-          version: Math.max(updatedNote.version ?? 0, (previous?.version ?? 0) + 1),
-        };
-        set((state) => ({
-          notes: state.notes.map(n => n.id === updatedNote.id ? nextNote : n),
-        }));
-        getSyncEngine().then(se => se.pushNote(nextNote, previous));
-      },
-      deleteNote: (id) => {
-        const deletedNote = get().notes.find(n => n.id === id);
-        set((state) => ({ notes: state.notes.filter(n => n.id !== id) }));
-        getSyncEngine().then(se => se.deleteNoteCloud(id, deletedNote));
-      },
+  _setSyncStatus: (syncStatus) => set({ syncStatus }),
+  _setLastSyncedAt: (lastSyncedAt) => set({ lastSyncedAt }),
+  _setIsLoading: (isLoading) => set({ isLoading }),
+  _hydrateFromCloud: (notes, tasks, focusSessions) => set({ notes, tasks, focusSessions }),
+}));
 
-      // ── Focus Sessions ─────────────────────────────────────
-      addFocusSession: (session) => {
-        set((state) => ({ focusSessions: [...state.focusSessions, session] }));
-        getSyncEngine().then(se => se.pushFocusSession(session));
-      },
+let persistenceTimer: ReturnType<typeof setTimeout> | null = null;
 
-      // ── Internal Sync Actions ──────────────────────────────
-      _setSyncStatus: (status) => set({ syncStatus: status }),
-      _setLastSyncedAt: (timestamp) => set({ lastSyncedAt: timestamp }),
-      _setIsLoading: (loading) => set({ isLoading: loading }),
-      _hydrateFromCloud: (notes, tasks, sessions) =>
-        set({ notes, tasks, focusSessions: sessions }),
+const persistActiveWorkspace = (): void => {
+  const state = useAppStore.getState();
+  if (state.activeWorkspaceId) writeWorkspace(state.activeWorkspaceId, state);
+};
 
-      // ── Optimistic Rollback ────────────────────────────────
-      _rollbackNote: (previousNote, noteId) => {
-        if (previousNote) {
-          set((state) => ({
-            notes: state.notes.map(n => n.id === noteId ? previousNote : n),
-          }));
-        } else {
-          // Was an add; remove it
-          set((state) => ({ notes: state.notes.filter(n => n.id !== noteId) }));
-        }
-      },
-      _rollbackTask: (previousTask, taskId) => {
-        if (previousTask) {
-          set((state) => ({
-            tasks: state.tasks.map(t => t.id === taskId ? previousTask : t),
-          }));
-        } else {
-          set((state) => ({ tasks: state.tasks.filter(t => t.id !== taskId) }));
-        }
-      },
-      _rollbackDeleteNote: (note) => {
-        set((state) => ({ notes: [...state.notes, note] }));
-      },
-      _rollbackDeleteTask: (task) => {
-        set((state) => ({ tasks: [...state.tasks, task] }));
-      },
-    }),
-    {
-      name: 'nexo_storage',
-      partialize: (state) => ({
-        tasks: state.tasks,
-        notes: state.notes,
-        focusSessions: state.focusSessions,
-      }),
-    }
-  )
-);
+useAppStore.subscribe((state, previous) => {
+  if (
+    !state.activeWorkspaceId ||
+    (state.notes === previous.notes &&
+      state.tasks === previous.tasks &&
+      state.focusSessions === previous.focusSessions)
+  ) return;
+
+  if (persistenceTimer) clearTimeout(persistenceTimer);
+  persistenceTimer = setTimeout(() => {
+    persistenceTimer = null;
+    persistActiveWorkspace();
+  }, 100);
+});
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', persistActiveWorkspace);
+}

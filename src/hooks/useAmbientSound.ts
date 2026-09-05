@@ -52,7 +52,7 @@ export const useAmbientSound = (isActive: boolean, isMuted: boolean, type: Sound
     
     const ctx = initAudio();
     if (ctx.state === 'suspended') {
-      ctx.resume();
+      void ctx.resume().catch(() => {});
     }
 
     // Clean up existing nodes
@@ -85,23 +85,30 @@ export const useAmbientSound = (isActive: boolean, isMuted: boolean, type: Sound
   };
 
   const stopSound = () => {
-    if (bufferSourceRef.current) {
+    const source = bufferSourceRef.current;
+    const gainNode = gainNodeRef.current;
+    const audioContext = audioCtxRef.current;
+    bufferSourceRef.current = null;
+    gainNodeRef.current = null;
+
+    if (source) {
       try {
-        const gainNode = gainNodeRef.current;
-        if (gainNode && audioCtxRef.current) {
+        if (gainNode && audioContext) {
           // Fade out before stopping
-          gainNode.gain.setTargetAtTime(0, audioCtxRef.current.currentTime, 0.5);
+          gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.5);
           setTimeout(() => {
-            bufferSourceRef.current?.stop();
-            bufferSourceRef.current?.disconnect();
-            bufferSourceRef.current = null;
+            try {
+              source.stop();
+              source.disconnect();
+            } catch {
+              // The captured source may already have stopped.
+            }
           }, 1000);
         } else {
-          bufferSourceRef.current.stop();
-          bufferSourceRef.current.disconnect();
-          bufferSourceRef.current = null;
+          source.stop();
+          source.disconnect();
         }
-      } catch (e) {
+      } catch {
         // Ignore errors from already stopped nodes
       }
     }
@@ -111,15 +118,18 @@ export const useAmbientSound = (isActive: boolean, isMuted: boolean, type: Sound
     if (isActive && !isMuted && type !== 'none') {
       playSound();
     } else {
-      if (gainNodeRef.current && audioCtxRef.current) {
-        gainNodeRef.current.gain.setTargetAtTime(0, audioCtxRef.current.currentTime, 0.5);
-      }
-      setTimeout(() => stopSound(), 1000);
+      stopSound();
     }
     
     return () => {
       stopSound();
     };
   }, [isActive, isMuted, type]);
+
+  useEffect(() => () => {
+    const context = audioCtxRef.current;
+    audioCtxRef.current = null;
+    if (context && context.state !== 'closed') void context.close().catch(() => {});
+  }, []);
 
 };

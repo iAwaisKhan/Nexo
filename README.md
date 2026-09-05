@@ -6,7 +6,7 @@ Nexo is a local-first productivity workspace for deep work, notes, tasks, focus 
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.19+
 - npm
 
 ### Development
@@ -52,14 +52,16 @@ Nexo/
 │   ├── App.tsx              Routes and app shell
 │   ├── main.tsx             React entry point
 │   └── index.css            Theme and global styles
-├── supabase/schema.sql      Supabase tables, policies, indexes, and realtime setup
+├── supabase/migrations/     Versioned database schema, RLS, and sync safeguards
+├── .github/workflows/ci.yml Frontend type, test, audit, and build checks
+├── vercel.json              SPA routing and security headers for Vercel
 ├── vite.config.ts           Vite, Tailwind, PWA, and test configuration
 └── package.json
 ```
 
 ## Data Model
 
-Nexo works without a backend. Notes, tasks, focus sessions, theme settings, and the offline sync queue are stored locally in the browser.
+Nexo works without a backend. Notes, tasks, focus sessions, theme settings, and the offline sync queue are stored locally in the browser. Guest and signed-in workspaces use separate account-scoped storage, so changing accounts in one browser cannot expose or upload another workspace's local data.
 
 When Supabase credentials are provided, the app enables:
 
@@ -69,15 +71,22 @@ When Supabase credentials are provided, the app enables:
 - Realtime updates across devices
 - Public read-only note links for notes explicitly marked public
 
-Local edits are optimistic: the UI updates first, then the sync engine pushes changes to Supabase. Offline writes are queued locally and retried when the browser returns online.
+Local edits are optimistic: the UI updates first, then a per-account queue sends changes to Supabase in order. Offline writes retry when the browser returns online. Version and timestamp guards in PostgreSQL reject stale writes from another browser or device, while soft-delete tombstones prevent deleted records from reappearing.
 
 ## Supabase Setup
 
-1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL editor.
-3. Enable Google in Authentication providers.
-4. Add your OAuth redirect URL in Supabase.
-5. Create a `.env` file:
+1. Create a Supabase project and install the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started).
+2. Link this repository and apply the committed migrations:
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PROJECT_REF
+supabase db push
+```
+
+3. Enable the desired providers under Authentication. Email/password works without Google; Google OAuth remains optional.
+4. Add both the local and production `/profile` URLs to Authentication → URL Configuration → Redirect URLs.
+5. Copy `.env.example` to `.env` and add the public project values:
 
 ```bash
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -85,6 +94,22 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 If these values are omitted, cloud sync and sign-in are disabled and Nexo remains local-only.
+
+For a clean local database check, run:
+
+```bash
+supabase db start
+supabase db reset
+supabase db lint --local --fail-on error
+```
+
+`supabase/migrations/` is the canonical schema history. Apply migrations before deploying frontend code that depends on new columns or views.
+
+## Deployment
+
+The repository includes Vercel SPA rewrites and a Netlify-compatible `_redirects` fallback, so refreshes on `/notes`, `/profile`, and public `/share/:noteId` links resolve to the React app. Configure the two `VITE_SUPABASE_*` variables in the hosting provider, set the Supabase production Site URL, and add `https://YOUR_DOMAIN/profile` as an allowed redirect.
+
+GitHub Actions currently runs only the frontend audit, TypeScript, tests, and production build for pushes to `main` and pull requests. The Supabase migration job is intentionally paused until the hosted database workflow is enabled; migrations remain versioned and can still be checked locally with the commands above.
 
 ## Scripts
 

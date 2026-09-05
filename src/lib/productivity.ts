@@ -23,6 +23,10 @@ export const addDays = (date: Date, days: number) => {
 
 export const dateKey = (date: Date) => localDateKey(date);
 
+export const shiftMonth = (date: Date, offset: number) => (
+  new Date(date.getFullYear(), date.getMonth() + offset, 1)
+);
+
 export const formatDuration = (seconds: number) => {
   if (seconds < 60) return `${Math.max(0, seconds)}s`;
   const minutes = Math.floor(seconds / 60);

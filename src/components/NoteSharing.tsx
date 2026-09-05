@@ -10,7 +10,7 @@ import {
   Zap, 
   PenTool
 } from "lucide-react";
-import { Note } from "./Notes";
+import type { Note } from "../types/note";
 
 interface NoteSharingProps {
   note: Note;
@@ -23,10 +23,14 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
 
   const publicUrl = `${window.location.origin}/share/${note.id}`;
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
   };
 
   const publishToExternal = (platform: string) => {
@@ -36,14 +40,15 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
       : `https://dev.to/new`;
     
     // Copy content to clipboard first for convenience
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text).catch(() => {});
     alert(`Content copied to clipboard! Redirecting to ${platform} to publish...`);
-    window.open(url, '_blank');
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <div className="relative">
       <motion.button 
+        type="button"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
@@ -74,9 +79,11 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
 
             {/* Public Access Toggle */}
             <div className="space-y-3">
-              <div 
+              <button
+                type="button"
+                aria-pressed={note.isPublic}
                 onClick={() => onUpdate({ isPublic: !note.isPublic })}
-                className={`group flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${note.isPublic ? "bg-primary/5 border-primary/20" : "bg-transparent border-border/5 hover:border-border/20"}`}
+                className={`group w-full flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer text-left ${note.isPublic ? "bg-primary/5 border-primary/20" : "bg-transparent border-border/5 hover:border-border/20"}`}
               >
                 <div className="flex items-center gap-3">
                   <Globe className={`w-5 h-5 ${note.isPublic ? "text-primary" : "text-text/30"}`} />
@@ -91,7 +98,7 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
                     className="absolute top-1 w-2 h-2 rounded-full bg-white shadow-sm"
                   />
                 </div>
-              </div>
+              </button>
 
               {note.isPublic && (
                 <motion.div 
@@ -105,7 +112,9 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
                     className="flex-1 bg-transparent text-[10px] font-mono p-1 text-text/60 outline-none overflow-hidden text-ellipsis"
                   />
                   <button 
-                    onClick={handleCopy}
+                    type="button"
+                    aria-label="Copy public note link"
+                    onClick={() => void handleCopy()}
                     className="p-1.5 rounded-lg hover:bg-primary/10 text-primary transition-colors"
                   >
                     {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
@@ -119,6 +128,7 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
               <div className="text-[10px] font-bold text-text/30 uppercase tracking-[0.2em] px-1">Publishing</div>
               
               <button 
+                type="button"
                 onClick={() => onUpdate({ isBlog: !note.isBlog })}
                 className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${note.isBlog ? "bg-primary/5 border-primary/20" : "bg-transparent border-border/5 hover:bg-primary/5"}`}
               >
@@ -131,6 +141,7 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
 
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <button 
+                  type="button"
                   onClick={() => publishToExternal('medium')}
                   className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/5 hover:border-primary/20 hover:bg-primary/5 transition-all group"
                 >
@@ -138,6 +149,7 @@ const NoteSharing: React.FC<NoteSharingProps> = ({ note, onUpdate }) => {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-text/60 group-hover:text-text">Medium</span>
                 </button>
                 <button 
+                  type="button"
                   onClick={() => publishToExternal('devto')}
                   className="flex items-center justify-center gap-2 p-3 rounded-xl border border-border/5 hover:border-primary/20 hover:bg-primary/5 transition-all group"
                 >

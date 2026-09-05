@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dateFromKey, localDateKey } from '../date';
+import { shiftMonth } from '../productivity';
 
 describe('local date helpers', () => {
   it('formats calendar dates in the local timezone', () => {
@@ -11,5 +12,14 @@ describe('local date helpers', () => {
     expect(date.getFullYear()).toBe(2026);
     expect(date.getMonth()).toBe(6);
     expect(date.getDate()).toBe(16);
+  });
+});
+
+describe('shiftMonth', () => {
+  it('does not skip February when moving from January 31', () => {
+    const result = shiftMonth(new Date(2026, 0, 31), 1);
+    expect(result.getFullYear()).toBe(2026);
+    expect(result.getMonth()).toBe(1);
+    expect(result.getDate()).toBe(1);
   });
 });

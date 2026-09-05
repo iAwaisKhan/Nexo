@@ -5,15 +5,17 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ErrorFallback } from "./components/ui/ErrorFallback";
 import { useThemeStore } from "./store/useThemeStore";
 
-// ─── Eager imports → zero loading spinner on navigation ─────────────────────
+// Keep the app shell and lightweight primary routes eager. In development this
+// also prevents a stale Vite session from failing when Board is opened after an
+// HMR/dependency refresh; larger feature screens remain split below.
 import Dashboard from "./components/Dashboard";
+import KanbanBoard from "./components/KanbanBoard";
 const Notes = lazy(() => import("./components/Notes"));
 const Tasks = lazy(() => import("./components/Tasks"));
 const Profile = lazy(() => import("./components/Profile"));
 const Focus = lazy(() => import("./components/Focus"));
 const Settings = lazy(() => import("./components/Settings"));
 const SharedNoteView = lazy(() => import("./components/SharedNoteView"));
-const KanbanBoard = lazy(() => import("./components/KanbanBoard"));
 const CalendarView = lazy(() => import("./components/CalendarView"));
 const Spaces = lazy(() => import("./components/Spaces"));
 const InsightsDashboard = lazy(() => import("./components/InsightsDashboard"));
@@ -28,7 +30,6 @@ import { PWAPrompt } from "./components/ui/PWAPrompt";
 import { useAuthStore } from "./store/useAuthStore";
 import { useAppStore } from "./store/useAppStore";
 import { isSupabaseConfigured } from "./lib/supabase";
-import { syncEngine } from "./lib/syncEngine";
 import {
   Home,
   StickyNote,
@@ -74,6 +75,8 @@ const App: React.FC = () => {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const isPublicShareRoute = location.pathname.startsWith("/share/");
   const notes = useAppStore((state) => state.notes);
   const tasks = useAppStore((state) => state.tasks);
   const theme = useThemeStore((state) => state.theme);
@@ -89,13 +92,33 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
-      void syncEngine.initialize(user.id);
-      localStorage.removeItem("nexo_skipped_auth");
-      setSkippedAuth(false);
-    }
-    return () => { void syncEngine.destroy(); };
-  }, [isAuthenticated, user]);
+    let cancelled = false;
+
+    const configureWorkspace = async () => {
+      const { syncEngine } = await import("./lib/syncEngine");
+      await syncEngine.destroy();
+      if (cancelled) return;
+
+      if (isAuthenticated && user) {
+        useAppStore.getState()._switchWorkspace(`user:${user.id}`);
+        localStorage.removeItem("nexo_skipped_auth");
+        setSkippedAuth(false);
+        await syncEngine.initialize(user.id);
+        return;
+      }
+
+      if (!isSupabaseConfigured() || skippedAuth) {
+        useAppStore.getState()._switchWorkspace("guest");
+      }
+    };
+
+    if (!authLoading) void configureWorkspace();
+
+    return () => {
+      cancelled = true;
+      void import("./lib/syncEngine").then(({ syncEngine }) => syncEngine.destroy());
+    };
+  }, [authLoading, isAuthenticated, skippedAuth, user?.id]);
 
   useEffect(() => {
     const handler = () => {
@@ -143,6 +166,21 @@ const App: React.FC = () => {
       perform: () => navigate("/tasks"),
     })),
   ];
+
+  // Public note links must work for signed-out visitors and must not inherit
+  // the private workspace header or authentication gate.
+  if (isPublicShareRoute) {
+    return (
+      <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => window.location.reload()}>
+        <Suspense fallback={<RouteLoading />}>
+          <Routes>
+            <Route path="/share/:noteId" element={<SharedNoteView />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+    );
+  }
 
   // Auth initialisation loader (only shown once on app start when Supabase is configured)
   if (authLoading && isSupabaseConfigured()) {
@@ -307,7 +345,6 @@ const App: React.FC = () => {
                 </PageTransition>
               }
             />
-            <Route path="/share/:noteId" element={<SharedNoteView />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>

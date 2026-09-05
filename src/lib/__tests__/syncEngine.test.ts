@@ -1,5 +1,5 @@
 /**
- * SyncEngine unit tests — pure merge logic and store rollbacks.
+ * SyncEngine unit tests — pure merge logic and account-scoped store behavior.
  * The Supabase client is not called in these tests; we only test the
  * data-transformation and state-management logic that lives in the store.
  */
@@ -53,10 +53,12 @@ function makeSession(overrides: Partial<AppFocusSession> = {}): AppFocusSession 
 // ── Reset store before each test ───────────────────────────────
 
 beforeEach(() => {
+  localStorage.clear();
   useAppStore.setState({
     notes: [],
     tasks: [],
     focusSessions: [],
+    activeWorkspaceId: null,
     syncStatus: 'idle',
     lastSyncedAt: null,
     isLoading: false,
@@ -110,6 +112,15 @@ describe('Notes store actions', () => {
     useAppStore.getState().deleteNote('nonexistent-id');
     expect(useAppStore.getState().notes).toHaveLength(1);
   });
+
+  it('updateNote with an ID outside the active workspace is a no-op', () => {
+    useAppStore.getState()._switchWorkspace('user:account-a');
+    const staleNote = makeNote({ title: 'Previous account note' });
+
+    useAppStore.getState().updateNote(staleNote);
+
+    expect(useAppStore.getState().notes).toHaveLength(0);
+  });
 });
 
 // ── Task store actions ─────────────────────────────────────────
@@ -134,73 +145,62 @@ describe('Tasks store actions', () => {
     useAppStore.getState().deleteTask(task.id);
     expect(useAppStore.getState().tasks).toHaveLength(0);
   });
+
+  it('updateTask with an ID outside the active workspace is a no-op', () => {
+    useAppStore.getState()._switchWorkspace('user:account-b');
+    const staleTask = makeTask({ title: 'Previous account task' });
+
+    useAppStore.getState().updateTask(staleTask);
+
+    expect(useAppStore.getState().tasks).toHaveLength(0);
+  });
 });
 
-// ── Optimistic rollback ────────────────────────────────────────
+// ── Account-scoped persistence ─────────────────────────────────
 
-describe('Optimistic rollback', () => {
-  it('_rollbackNote restores previous note on update failure', () => {
-    const note = makeNote({ title: 'Before failure' });
-    useAppStore.getState().addNote(note);
+describe('Account-scoped workspaces', () => {
+  it('keeps guest and signed-in account data isolated', () => {
+    useAppStore.getState()._switchWorkspace('guest');
+    useAppStore.getState().addNote(makeNote({ title: 'Guest note' }));
 
-    // Simulate an update
-    const updated = { ...note, title: 'After update' };
-    useAppStore.setState(state => ({
-      notes: state.notes.map(n => n.id === updated.id ? updated : n),
-    }));
-    expect(useAppStore.getState().notes[0].title).toBe('After update');
-
-    // Now rollback to previous
-    useAppStore.getState()._rollbackNote(note, note.id);
-    expect(useAppStore.getState().notes[0].title).toBe('Before failure');
-  });
-
-  it('_rollbackDeleteNote restores a deleted note', () => {
-    const note = makeNote();
-    useAppStore.getState().addNote(note);
-    useAppStore.setState(state => ({
-      notes: state.notes.filter(n => n.id !== note.id),
-    }));
+    useAppStore.getState()._switchWorkspace('user:account-a');
     expect(useAppStore.getState().notes).toHaveLength(0);
+    useAppStore.getState().addNote(makeNote({ title: 'Account A note' }));
 
-    useAppStore.getState()._rollbackDeleteNote(note);
-    expect(useAppStore.getState().notes).toHaveLength(1);
-    expect(useAppStore.getState().notes[0].id).toBe(note.id);
+    useAppStore.getState()._switchWorkspace('user:account-b');
+    expect(useAppStore.getState().notes).toHaveLength(0);
+    useAppStore.getState().addNote(makeNote({ title: 'Account B note' }));
+
+    useAppStore.getState()._switchWorkspace('user:account-a');
+    expect(useAppStore.getState().notes.map((note) => note.title)).toEqual(['Account A note']);
+
+    useAppStore.getState()._switchWorkspace('guest');
+    expect(useAppStore.getState().notes.map((note) => note.title)).toEqual(['Guest note']);
   });
 
-  it('_rollbackTask restores previous task on update failure', () => {
-    const task = makeTask({ priority: 'Low' });
-    useAppStore.getState().addTask(task);
+  it('migrates ambiguous legacy data only into the guest workspace', () => {
+    const legacyNote = makeNote({ title: 'Legacy guest note' });
+    localStorage.setItem('nexo_storage', JSON.stringify({ state: {
+      notes: [legacyNote], tasks: [], focusSessions: [],
+    } }));
 
-    useAppStore.setState(state => ({
-      tasks: state.tasks.map(t => t.id === task.id ? { ...t, priority: 'High' as const } : t),
-    }));
-    expect(useAppStore.getState().tasks[0].priority).toBe('High');
-
-    useAppStore.getState()._rollbackTask(task, task.id);
-    expect(useAppStore.getState().tasks[0].priority).toBe('Low');
+    useAppStore.getState()._switchWorkspace('user:account-a');
+    expect(useAppStore.getState().notes).toHaveLength(0);
+    useAppStore.getState()._switchWorkspace('guest');
+    expect(useAppStore.getState().notes[0].title).toBe('Legacy guest note');
+    expect(localStorage.getItem('nexo_storage')).toBeNull();
   });
 
-  it('_rollbackDeleteTask restores a deleted task', () => {
-    const task = makeTask();
-    useAppStore.getState().addTask(task);
-    useAppStore.setState(state => ({
-      tasks: state.tasks.filter(t => t.id !== task.id),
-    }));
+  it('clears only the active browser workspace', () => {
+    useAppStore.getState()._switchWorkspace('user:account-a');
+    useAppStore.getState().addTask(makeTask({ title: 'Account A task' }));
+    useAppStore.getState()._switchWorkspace('user:account-b');
+    useAppStore.getState().addTask(makeTask({ title: 'Account B task' }));
+    useAppStore.getState()._clearActiveWorkspace();
+
     expect(useAppStore.getState().tasks).toHaveLength(0);
-
-    useAppStore.getState()._rollbackDeleteTask(task);
-    expect(useAppStore.getState().tasks).toHaveLength(1);
-  });
-
-  it('_rollbackNote with undefined previous removes the note (rollback of an add)', () => {
-    const note = makeNote();
-    useAppStore.getState().addNote(note);
-    expect(useAppStore.getState().notes).toHaveLength(1);
-
-    // Rollback an add — no previous, so remove
-    useAppStore.getState()._rollbackNote(undefined, note.id);
-    expect(useAppStore.getState().notes).toHaveLength(0);
+    useAppStore.getState()._switchWorkspace('user:account-a');
+    expect(useAppStore.getState().tasks[0].title).toBe('Account A task');
   });
 });
 

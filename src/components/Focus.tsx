@@ -22,21 +22,10 @@ const FocusMode: React.FC = () => {
 
   useAmbientSound(isActive, isMuted, soundType);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const deadlineRef = useRef<number | null>(null);
   const sessionStartRef = useRef<number | null>(null);
   const addFocusSession = useAppStore((state) => state.addFocusSession);
-
-  // Timer Countdown Logic
-  useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => setTimeLeft((p) => p - 1), 1000);
-    } else if (timeLeft === 0 && isActive) {
-      handleComplete();
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [isActive, timeLeft]);
 
   // Strict Mode Logic
   useEffect(() => {
@@ -66,12 +55,14 @@ const FocusMode: React.FC = () => {
   }, [addFocusSession]);
 
   const handleComplete = useCallback(async () => {
+    deadlineRef.current = null;
     setIsActive(false);
     if (isStrictMode && document.fullscreenElement) document.exitFullscreen().catch(() => {});
     if (mode === "focus" && sessionStartRef.current) {
       const duration = Math.floor((Date.now() - sessionStartRef.current) / 1000);
       await logSession(duration);
     }
+    sessionStartRef.current = null;
     const next = mode === "focus" ? "break" : "focus";
     setMode(next);
     setTimeLeft(next === "focus" ? focusMinutes * 60 : breakMinutes * 60);
@@ -82,24 +73,56 @@ const FocusMode: React.FC = () => {
     
     if (!isActive) {
       sessionStartRef.current = Date.now();
+      deadlineRef.current = Date.now() + timeLeft * 1000;
       if (isStrictMode) {
         try { await document.documentElement.requestFullscreen(); } catch {}
       }
     } else {
+      deadlineRef.current = null;
       if (mode === "focus" && sessionStartRef.current) {
         logSession(Math.floor((Date.now() - sessionStartRef.current) / 1000));
       }
       if (isStrictMode && document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
     setIsActive((p) => !p);
-  }, [isActive, isEditing, isStrictMode, mode, logSession]);
+  }, [isActive, isEditing, isStrictMode, mode, logSession, timeLeft]);
 
   const resetTimer = useCallback(() => {
+    deadlineRef.current = null;
+    sessionStartRef.current = null;
     setIsActive(false);
     setIsEditing(false);
     setTimeLeft(mode === "focus" ? focusMinutes * 60 : breakMinutes * 60);
     if (isStrictMode && document.fullscreenElement) document.exitFullscreen().catch(() => {});
   }, [mode, focusMinutes, breakMinutes, isStrictMode]);
+
+  // Derive the countdown from a deadline instead of subtracting once per
+  // interval. This keeps the timer accurate when the tab is backgrounded and
+  // browsers throttle timers.
+  useEffect(() => {
+    if (!isActive) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+      return;
+    }
+
+    if (!deadlineRef.current) deadlineRef.current = Date.now() + timeLeft * 1000;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil(((deadlineRef.current ?? Date.now()) - Date.now()) / 1000));
+      setTimeLeft((current) => current === remaining ? current : remaining);
+    };
+
+    tick();
+    timerRef.current = setInterval(tick, 250);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [isActive]);
+
+  useEffect(() => {
+    if (isActive && timeLeft === 0) void handleComplete();
+  }, [handleComplete, isActive, timeLeft]);
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Math.max(1, Math.min(120, parseInt(e.target.value) || 1));
@@ -129,6 +152,8 @@ const FocusMode: React.FC = () => {
                 disabled={isActive}
                 onClick={() => {
                   setMode(m);
+                  deadlineRef.current = null;
+                  sessionStartRef.current = null;
                   setTimeLeft(m === "focus" ? focusMinutes * 60 : breakMinutes * 60);
                   setIsActive(false);
                 }}

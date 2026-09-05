@@ -13,8 +13,8 @@ const Auth: React.FC = () => {
     setError(null);
     try {
       await signInWithGoogle();
-    } catch (err: any) {
-      setError(err.message || "Sign-in failed. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
       setIsLoading(false);
     }
   };
@@ -141,7 +141,7 @@ const Auth: React.FC = () => {
           <div className="space-y-3">
             {[
               { icon: Cloud, label: "Cross-device sync", desc: "Access your workspace anywhere" },
-              { icon: Shield, label: "Secure & private", desc: "Your data is encrypted and isolated" },
+              { icon: Shield, label: "Secure & private", desc: "Account-scoped access controls" },
               { icon: Zap, label: "Instant sync", desc: "Real-time updates across devices" },
             ].map(({ icon: Icon, label, desc }, i) => (
               <motion.div
@@ -170,10 +170,9 @@ const Auth: React.FC = () => {
           transition={{ delay: 1 }}
           className="text-center mt-8"
         >
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
+          <button
+            type="button"
+            onClick={() => {
               // Allow using the app without auth by dispatching a custom event
               window.dispatchEvent(new CustomEvent('nexo:skip-auth'));
             }}
@@ -181,7 +180,7 @@ const Auth: React.FC = () => {
           >
             Continue without signing in
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-          </a>
+          </button>
           <p className="text-[10px] text-text/15 mt-2 font-medium">
             Your data will stay local to this browser only.
           </p>

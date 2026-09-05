@@ -6,12 +6,24 @@ import FocusAnalytics from "./FocusAnalytics";
 import { useAuthStore } from "../store/useAuthStore";
 
 const Profile: React.FC = () => {
-  const { user, isAuthenticated, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    isPasswordRecovery,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    requestPasswordReset,
+    updatePassword,
+    signOut,
+  } = useAuthStore();
   
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const toggleMode = () => {
     setMode(mode === "login" ? "signup" : "login");
@@ -54,11 +66,83 @@ const Profile: React.FC = () => {
       await signInWithGoogle();
       setIsSuccess(true);
     } catch (error) {
-      console.error("Sign-in failed", error);
+      setErrorMessage(error instanceof Error ? error.message : "Unable to start Google sign-in.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handlePasswordRecovery = async () => {
+    if (!email.trim()) {
+      setErrorMessage("Enter your email address first.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await requestPasswordReset(email.trim());
+      setErrorMessage("Password reset link sent. Check your inbox.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to send the reset link.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      await updatePassword(newPassword);
+      setNewPassword("");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update your password.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isAuthenticated && user && isPasswordRecovery) {
+    return (
+      <div className="flex items-center justify-center min-h-0 md:min-h-[70vh] p-4 md:p-6 lg:p-12">
+        <motion.form
+          onSubmit={handlePasswordUpdate}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm bg-surface/30 backdrop-blur-2xl border border-border rounded-[2.5rem] shadow-2xl p-8 space-y-6"
+        >
+          <div>
+            <h2 className="text-2xl font-display text-text tracking-tight">Choose a new password</h2>
+            <p className="mt-2 text-xs text-text-muted">Use at least 8 characters for your Nexo account.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="recovery-password" className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">New password</label>
+            <input
+              id="recovery-password"
+              name="new-password"
+              type="password"
+              autoComplete="new-password"
+              minLength={8}
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              required
+              className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
+            />
+          </div>
+          {errorMessage && <p role="alert" className="text-xs text-red-500/80">{errorMessage}</p>}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-11 bg-text text-background text-xs font-bold uppercase tracking-[0.2em] rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update Password"}
+          </button>
+        </motion.form>
+      </div>
+    );
+  }
 
   // If user is authenticated, we show their account instead of the forms!
   if (isAuthenticated && user) {
@@ -160,9 +244,12 @@ const Profile: React.FC = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="space-y-1.5"
                     >
-                      <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Name</label>
+                      <label htmlFor="auth-name" className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Name</label>
                       <input
+                        id="auth-name"
+                        name="name"
                         type="text"
+                        autoComplete="name"
                         placeholder="Your name"
                         required
                         className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
@@ -172,9 +259,14 @@ const Profile: React.FC = () => {
                 </AnimatePresence>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Email</label>
+                  <label htmlFor="auth-email" className="text-[9px] font-bold text-text-muted uppercase tracking-widest ml-1">Email</label>
                   <input
+                    id="auth-email"
+                    name="email"
                     type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                     placeholder="m@nexo.io"
                     required
                     className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"
@@ -183,15 +275,24 @@ const Profile: React.FC = () => {
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between ml-1">
-                    <label className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Password</label>
+                    <label htmlFor="auth-password" className="text-[9px] font-bold text-text-muted uppercase tracking-widest">Password</label>
                     {mode === "login" && (
-                      <a href="#" className="text-[9px] font-bold text-primary/40 hover:text-primary transition-colors tracking-widest">
+                      <button
+                        type="button"
+                        onClick={handlePasswordRecovery}
+                        disabled={isLoading}
+                        className="text-[9px] font-bold text-primary/40 hover:text-primary disabled:opacity-40 transition-colors tracking-widest"
+                      >
                         RECOVER
-                      </a>
+                      </button>
                     )}
                   </div>
                   <input
+                    id="auth-password"
+                    name="password"
                     type="password"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    minLength={8}
                     placeholder="••••••••"
                     required
                     className="w-full h-11 bg-surface/50 border border-border/50 rounded-2xl px-4 text-sm text-text placeholder:text-text-muted/20 focus:outline-hidden focus:ring-1 focus:ring-primary/20 transition-all"

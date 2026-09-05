@@ -79,6 +79,7 @@ const Tasks: React.FC = () => {
   };
 
   const deleteTask = (id: string) => {
+    if (activeTaskId === id) toggleFocus(id);
     deleteTaskStore(id);
   };
 
@@ -110,7 +111,7 @@ const Tasks: React.FC = () => {
       setActiveTaskId(null);
       activeTaskStartRef.current = null;
     } else {
-      // If another task is active, stop it first? For simplicity, just switch.
+      // Persist the current task's focus segment before switching targets.
       if (activeTaskId) toggleFocus(activeTaskId); 
       
       setActiveTaskId(id);
@@ -258,6 +259,8 @@ const Tasks: React.FC = () => {
             >
               <div className="flex items-start gap-3 md:gap-5">
                 <button 
+                  type="button"
+                  aria-label={task.status === "Done" ? `Mark ${task.title} as not done` : `Mark ${task.title} as done`}
                   onClick={() => toggleTask(task.id)}
                   className={`mt-1 transition-all duration-300 scale-110 ${task.status === "Done" ? "text-primary" : "text-text/30 hover:text-primary/50"}`}
                 >
@@ -270,6 +273,8 @@ const Tasks: React.FC = () => {
                       {task.title}
                     </h4>
                     <button 
+                      type="button"
+                      aria-label={activeTaskId === task.id ? `Pause focus on ${task.title}` : `Focus on ${task.title}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleFocus(task.id);
@@ -303,6 +308,8 @@ const Tasks: React.FC = () => {
                 </div>
 
                 <button 
+                  type="button"
+                  aria-label={`Delete ${task.title}`}
                   onClick={() => deleteTask(task.id)}
                   className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-2 text-text/30 hover:text-red-500 transition-all"
                 >

@@ -20,9 +20,9 @@ import {
 import { useAuthStore } from "../store/useAuthStore";
 import { useAppStore } from "../store/useAppStore";
 import { useThemeStore } from "../store/useThemeStore";
-import { syncEngine } from "../lib/syncEngine";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { localDateKey } from "../lib/date";
+import { useNavigate } from "react-router-dom";
 
 interface SettingSectionProps {
   title: string;
@@ -51,8 +51,16 @@ interface SettingItemProps {
 
 const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, description, action, onClick, danger }) => (
   <motion.div
+    role={onClick ? "button" : undefined}
+    tabIndex={onClick ? 0 : undefined}
     whileHover={onClick ? { x: 4 } : {}}
     onClick={onClick}
+    onKeyDown={(event) => {
+      if (onClick && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        onClick();
+      }
+    }}
     className={`group flex items-center justify-between p-3 md:p-4 rounded-2xl border border-border/5 bg-surface/30 backdrop-blur-sm transition-all ${onClick ? 'cursor-pointer hover:bg-surface/50 hover:border-border/20' : ''}`}
   >
     <div className="flex items-center gap-4">
@@ -75,17 +83,37 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated, signInWithGoogle, signOut } = useAuthStore();
   const { syncStatus, lastSyncedAt } = useAppStore();
   const { theme, toggleTheme } = useThemeStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const clearData = () => {
-    if (confirm("Are you sure? This will permanently delete all your notes, tasks, and focus history.")) {
-      indexedDB.deleteDatabase("NexoDB_Modern");
+  const deleteLegacyDatabase = () => new Promise<void>((resolve) => {
+    if (!('indexedDB' in window)) {
+      resolve();
+      return;
+    }
+
+    const request = indexedDB.deleteDatabase("NexoDB_Modern");
+    request.onsuccess = () => resolve();
+    request.onerror = () => resolve();
+    request.onblocked = () => resolve();
+  });
+
+  const clearData = async () => {
+    const message = isAuthenticated
+      ? "Clear this account's data from this browser? Cloud data will be downloaded again after reload."
+      : "Clear this guest workspace? Guest notes, tasks, and focus history stored on this browser will be permanently deleted.";
+
+    if (confirm(message)) {
+      const { syncEngine } = await import("../lib/syncEngine");
+      syncEngine.clearQueuedWrites(user?.id);
+      useAppStore.getState()._clearActiveWorkspace();
       localStorage.removeItem("nexo_storage");
-      localStorage.removeItem("nexo_skipped_auth");
       localStorage.removeItem("nexo_sync_write_queue");
+      localStorage.removeItem("nexo_sync_write_queue_v2");
+      await deleteLegacyDatabase();
       window.location.reload();
     }
   };
@@ -103,13 +131,16 @@ const Settings: React.FC<SettingsProps> = () => {
     const a = document.createElement("a");
     a.href = url;
     a.download = `nexo-export-${localDateKey()}.json`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   const handleForceSync = async () => {
     setIsSyncing(true);
     try {
+      const { syncEngine } = await import("../lib/syncEngine");
       await syncEngine.forceSync();
     } catch (error) {
       console.error('Force sync failed:', error);
@@ -119,6 +150,7 @@ const Settings: React.FC<SettingsProps> = () => {
 
   const handleSignOut = async () => {
     if (confirm("Sign out? Your local data will remain on this device.")) {
+      const { syncEngine } = await import("../lib/syncEngine");
       await syncEngine.destroy();
       await signOut();
     }
@@ -235,7 +267,7 @@ const Settings: React.FC<SettingsProps> = () => {
             icon={User}
             label="Profile Identity"
             description="Manage your Nexo profile"
-            onClick={() => {}}
+            onClick={() => navigate("/profile")}
           />
           <SettingItem
             icon={Bell}
@@ -272,8 +304,8 @@ const Settings: React.FC<SettingsProps> = () => {
           />
           <SettingItem
             icon={Trash2}
-            label="Reset Workspace"
-            description="Permanently delete all local data"
+            label="Clear Local Data"
+            description={isAuthenticated ? "Clear this browser copy; cloud data remains safe" : "Permanently remove this guest workspace"}
             danger
             onClick={clearData}
           />

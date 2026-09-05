@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from "react";
 import * as d3 from "d3";
-import { Note } from "./Notes";
+import type { Note } from "../types/note";
 import { motion } from "framer-motion";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 
@@ -22,6 +22,7 @@ interface GraphViewProps {
 
 const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   const graphData = useMemo(() => {
     const nodes: Node[] = notes.map(n => ({ id: n.id, title: n.title || "Untitled" }));
@@ -62,6 +63,11 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
     svg.selectAll("*").remove();
 
     const g = svg.append("g");
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 4])
+      .on("zoom", (event) => g.attr("transform", event.transform));
+    svg.call(zoom);
+    zoomRef.current = zoom;
 
     const link = g.append("g")
       .attr("stroke", "var(--color-primary)")
@@ -126,9 +132,19 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
     }
 
     return () => {
-        simulation.stop();
+      simulation.stop();
+      svg.on(".zoom", null);
+      if (zoomRef.current === zoom) zoomRef.current = null;
     };
   }, [graphData, onNoteClick]);
+
+  const zoomBy = (factor: number) => {
+    if (!svgRef.current || !zoomRef.current) return;
+    d3.select(svgRef.current)
+      .transition()
+      .duration(180)
+      .call(zoomRef.current.scaleBy, factor);
+  };
 
   return (
     <motion.div 
@@ -146,6 +162,8 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
         </div>
         <div className="flex items-center gap-2">
             <button 
+                type="button"
+                aria-label="Close knowledge graph"
                 onClick={onClose}
                 className="p-3 rounded-2xl bg-surface/50 border border-border/10 hover:bg-red-500/10 hover:text-red-500 transition-all group"
             >
@@ -158,10 +176,20 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
         <svg ref={svgRef} className="w-full h-full" />
         
         <div className="absolute bottom-8 right-8 flex flex-col gap-2">
-            <button className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors">
+            <button
+              type="button"
+              aria-label="Zoom in"
+              onClick={() => zoomBy(1.3)}
+              className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
+            >
                 <ZoomIn className="w-5 h-5 text-text/80" />
             </button>
-            <button className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors">
+            <button
+              type="button"
+              aria-label="Zoom out"
+              onClick={() => zoomBy(1 / 1.3)}
+              className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
+            >
                 <ZoomOut className="w-5 h-5 text-text/80" />
             </button>
         </div>

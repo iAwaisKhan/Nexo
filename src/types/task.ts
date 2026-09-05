@@ -10,8 +10,9 @@ export interface Task {
   dueDate: string;
   status: 'To Do' | 'Done';
   createdAt: number;
+  /** Last local mutation timestamp, used as the conflict-resolution tie-breaker. */
+  lastModified?: number;
   /** Logical version counter for conflict resolution (increments on every write). */
   version?: number;
   timeSpent?: number; // Cumulative seconds
-  deleted_at?: string | null;
 }

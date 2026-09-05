@@ -122,12 +122,14 @@ const Header: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-2 md:py-3 bg-transparent border-b border-border/10">
         {/* Left: Logo */}
         <div className="flex-1 flex items-center">
-          <div
+          <button
+            type="button"
+            aria-label="Go to dashboard"
             className="flex items-center cursor-pointer group"
             onClick={() => navigate("/")}
           >
             <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Nexo</span>
-          </div>
+          </button>
         </div>
 
         {/* Center: Uiverse Nav (Desktop only) */}
@@ -135,8 +137,10 @@ const Header: React.FC = () => {
           <nav className="uiverse-menu shadow-2xl shadow-primary/5 flex max-w-[58vw] overflow-x-auto scrollbar-hide">
             {navItems.map((item) => (
               <button
+                type="button"
                 key={item.path}
                 onClick={() => navigate(item.path)}
+                aria-current={isActive(item.path) ? "page" : undefined}
                 className={`uiverse-link ${isActive(item.path) ? "active" : ""}`}
               >
                 <span className="uiverse-link-icon flex-shrink-0">
@@ -152,6 +156,8 @@ const Header: React.FC = () => {
         <div className="flex-1 flex items-center justify-end gap-3 md:gap-4">
           <SyncBadge />
           <button
+            type="button"
+            aria-label="Open settings"
             onClick={() => navigate("/settings")}
             className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
               isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
@@ -160,9 +166,11 @@ const Header: React.FC = () => {
           >
             <SettingsIcon className="w-5 h-5" />
           </button>
-          <div
+          <button
+            type="button"
+            aria-label={isAuthenticated ? "Open profile" : "Sign in or create an account"}
             className="group cursor-pointer transition-all flex items-center"
-            onClick={() => navigate(isAuthenticated ? "/profile" : "/profile")}
+            onClick={() => navigate("/profile")}
           >
             {isAuthenticated && avatarUrl ? (
               <img
@@ -173,7 +181,7 @@ const Header: React.FC = () => {
             ) : (
               <Avatar size="sm" fallback={fallback} />
             )}
-          </div>
+          </button>
         </div>
       </header>
 
@@ -184,8 +192,10 @@ const Header: React.FC = () => {
             const active = isActive(item.path);
             return (
               <button
+                type="button"
                 key={item.path}
                 onClick={() => navigate(item.path)}
+                aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-xl shrink-0 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
                   active ? "text-primary" : "text-text-muted hover:text-text/80"
                 }`}

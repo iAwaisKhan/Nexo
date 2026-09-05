@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, ChevronLeft, ChevronRight, CheckSquare, Clock, Flame } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { dateFromKey } from '../lib/date';
-import { dateKey, formatDuration, getMonthMatrix } from '../lib/productivity';
+import { dateKey, formatDuration, getMonthMatrix, shiftMonth } from '../lib/productivity';
 
 const monthLabel = (date: Date) => date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
@@ -36,9 +36,11 @@ const CalendarView: React.FC = () => {
   const selectedFocusSeconds = focusByDate.get(selectedDate) || 0;
 
   const moveMonth = (direction: number) => {
-    const next = new Date(anchorDate);
-    next.setMonth(anchorDate.getMonth() + direction);
+    // Construct from day one so dates such as January 31 cannot overflow and
+    // accidentally skip February when moving between months.
+    const next = shiftMonth(anchorDate, direction);
     setAnchorDate(next);
+    setSelectedDate(dateKey(next));
   };
 
   return (

@@ -20,14 +20,16 @@ export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBounda
         <h2 className="text-2xl font-bold mb-3">Something went wrong</h2>
         
         <p className="text-text/70 mb-6">
-          An unexpected error has occurred. Our team has been notified.
+          This view could not be loaded. Your locally saved workspace has not been removed.
         </p>
 
-        <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 w-full text-left overflow-auto max-h-32 mb-8">
-          <code className="text-xs text-red-400 font-mono break-words">
-            {message}
-          </code>
-        </div>
+        {import.meta.env.DEV && (
+          <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 w-full text-left overflow-auto max-h-32 mb-8">
+            <code className="text-xs text-red-400 font-mono break-words">
+              {message}
+            </code>
+          </div>
+        )}
 
         <button
           onClick={resetErrorBoundary}
