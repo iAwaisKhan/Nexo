@@ -2,6 +2,11 @@
 
 Nexo is a local-first productivity workspace for deep work, notes, tasks, focus sessions, and lightweight knowledge sharing. It is built with React, TypeScript, Vite, Tailwind CSS, Zustand, and optional Supabase auth/sync.
 
+Nexo is being migrated incrementally toward a MERN architecture. The current React application
+remains deployable while shared runtime contracts, an Express API, and MongoDB are introduced in
+reviewable vertical slices. See [the architecture guide](docs/architecture.md) and
+[Phase 1 foundation plan](docs/phase-1-foundation.md).
+
 ## Quick Start
 
 ### Prerequisites
@@ -42,6 +47,8 @@ npm run preview
 ```text
 Nexo/
 ├── public/                  Static assets
+├── packages/contracts/      Shared Zod schemas and inferred domain types
+├── docs/                    Architecture decisions and migration plans
 ├── src/
 │   ├── components/          App screens and UI components
 │   ├── components/ui/       Shared UI elements
@@ -117,8 +124,11 @@ GitHub Actions currently runs only the frontend audit, TypeScript, tests, and pr
 npm run dev        # Start local development server
 npm run build      # Build production assets
 npm run preview    # Preview the production build
+npm run lint       # Enforce TypeScript and React lint rules
+npm run format:check # Verify repository formatting
 npm test           # Run Vitest
 npm run coverage   # Run Vitest with coverage
+npm run check      # Run all CI quality gates and production build
 ```
 
 ## Notes

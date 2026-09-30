@@ -57,12 +57,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleOAuth = async (provider: string) => {
-    if (provider !== 'Google') {
-      alert(`${provider} login is not supported yet.`);
-      return;
-    }
-
+  const handleGoogleOAuth = async () => {
     setIsLoading(true);
     try {
       await signInWithGoogle();
@@ -379,7 +374,7 @@ const Profile: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => handleOAuth('Google')}
+                  onClick={handleGoogleOAuth}
                   disabled={isLoading}
                   className="w-full h-11 rounded-2xl bg-surface/50 border border-border/50 hover:border-primary/20 transition-all flex items-center justify-center gap-2 group"
                 >
