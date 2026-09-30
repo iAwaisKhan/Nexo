@@ -1,6 +1,6 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Home,
   StickyNote,
@@ -15,11 +15,11 @@ import {
   Cloud,
   CloudOff,
   Loader2,
-  AlertCircle
-} from "lucide-react";
-import { Avatar } from "./ui/Avatar";
-import { useAuthStore } from "../store/useAuthStore";
-import { useAppStore, SyncStatus } from "../store/useAppStore";
+  AlertCircle,
+} from 'lucide-react';
+import { Avatar } from './ui/Avatar';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAppStore, SyncStatus } from '../store/useAppStore';
 
 const SyncBadge: React.FC = () => {
   const syncStatus = useAppStore((s) => s.syncStatus);
@@ -28,30 +28,31 @@ const SyncBadge: React.FC = () => {
 
   if (!isAuthenticated) return null;
 
-  const statusConfig: Record<SyncStatus, { icon: React.ReactNode; color: string; label: string }> = {
-    idle: {
-      icon: <Cloud className="w-3.5 h-3.5" />,
-      color: "text-green-500",
-      label: lastSyncedAt
-        ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-        : "Synced",
-    },
-    syncing: {
-      icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
-      color: "text-amber-500",
-      label: "Syncing...",
-    },
-    error: {
-      icon: <AlertCircle className="w-3.5 h-3.5" />,
-      color: "text-red-500",
-      label: "Sync error",
-    },
-    offline: {
-      icon: <CloudOff className="w-3.5 h-3.5" />,
-      color: "text-text/30",
-      label: "Offline",
-    },
-  };
+  const statusConfig: Record<SyncStatus, { icon: React.ReactNode; color: string; label: string }> =
+    {
+      idle: {
+        icon: <Cloud className="w-3.5 h-3.5" />,
+        color: 'text-green-500',
+        label: lastSyncedAt
+          ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          : 'Synced',
+      },
+      syncing: {
+        icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+        color: 'text-amber-500',
+        label: 'Syncing...',
+      },
+      error: {
+        icon: <AlertCircle className="w-3.5 h-3.5" />,
+        color: 'text-red-500',
+        label: 'Sync error',
+      },
+      offline: {
+        icon: <CloudOff className="w-3.5 h-3.5" />,
+        color: 'text-text/30',
+        label: 'Offline',
+      },
+    };
 
   const config = statusConfig[syncStatus];
 
@@ -71,26 +72,26 @@ const SyncBadge: React.FC = () => {
 };
 
 const navItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/kanban", label: "Board", icon: FolderKanban },
-  { path: "/calendar", label: "Plan", icon: CalendarDays },
-  { path: "/spaces", label: "Spaces", icon: Layers3 },
-  { path: "/insights", label: "Insights", icon: BarChart3 },
-  { path: "/today", label: "Today", icon: Sparkles },
-  { path: "/notes", label: "Notes", icon: StickyNote },
-  { path: "/tasks", label: "Tasks", icon: CheckCircle },
-  { path: "/focus", label: "Focus", icon: Brain },
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/kanban', label: 'Board', icon: FolderKanban },
+  { path: '/calendar', label: 'Plan', icon: CalendarDays },
+  { path: '/spaces', label: 'Spaces', icon: Layers3 },
+  { path: '/insights', label: 'Insights', icon: BarChart3 },
+  { path: '/today', label: 'Today', icon: Sparkles },
+  { path: '/notes', label: 'Notes', icon: StickyNote },
+  { path: '/tasks', label: 'Tasks', icon: CheckCircle },
+  { path: '/focus', label: 'Focus', icon: Brain },
 ];
 
 const mobileNavItems = [
-  { path: "/", label: "Home", icon: Home },
-  { path: "/kanban", label: "Board", icon: FolderKanban },
-  { path: "/calendar", label: "Plan", icon: CalendarDays },
-  { path: "/spaces", label: "Spaces", icon: Layers3 },
-  { path: "/insights", label: "Insights", icon: BarChart3 },
-  { path: "/notes", label: "Notes", icon: StickyNote },
-  { path: "/focus", label: "Focus", icon: Brain },
-  { path: "/settings", label: "Settings", icon: SettingsIcon },
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/kanban', label: 'Board', icon: FolderKanban },
+  { path: '/calendar', label: 'Plan', icon: CalendarDays },
+  { path: '/spaces', label: 'Spaces', icon: Layers3 },
+  { path: '/insights', label: 'Insights', icon: BarChart3 },
+  { path: '/notes', label: 'Notes', icon: StickyNote },
+  { path: '/focus', label: 'Focus', icon: Brain },
+  { path: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 const Header: React.FC = () => {
@@ -103,17 +104,21 @@ const Header: React.FC = () => {
   React.useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Build avatar props from auth state
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'U';
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split('@')[0] ||
+    'U';
   const fallback = displayName.charAt(0).toUpperCase();
 
   const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
+    if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
@@ -126,9 +131,11 @@ const Header: React.FC = () => {
             type="button"
             aria-label="Go to dashboard"
             className="flex items-center cursor-pointer group"
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
           >
-            <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">Nexo</span>
+            <span className="text-lg md:text-xl font-light text-text tracking-[0.3em] md:tracking-[0.4em] uppercase font-sans transition-all group-hover:tracking-[0.5em]">
+              Nexo
+            </span>
           </button>
         </div>
 
@@ -140,8 +147,8 @@ const Header: React.FC = () => {
                 type="button"
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                aria-current={isActive(item.path) ? "page" : undefined}
-                className={`uiverse-link ${isActive(item.path) ? "active" : ""}`}
+                aria-current={isActive(item.path) ? 'page' : undefined}
+                className={`uiverse-link ${isActive(item.path) ? 'active' : ''}`}
               >
                 <span className="uiverse-link-icon flex-shrink-0">
                   <item.icon className="w-5 h-5" />
@@ -158,9 +165,9 @@ const Header: React.FC = () => {
           <button
             type="button"
             aria-label="Open settings"
-            onClick={() => navigate("/settings")}
+            onClick={() => navigate('/settings')}
             className={`hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-surface/50 border border-border/10 text-text-muted hover:text-primary hover:border-primary/20 transition-colors ${
-              isActive("/settings") ? "text-primary border-primary/20 bg-primary/5" : ""
+              isActive('/settings') ? 'text-primary border-primary/20 bg-primary/5' : ''
             }`}
             title="Settings"
           >
@@ -168,9 +175,9 @@ const Header: React.FC = () => {
           </button>
           <button
             type="button"
-            aria-label={isAuthenticated ? "Open profile" : "Sign in or create an account"}
+            aria-label={isAuthenticated ? 'Open profile' : 'Sign in or create an account'}
             className="group cursor-pointer transition-all flex items-center"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate('/profile')}
           >
             {isAuthenticated && avatarUrl ? (
               <img
@@ -195,9 +202,9 @@ const Header: React.FC = () => {
                 type="button"
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                aria-current={active ? "page" : undefined}
+                aria-current={active ? 'page' : undefined}
                 className={`relative flex flex-col items-center justify-center py-2 px-2 rounded-xl shrink-0 text-[9px] font-bold uppercase tracking-wider transition-colors duration-200 ${
-                  active ? "text-primary" : "text-text-muted hover:text-text/80"
+                  active ? 'text-primary' : 'text-text-muted hover:text-text/80'
                 }`}
                 style={{ width: 72 }}
               >
@@ -205,7 +212,7 @@ const Header: React.FC = () => {
                   <motion.div
                     layoutId="activeMobileTab"
                     className="absolute inset-0 bg-primary/10 rounded-xl -z-10 border border-primary/20"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
                 <item.icon className="w-5 h-5 mb-0.5" />

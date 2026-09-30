@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   User,
   Moon,
@@ -15,14 +15,15 @@ import {
   LogOut,
   Loader2,
   CheckCircle2,
-  AlertCircle
-} from "lucide-react";
-import { useAuthStore } from "../store/useAuthStore";
-import { useAppStore } from "../store/useAppStore";
-import { useThemeStore } from "../store/useThemeStore";
-import { isSupabaseConfigured } from "../lib/supabase";
-import { localDateKey } from "../lib/date";
-import { useNavigate } from "react-router-dom";
+  AlertCircle,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAppStore } from '../store/useAppStore';
+import { useThemeStore } from '../store/useThemeStore';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { localDateKey } from '../lib/date';
+import { useNavigate } from 'react-router-dom';
 
 interface SettingSectionProps {
   title: string;
@@ -31,17 +32,13 @@ interface SettingSectionProps {
 
 const SettingSection: React.FC<SettingSectionProps> = ({ title, children }) => (
   <div className="space-y-4">
-    <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.3em] pl-1">
-      {title}
-    </h3>
-    <div className="space-y-2">
-      {children}
-    </div>
+    <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.3em] pl-1">{title}</h3>
+    <div className="space-y-2">{children}</div>
   </div>
 );
 
 interface SettingItemProps {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   description?: string;
   action?: React.ReactNode;
@@ -49,14 +46,21 @@ interface SettingItemProps {
   danger?: boolean;
 }
 
-const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, description, action, onClick, danger }) => (
+const SettingItem: React.FC<SettingItemProps> = ({
+  icon: Icon,
+  label,
+  description,
+  action,
+  onClick,
+  danger,
+}) => (
   <motion.div
-    role={onClick ? "button" : undefined}
+    role={onClick ? 'button' : undefined}
     tabIndex={onClick ? 0 : undefined}
     whileHover={onClick ? { x: 4 } : {}}
     onClick={onClick}
     onKeyDown={(event) => {
-      if (onClick && (event.key === "Enter" || event.key === " ")) {
+      if (onClick && (event.key === 'Enter' || event.key === ' ')) {
         event.preventDefault();
         onClick();
       }
@@ -64,11 +68,15 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, descriptio
     className={`group flex items-center justify-between p-3 md:p-4 rounded-2xl border border-border/5 bg-surface/30 backdrop-blur-sm transition-all ${onClick ? 'cursor-pointer hover:bg-surface/50 hover:border-border/20' : ''}`}
   >
     <div className="flex items-center gap-4">
-      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-colors ${danger ? 'bg-red-500/10 text-red-500 group-hover:bg-red-500/20' : 'bg-primary/10 text-primary group-hover:bg-primary/20'}`}>
+      <div
+        className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-colors ${danger ? 'bg-red-500/10 text-red-500 group-hover:bg-red-500/20' : 'bg-primary/10 text-primary group-hover:bg-primary/20'}`}
+      >
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <div className={`font-medium tracking-tight ${danger ? 'text-red-500' : 'text-text'}`}>{label}</div>
+        <div className={`font-medium tracking-tight ${danger ? 'text-red-500' : 'text-text'}`}>
+          {label}
+        </div>
         {description && <div className="text-xs text-text/40 font-medium">{description}</div>}
       </div>
     </div>
@@ -79,40 +87,38 @@ const SettingItem: React.FC<SettingItemProps> = ({ icon: Icon, label, descriptio
   </motion.div>
 );
 
-interface SettingsProps {
-}
-
-const Settings: React.FC<SettingsProps> = () => {
+const Settings: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, signInWithGoogle, signOut } = useAuthStore();
   const { syncStatus, lastSyncedAt } = useAppStore();
   const { theme, toggleTheme } = useThemeStore();
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const deleteLegacyDatabase = () => new Promise<void>((resolve) => {
-    if (!('indexedDB' in window)) {
-      resolve();
-      return;
-    }
+  const deleteLegacyDatabase = () =>
+    new Promise<void>((resolve) => {
+      if (!('indexedDB' in window)) {
+        resolve();
+        return;
+      }
 
-    const request = indexedDB.deleteDatabase("NexoDB_Modern");
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
+      const request = indexedDB.deleteDatabase('NexoDB_Modern');
+      request.onsuccess = () => resolve();
+      request.onerror = () => resolve();
+      request.onblocked = () => resolve();
+    });
 
   const clearData = async () => {
     const message = isAuthenticated
       ? "Clear this account's data from this browser? Cloud data will be downloaded again after reload."
-      : "Clear this guest workspace? Guest notes, tasks, and focus history stored on this browser will be permanently deleted.";
+      : 'Clear this guest workspace? Guest notes, tasks, and focus history stored on this browser will be permanently deleted.';
 
     if (confirm(message)) {
-      const { syncEngine } = await import("../lib/syncEngine");
+      const { syncEngine } = await import('../lib/syncEngine');
       syncEngine.clearQueuedWrites(user?.id);
       useAppStore.getState()._clearActiveWorkspace();
-      localStorage.removeItem("nexo_storage");
-      localStorage.removeItem("nexo_sync_write_queue");
-      localStorage.removeItem("nexo_sync_write_queue_v2");
+      localStorage.removeItem('nexo_storage');
+      localStorage.removeItem('nexo_sync_write_queue');
+      localStorage.removeItem('nexo_sync_write_queue_v2');
       await deleteLegacyDatabase();
       window.location.reload();
     }
@@ -126,9 +132,9 @@ const Settings: React.FC<SettingsProps> = () => {
       focusSessions: state.focusSessions,
       exportedAt: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = `nexo-export-${localDateKey()}.json`;
     document.body.appendChild(a);
@@ -140,7 +146,7 @@ const Settings: React.FC<SettingsProps> = () => {
   const handleForceSync = async () => {
     setIsSyncing(true);
     try {
-      const { syncEngine } = await import("../lib/syncEngine");
+      const { syncEngine } = await import('../lib/syncEngine');
       await syncEngine.forceSync();
     } catch (error) {
       console.error('Force sync failed:', error);
@@ -149,8 +155,8 @@ const Settings: React.FC<SettingsProps> = () => {
   };
 
   const handleSignOut = async () => {
-    if (confirm("Sign out? Your local data will remain on this device.")) {
-      const { syncEngine } = await import("../lib/syncEngine");
+    if (confirm('Sign out? Your local data will remain on this device.')) {
+      const { syncEngine } = await import('../lib/syncEngine');
       await syncEngine.destroy();
       await signOut();
     }
@@ -165,9 +171,9 @@ const Settings: React.FC<SettingsProps> = () => {
   };
 
   const formatLastSynced = () => {
-    if (!lastSyncedAt) return "Never";
+    if (!lastSyncedAt) return 'Never';
     const diff = Date.now() - lastSyncedAt;
-    if (diff < 60_000) return "Just now";
+    if (diff < 60_000) return 'Just now';
     if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
     return new Date(lastSyncedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -175,7 +181,6 @@ const Settings: React.FC<SettingsProps> = () => {
   return (
     <div className="max-w-full md:max-w-3xl mx-auto py-6 md:py-10">
       <div className="flex flex-col gap-8 md:gap-12">
-
         {/* Cloud & Sync */}
         <SettingSection title="Cloud & Sync">
           {isAuthenticated && user ? (
@@ -267,13 +272,17 @@ const Settings: React.FC<SettingsProps> = () => {
             icon={User}
             label="Profile Identity"
             description="Manage your Nexo profile"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate('/profile')}
           />
           <SettingItem
             icon={Bell}
             label="Notifications"
             description="Manage system alerts and break reminders"
-            action={<div className="w-12 h-6 rounded-full bg-border/20 relative cursor-not-allowed"><div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-text/20" /></div>}
+            action={
+              <div className="w-12 h-6 rounded-full bg-border/20 relative cursor-not-allowed">
+                <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-text/20" />
+              </div>
+            }
           />
         </SettingSection>
 
@@ -282,12 +291,18 @@ const Settings: React.FC<SettingsProps> = () => {
           <SettingItem
             icon={theme === 'dark' ? Sun : Moon}
             label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            description={theme === 'dark' ? 'Eye-friendly dark theme for night work' : 'Bright theme for daytime'}
+            description={
+              theme === 'dark'
+                ? 'Eye-friendly dark theme for night work'
+                : 'Bright theme for daytime'
+            }
             onClick={toggleTheme}
             action={
               <div className="flex items-center gap-2">
                 <div className="w-10 h-6 rounded-full bg-primary/20 relative transition-all duration-300">
-                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-primary transition-all duration-300 ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
+                  <div
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-primary transition-all duration-300 ${theme === 'dark' ? 'right-1' : 'left-1'}`}
+                  />
                 </div>
               </div>
             }
@@ -305,7 +320,11 @@ const Settings: React.FC<SettingsProps> = () => {
           <SettingItem
             icon={Trash2}
             label="Clear Local Data"
-            description={isAuthenticated ? "Clear this browser copy; cloud data remains safe" : "Permanently remove this guest workspace"}
+            description={
+              isAuthenticated
+                ? 'Clear this browser copy; cloud data remains safe'
+                : 'Permanently remove this guest workspace'
+            }
             danger
             onClick={clearData}
           />
@@ -315,11 +334,14 @@ const Settings: React.FC<SettingsProps> = () => {
         <div className="pt-8 border-t border-border/5 flex flex-col items-center gap-4">
           <div className="flex items-center gap-2 text-text/20">
             <Shield className="w-4 h-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Local-First Private Workspace</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">
+              Local-First Private Workspace
+            </span>
           </div>
-          <p className="text-[10px] text-text/30 font-medium">Version 1.0.0 - Optional Cloud Sync</p>
+          <p className="text-[10px] text-text/30 font-medium">
+            Version 1.0.0 - Optional Cloud Sync
+          </p>
         </div>
-
       </div>
     </div>
   );

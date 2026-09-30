@@ -23,9 +23,8 @@ export const addDays = (date: Date, days: number) => {
 
 export const dateKey = (date: Date) => localDateKey(date);
 
-export const shiftMonth = (date: Date, offset: number) => (
-  new Date(date.getFullYear(), date.getMonth() + offset, 1)
-);
+export const shiftMonth = (date: Date, offset: number) =>
+  new Date(date.getFullYear(), date.getMonth() + offset, 1);
 
 export const formatDuration = (seconds: number) => {
   if (seconds < 60) return `${Math.max(0, seconds)}s`;
@@ -69,7 +68,11 @@ export const getKanbanColumns = (tasks: Task[]) => {
   return columns;
 };
 
-export const buildSpaces = (notes: Note[], tasks: Task[], sessions: AppFocusSession[]): SpaceSummary[] => {
+export const buildSpaces = (
+  notes: Note[],
+  tasks: Task[],
+  sessions: AppFocusSession[],
+): SpaceSummary[] => {
   const tagNames = new Set<string>();
   notes.forEach((note) => note.tags.forEach((tag) => tagNames.add(tag.trim())));
 
@@ -79,17 +82,21 @@ export const buildSpaces = (notes: Note[], tasks: Task[], sessions: AppFocusSess
 
   const spaces = normalizedTags.map((tag) => {
     const lower = tag.toLowerCase();
-    const spaceNotes = notes.filter((note) => note.tags.some((noteTag) => noteTag.toLowerCase() === lower));
-    const spaceTasks = tasks.filter((task) =>
-      task.title.toLowerCase().includes(lower) || task.description.toLowerCase().includes(lower)
+    const spaceNotes = notes.filter((note) =>
+      note.tags.some((noteTag) => noteTag.toLowerCase() === lower),
+    );
+    const spaceTasks = tasks.filter(
+      (task) =>
+        task.title.toLowerCase().includes(lower) || task.description.toLowerCase().includes(lower),
     );
     const noteIds = new Set(spaceNotes.map((note) => note.id));
     const taskIds = new Set(spaceTasks.map((task) => task.id));
     const focusSeconds = sessions
-      .filter((session) => (
-        (session.targetType === 'note' && session.targetId && noteIds.has(session.targetId)) ||
-        (session.targetType === 'task' && session.targetId && taskIds.has(session.targetId))
-      ))
+      .filter(
+        (session) =>
+          (session.targetType === 'note' && session.targetId && noteIds.has(session.targetId)) ||
+          (session.targetType === 'task' && session.targetId && taskIds.has(session.targetId)),
+      )
       .reduce((total, session) => total + session.duration, 0);
 
     return {
@@ -103,7 +110,9 @@ export const buildSpaces = (notes: Note[], tasks: Task[], sessions: AppFocusSess
 
   const taggedNoteIds = new Set(spaces.flatMap((space) => space.notes.map((note) => note.id)));
   const taggedTaskIds = new Set(spaces.flatMap((space) => space.tasks.map((task) => task.id)));
-  const generalNotes = notes.filter((note) => note.tags.length === 0 || !taggedNoteIds.has(note.id));
+  const generalNotes = notes.filter(
+    (note) => note.tags.length === 0 || !taggedNoteIds.has(note.id),
+  );
   const generalTasks = tasks.filter((task) => !taggedTaskIds.has(task.id));
 
   return [
@@ -119,7 +128,9 @@ export const buildSpaces = (notes: Note[], tasks: Task[], sessions: AppFocusSess
 };
 
 export const getDailyStreak = (sessions: AppFocusSession[]) => {
-  const activeDays = new Set(sessions.filter((session) => session.duration > 0).map((session) => session.date));
+  const activeDays = new Set(
+    sessions.filter((session) => session.duration > 0).map((session) => session.date),
+  );
   let streak = 0;
   for (let offset = 0; offset < 365; offset += 1) {
     const key = dateKey(addDays(new Date(), -offset));

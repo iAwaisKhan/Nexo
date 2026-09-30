@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { useAuthStore } from "../store/useAuthStore";
-import { GraduationCap, Loader2, Cloud, Zap, Shield, ArrowRight } from "lucide-react";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useAuthStore } from '../store/useAuthStore';
+import { GraduationCap, Loader2, Cloud, Zap, Shield, ArrowRight } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
@@ -14,7 +14,7 @@ const Auth: React.FC = () => {
     try {
       await signInWithGoogle();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Sign-in failed. Please try again.");
+      setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.');
       setIsLoading(false);
     }
   };
@@ -28,7 +28,7 @@ const Auth: React.FC = () => {
             scale: [1, 1.2, 1],
             opacity: [0.03, 0.06, 0.03],
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] rounded-full bg-primary"
         />
         <motion.div
@@ -36,7 +36,7 @@ const Auth: React.FC = () => {
             scale: [1.2, 1, 1.2],
             opacity: [0.02, 0.05, 0.02],
           }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
           className="absolute -bottom-1/4 -left-1/4 w-[600px] h-[600px] rounded-full bg-primary"
         />
       </div>
@@ -52,7 +52,7 @@ const Auth: React.FC = () => {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
             className="w-16 h-16 rounded-[1.5rem] bg-primary/10 flex items-center justify-center mx-auto mb-6"
           >
             <GraduationCap className="w-8 h-8 text-primary" />
@@ -114,7 +114,7 @@ const Auth: React.FC = () => {
                 />
               </svg>
             )}
-            {isLoading ? "Connecting..." : "Continue with Google"}
+            {isLoading ? 'Connecting...' : 'Continue with Google'}
           </motion.button>
 
           {/* Error Display */}
@@ -140,9 +140,9 @@ const Auth: React.FC = () => {
           {/* Features */}
           <div className="space-y-3">
             {[
-              { icon: Cloud, label: "Cross-device sync", desc: "Access your workspace anywhere" },
-              { icon: Shield, label: "Secure & private", desc: "Account-scoped access controls" },
-              { icon: Zap, label: "Instant sync", desc: "Real-time updates across devices" },
+              { icon: Cloud, label: 'Cross-device sync', desc: 'Access your workspace anywhere' },
+              { icon: Shield, label: 'Secure & private', desc: 'Account-scoped access controls' },
+              { icon: Zap, label: 'Instant sync', desc: 'Real-time updates across devices' },
             ].map(({ icon: Icon, label, desc }, i) => (
               <motion.div
                 key={label}

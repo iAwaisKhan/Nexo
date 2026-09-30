@@ -4,7 +4,8 @@ import { AlertTriangle, RefreshCcw } from 'lucide-react';
 import { FallbackProps } from 'react-error-boundary';
 
 export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
-  const message = error instanceof Error ? error.message : String(error || "Unknown error component crash");
+  const message =
+    error instanceof Error ? error.message : String(error || 'Unknown error component crash');
   return (
     <div className="min-h-[400px] h-full flex flex-col items-center justify-center p-8 bg-background text-text text-center rounded-xl border border-primary/10 shadow-sm">
       <motion.div
@@ -16,18 +17,16 @@ export const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBounda
         <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-6 text-red-500">
           <AlertTriangle className="h-8 w-8" />
         </div>
-        
+
         <h2 className="text-2xl font-bold mb-3">Something went wrong</h2>
-        
+
         <p className="text-text/70 mb-6">
           This view could not be loaded. Your locally saved workspace has not been removed.
         </p>
 
         {import.meta.env.DEV && (
           <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 w-full text-left overflow-auto max-h-32 mb-8">
-            <code className="text-xs text-red-400 font-mono break-words">
-              {message}
-            </code>
+            <code className="text-xs text-red-400 font-mono break-words">{message}</code>
           </div>
         )}
 

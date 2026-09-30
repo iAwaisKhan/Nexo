@@ -24,32 +24,32 @@ export default defineConfig({
             src: '/favicon.svg',
             sizes: '192x192',
             type: 'image/svg+xml',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/favicon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
-            purpose: 'maskable'
-          }
-        ]
+            purpose: 'maskable',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 6291456, // 6 MiB
-      }
-    })
+      },
+    }),
   ],
   server: {
     port: 3000,
-    open: true
+    open: true,
   },
   build: {
     outDir: 'dist',
     sourcemap: false,
-    chunkSizeWarningLimit: 900
+    chunkSizeWarningLimit: 900,
   },
   test: {
     globals: true,
@@ -57,5 +57,24 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     pool: 'threads',
     maxWorkers: 1,
-  }
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/*.test.{ts,tsx}',
+        'src/setupTests.ts',
+        'src/main.tsx',
+        'src/types/**',
+      ],
+      thresholds: {
+        statements: 6,
+        branches: 4,
+        functions: 6,
+        lines: 6,
+      },
+    },
+  },
 });

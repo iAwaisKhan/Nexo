@@ -19,10 +19,15 @@ const Spaces: React.FC = () => {
     <div className="w-full min-h-[calc(100vh-9rem)] space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">Collections</p>
-          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">Spaces</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">
+            Collections
+          </p>
+          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">
+            Spaces
+          </h1>
           <p className="text-sm text-text/50 mt-2 max-w-2xl">
-            Your notes and tasks grouped by note tags, with General holding everything uncategorized.
+            Your notes and tasks grouped by note tags, with General holding everything
+            uncategorized.
           </p>
         </div>
         <button
@@ -54,7 +59,9 @@ const Spaces: React.FC = () => {
                       <FolderKanban className="w-4 h-4 shrink-0" />
                       <span className="font-semibold truncate">{space.name}</span>
                     </div>
-                    <span className="text-[10px] font-bold tabular-nums">{space.notes.length + space.tasks.length}</span>
+                    <span className="text-[10px] font-bold tabular-nums">
+                      {space.notes.length + space.tasks.length}
+                    </span>
                   </div>
                 </button>
               );
@@ -72,19 +79,30 @@ const Spaces: React.FC = () => {
             <div className="rounded-3xl bg-surface/55 backdrop-blur-2xl border border-border/40 p-5 md:p-7">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">Space</div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">
+                    Space
+                  </div>
                   <h2 className="text-3xl font-display font-semibold text-text">{selected.name}</h2>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: 'Notes', value: selected.notes.length, icon: NotebookText },
                     { label: 'Tasks', value: selected.tasks.length, icon: FolderKanban },
-                    { label: 'Focus', value: formatDuration(selected.focusSeconds), icon: TimerReset },
+                    {
+                      label: 'Focus',
+                      value: formatDuration(selected.focusSeconds),
+                      icon: TimerReset,
+                    },
                   ].map(({ label, value, icon: Icon }) => (
-                    <div key={label} className="min-w-24 rounded-2xl bg-background/60 border border-border/20 p-4">
+                    <div
+                      key={label}
+                      className="min-w-24 rounded-2xl bg-background/60 border border-border/20 p-4"
+                    >
                       <Icon className="w-4 h-4 text-primary mb-2" />
                       <div className="text-xl font-semibold text-text tabular-nums">{value}</div>
-                      <div className="text-[9px] font-bold uppercase tracking-widest text-text/35">{label}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-text/35">
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -95,7 +113,12 @@ const Spaces: React.FC = () => {
               <div className="rounded-3xl bg-surface/45 backdrop-blur-2xl border border-border/40 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-text">Notes</h3>
-                  <button onClick={() => navigate('/notes')} className="text-primary text-[10px] font-bold uppercase tracking-widest">Open Notes</button>
+                  <button
+                    onClick={() => navigate('/notes')}
+                    className="text-primary text-[10px] font-bold uppercase tracking-widest"
+                  >
+                    Open Notes
+                  </button>
                 </div>
                 <div className="space-y-3">
                   {selected.notes.slice(0, 8).map((note) => (
@@ -105,10 +128,14 @@ const Spaces: React.FC = () => {
                       className="w-full text-left rounded-2xl bg-background/55 border border-border/20 p-4 hover:border-primary/20 hover:bg-primary/5 transition-all"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <h4 className="font-semibold text-sm text-text truncate">{note.title || 'Untitled Note'}</h4>
+                        <h4 className="font-semibold text-sm text-text truncate">
+                          {note.title || 'Untitled Note'}
+                        </h4>
                         <ArrowRight className="w-4 h-4 text-text/25" />
                       </div>
-                      <p className="text-xs text-text/45 mt-2 line-clamp-2">{note.content || 'No content yet.'}</p>
+                      <p className="text-xs text-text/45 mt-2 line-clamp-2">
+                        {note.content || 'No content yet.'}
+                      </p>
                     </button>
                   ))}
                   {selected.notes.length === 0 && (
@@ -122,16 +149,28 @@ const Spaces: React.FC = () => {
               <div className="rounded-3xl bg-surface/45 backdrop-blur-2xl border border-border/40 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-text">Tasks</h3>
-                  <button onClick={() => navigate('/kanban')} className="text-primary text-[10px] font-bold uppercase tracking-widest">Open Board</button>
+                  <button
+                    onClick={() => navigate('/kanban')}
+                    className="text-primary text-[10px] font-bold uppercase tracking-widest"
+                  >
+                    Open Board
+                  </button>
                 </div>
                 <div className="space-y-3">
                   {selected.tasks.slice(0, 8).map((task) => (
-                    <div key={task.id} className="rounded-2xl bg-background/55 border border-border/20 p-4">
+                    <div
+                      key={task.id}
+                      className="rounded-2xl bg-background/55 border border-border/20 p-4"
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <h4 className="font-semibold text-sm text-text">{task.title}</h4>
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-text/35">{task.status}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-text/35">
+                          {task.status}
+                        </span>
                       </div>
-                      <p className="text-xs text-text/45 mt-2 line-clamp-2">{task.description || task.dueDate || 'No extra details.'}</p>
+                      <p className="text-xs text-text/45 mt-2 line-clamp-2">
+                        {task.description || task.dueDate || 'No extra details.'}
+                      </p>
                     </div>
                   ))}
                   {selected.tasks.length === 0 && (

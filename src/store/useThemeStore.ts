@@ -26,8 +26,8 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: 'nexo-theme-storage',
-    }
-  )
+    },
+  ),
 );
 
 function applyTheme(theme: Theme) {

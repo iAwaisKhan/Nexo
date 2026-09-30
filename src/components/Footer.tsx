@@ -1,11 +1,10 @@
-import React from "react";
-import { Heart, ShieldCheck } from "lucide-react";
+import React from 'react';
+import { Heart, ShieldCheck } from 'lucide-react';
 
 const Footer: React.FC = () => {
   return (
     <footer className="w-full py-8 px-4 md:px-8 mt-auto border-t border-border/10">
       <div className="max-w-[95%] w-full mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        
         {/* Left: Brand & Copy */}
         <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
           <span className="text-sm font-bold text-text tracking-[0.3em] uppercase">Nexo</span>
@@ -16,7 +15,10 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Center: Product status */}
-        <div className="flex items-center gap-2 text-xs text-text-muted/80" aria-label="Workspace status">
+        <div
+          className="flex items-center gap-2 text-xs text-text-muted/80"
+          aria-label="Workspace status"
+        >
           <ShieldCheck className="w-4 h-4 text-primary" aria-hidden="true" />
           <span>Private workspace</span>
         </div>
@@ -25,7 +27,6 @@ const Footer: React.FC = () => {
         <div className="flex items-center gap-1.5 text-xs text-text-muted/80">
           Crafted with <Heart className="w-3 h-3 text-red-500/80 fill-red-500/80" /> for flow.
         </div>
-
       </div>
     </footer>
   );

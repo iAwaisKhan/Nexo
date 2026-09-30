@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import * as d3 from "d3";
-import type { Note } from "../types/note";
-import { motion } from "framer-motion";
-import { X, ZoomIn, ZoomOut } from "lucide-react";
+import React, { useEffect, useRef, useMemo } from 'react';
+import * as d3 from 'd3';
+import type { Note } from '../types/note';
+import { motion } from 'framer-motion';
+import { X, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface Node extends d3.SimulationNodeDatum {
   id: string;
@@ -25,20 +25,20 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   const graphData = useMemo(() => {
-    const nodes: Node[] = notes.map(n => ({ id: n.id, title: n.title || "Untitled" }));
+    const nodes: Node[] = notes.map((n) => ({ id: n.id, title: n.title || 'Untitled' }));
     const links: Link[] = [];
 
-    notes.forEach(note => {
+    notes.forEach((note) => {
       // Find links in content like [[Title]]
       const linkRegex = /\[\[(.*?)\]\]/g;
       let match;
       while ((match = linkRegex.exec(note.content)) !== null) {
         const targetTitle = match[1];
-        const targetNote = notes.find(n => n.title === targetTitle);
+        const targetNote = notes.find((n) => n.title === targetTitle);
         if (targetNote) {
           links.push({
             source: note.id,
-            target: targetNote.id
+            target: targetNote.id,
           });
         }
       }
@@ -53,65 +53,79 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
 
-    const simulation = d3.forceSimulation<Node>(graphData.nodes)
-      .force("link", d3.forceLink<Node, Link>(graphData.links).id(d => d.id).distance(100))
-      .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(50));
+    const simulation = d3
+      .forceSimulation<Node>(graphData.nodes)
+      .force(
+        'link',
+        d3
+          .forceLink<Node, Link>(graphData.links)
+          .id((d) => d.id)
+          .distance(100),
+      )
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius(50));
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
+    svg.selectAll('*').remove();
 
-    const g = svg.append("g");
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const g = svg.append('g');
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 4])
-      .on("zoom", (event) => g.attr("transform", event.transform));
+      .on('zoom', (event) => g.attr('transform', event.transform));
     svg.call(zoom);
     zoomRef.current = zoom;
 
-    const link = g.append("g")
-      .attr("stroke", "var(--color-primary)")
-      .attr("stroke-opacity", 0.2)
-      .selectAll("line")
+    const link = g
+      .append('g')
+      .attr('stroke', 'var(--color-primary)')
+      .attr('stroke-opacity', 0.2)
+      .selectAll('line')
       .data(graphData.links)
-      .join("line")
-      .attr("stroke-width", 1);
+      .join('line')
+      .attr('stroke-width', 1);
 
-    const node = g.append("g")
-      .selectAll("g")
+    const node = g
+      .append('g')
+      .selectAll('g')
       .data(graphData.nodes)
-      .join("g")
-      .call(d3.drag<SVGGElement, Node>()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended) as any)
-      .on("click", (_event: any, d: Node) => onNoteClick(d.id));
+      .join('g')
+      .call(
+        d3
+          .drag<SVGGElement, Node>()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended) as any,
+      )
+      .on('click', (_event: any, d: Node) => onNoteClick(d.id));
 
-    node.append("circle")
-      .attr("r", 6)
-      .attr("fill", "var(--color-primary)")
-      .attr("stroke", "var(--color-surface)")
-      .attr("stroke-width", 2);
+    node
+      .append('circle')
+      .attr('r', 6)
+      .attr('fill', 'var(--color-primary)')
+      .attr('stroke', 'var(--color-surface)')
+      .attr('stroke-width', 2);
 
-    node.append("text")
+    node
+      .append('text')
       .text((d: any) => d.title)
-      .attr("x", 10)
-      .attr("y", 4)
-      .style("font-size", "10px")
-      .style("font-weight", "600")
-      .style("fill", "var(--color-text)")
-      .style("opacity", 0.9)
-      .style("pointer-events", "none");
+      .attr('x', 10)
+      .attr('y', 4)
+      .style('font-size', '10px')
+      .style('font-weight', '600')
+      .style('fill', 'var(--color-text)')
+      .style('opacity', 0.9)
+      .style('pointer-events', 'none');
 
-    simulation.on("tick", () => {
+    simulation.on('tick', () => {
       link
-        .attr("x1", (d: any) => (d.source as Node).x!)
-        .attr("y1", (d: any) => (d.source as Node).y!)
-        .attr("x2", (d: any) => (d.target as Node).x!)
-        .attr("y2", (d: any) => (d.target as Node).y!);
+        .attr('x1', (d: any) => (d.source as Node).x!)
+        .attr('y1', (d: any) => (d.source as Node).y!)
+        .attr('x2', (d: any) => (d.target as Node).x!)
+        .attr('y2', (d: any) => (d.target as Node).y!);
 
-      node
-        .attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+      node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
     });
 
     function dragstarted(event: any) {
@@ -133,21 +147,18 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
 
     return () => {
       simulation.stop();
-      svg.on(".zoom", null);
+      svg.on('.zoom', null);
       if (zoomRef.current === zoom) zoomRef.current = null;
     };
   }, [graphData, onNoteClick]);
 
   const zoomBy = (factor: number) => {
     if (!svgRef.current || !zoomRef.current) return;
-    d3.select(svgRef.current)
-      .transition()
-      .duration(180)
-      .call(zoomRef.current.scaleBy, factor);
+    d3.select(svgRef.current).transition().duration(180).call(zoomRef.current.scaleBy, factor);
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -161,37 +172,37 @@ const GraphView: React.FC<GraphViewProps> = ({ notes, onNoteClick, onClose }) =>
           </p>
         </div>
         <div className="flex items-center gap-2">
-            <button 
-                type="button"
-                aria-label="Close knowledge graph"
-                onClick={onClose}
-                className="p-3 rounded-2xl bg-surface/50 border border-border/10 hover:bg-red-500/10 hover:text-red-500 transition-all group"
-            >
-                <X className="w-5 h-5 group-active:scale-90" />
-            </button>
+          <button
+            type="button"
+            aria-label="Close knowledge graph"
+            onClick={onClose}
+            className="p-3 rounded-2xl bg-surface/50 border border-border/10 hover:bg-red-500/10 hover:text-red-500 transition-all group"
+          >
+            <X className="w-5 h-5 group-active:scale-90" />
+          </button>
         </div>
       </div>
-      
+
       <div className="flex-1 relative cursor-grab active:cursor-grabbing">
         <svg ref={svgRef} className="w-full h-full" />
-        
+
         <div className="absolute bottom-8 right-8 flex flex-col gap-2">
-            <button
-              type="button"
-              aria-label="Zoom in"
-              onClick={() => zoomBy(1.3)}
-              className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
-            >
-                <ZoomIn className="w-5 h-5 text-text/80" />
-            </button>
-            <button
-              type="button"
-              aria-label="Zoom out"
-              onClick={() => zoomBy(1 / 1.3)}
-              className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
-            >
-                <ZoomOut className="w-5 h-5 text-text/80" />
-            </button>
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() => zoomBy(1.3)}
+            className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
+          >
+            <ZoomIn className="w-5 h-5 text-text/80" />
+          </button>
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() => zoomBy(1 / 1.3)}
+            className="p-3 rounded-xl bg-surface border border-border/20 shadow-lg hover:bg-primary/10 transition-colors"
+          >
+            <ZoomOut className="w-5 h-5 text-text/80" />
+          </button>
         </div>
       </div>
     </motion.div>

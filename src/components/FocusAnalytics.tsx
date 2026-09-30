@@ -1,18 +1,18 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Flame, Clock } from "lucide-react";
-import { useAppStore } from "../store/useAppStore";
-import { localDateKey } from "../lib/date";
+import React, { useMemo, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Flame, Clock } from 'lucide-react';
+import { useAppStore } from '../store/useAppStore';
+import { localDateKey } from '../lib/date';
 
 const FocusAnalytics: React.FC = () => {
-  const focusSessions = useAppStore(state => state.focusSessions);
+  const focusSessions = useAppStore((state) => state.focusSessions);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const { totalHours, currentStreak, days } = useMemo(() => {
@@ -23,7 +23,7 @@ const FocusAnalytics: React.FC = () => {
     const sessionsByDate: Record<string, number> = {};
     let totalSeconds = 0;
 
-    focusSessions.forEach(session => {
+    focusSessions.forEach((session) => {
       let dateStr = session.date;
       if (!dateStr) {
         const d = new Date(session.startTime);
@@ -78,12 +78,18 @@ const FocusAnalytics: React.FC = () => {
 
   const getIntensityClass = (intensity: number) => {
     switch (intensity) {
-      case 0: return "bg-border/20 dark:bg-white/5";
-      case 1: return "bg-primary/30";
-      case 2: return "bg-primary/50";
-      case 3: return "bg-primary/75";
-      case 4: return "bg-primary";
-      default: return "bg-border/20 dark:bg-white/5";
+      case 0:
+        return 'bg-border/20 dark:bg-white/5';
+      case 1:
+        return 'bg-primary/30';
+      case 2:
+        return 'bg-primary/50';
+      case 3:
+        return 'bg-primary/75';
+      case 4:
+        return 'bg-primary';
+      default:
+        return 'bg-border/20 dark:bg-white/5';
     }
   };
 
@@ -101,7 +107,9 @@ const FocusAnalytics: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-base font-semibold text-text mb-1">Focus Activity</p>
-          <p className="text-xs text-text-muted">A timeline of your {isMobile ? "12" : "24"} latest weeks</p>
+          <p className="text-xs text-text-muted">
+            A timeline of your {isMobile ? '12' : '24'} latest weeks
+          </p>
         </div>
 
         <div className="flex items-center gap-6">
@@ -109,7 +117,9 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center gap-2 text-text-muted">
             <Clock className="w-4 h-4" />
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-display font-medium text-text tabular-nums">{totalHours}</span>
+              <span className="text-xl font-display font-medium text-text tabular-nums">
+                {totalHours}
+              </span>
               <span className="text-xs font-semibold uppercase tracking-wider">h</span>
             </div>
           </div>
@@ -118,7 +128,9 @@ const FocusAnalytics: React.FC = () => {
           <div className="flex items-center gap-2 text-text-muted">
             <Flame className="w-4 h-4" />
             <div className="flex items-baseline gap-1">
-              <span className="text-xl font-display font-medium text-text tabular-nums">{currentStreak}</span>
+              <span className="text-xl font-display font-medium text-text tabular-nums">
+                {currentStreak}
+              </span>
               <span className="text-xs font-semibold uppercase tracking-wider">d</span>
             </div>
           </div>
@@ -130,7 +142,7 @@ const FocusAnalytics: React.FC = () => {
         <div className="min-w-max">
           <div
             className={`grid grid-flow-col ${isMobile ? 'gap-1' : 'gap-1.5'} justify-start`}
-            style={{ gridTemplateRows: "repeat(7, 10px)" }}
+            style={{ gridTemplateRows: 'repeat(7, 10px)' }}
           >
             {displayDays.map((day, i) => (
               <motion.div
@@ -139,7 +151,7 @@ const FocusAnalytics: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.001, duration: 0.3 }}
                 title={`${day.date}: ${formatDuration(day.duration)}`}
-                className={`${cellSize} rounded-[2px] transition-transform duration-200 ${getIntensityClass(day.intensity)} ${day.duration > 0 ? "cursor-pointer" : "cursor-default"}`}
+                className={`${cellSize} rounded-[2px] transition-transform duration-200 ${getIntensityClass(day.intensity)} ${day.duration > 0 ? 'cursor-pointer' : 'cursor-default'}`}
                 whileHover={day.duration > 0 ? { scale: 1.5 } : {}}
               />
             ))}
@@ -147,7 +159,9 @@ const FocusAnalytics: React.FC = () => {
 
           {/* Legend */}
           <div className="flex items-center justify-between mt-4">
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{isMobile ? "12w ago" : "24w ago"}</span>
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+              {isMobile ? '12w ago' : '24w ago'}
+            </span>
             <div className="flex items-center gap-1.5">
               {[0, 1, 2, 3, 4].map((intensity) => (
                 <div
@@ -156,7 +170,9 @@ const FocusAnalytics: React.FC = () => {
                 />
               ))}
             </div>
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Today</span>
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">
+              Today
+            </span>
           </div>
         </div>
       </div>

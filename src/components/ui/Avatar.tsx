@@ -1,47 +1,58 @@
-import React from "react";
-import { User } from "lucide-react";
+import React from 'react';
+import { User } from 'lucide-react';
 
 interface AvatarProps {
   src?: string;
   alt?: string;
   fallback: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   label?: {
     name: string;
     email: string;
   };
 }
 
-export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = "md", label }) => {
+export const Avatar: React.FC<AvatarProps> = ({ src, alt, fallback, size = 'md', label }) => {
   const sizeClasses = {
-    sm: "w-8 h-8",
-    md: "w-10 h-10",
-    lg: "w-14 h-14",
-    xl: "w-20 h-20",
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-14 h-14',
+    xl: 'w-20 h-20',
   };
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/30`}>
+      <div
+        className={`relative ${sizeClasses[size]} shrink-0 rounded-full bg-surface border border-border flex items-center justify-center overflow-hidden transition-all hover:border-primary/30`}
+      >
         {src ? (
-          <img 
-            src={src} 
-            alt={alt || "avatar"} 
+          <img
+            src={src}
+            alt={alt || 'avatar'}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : fallback ? (
-          <span className={`font-semibold text-text-muted ${size === 'sm' ? 'text-[10px]' : size === 'xl' ? 'text-xl' : 'text-sm'}`}>
+          <span
+            className={`font-semibold text-text-muted ${size === 'sm' ? 'text-[10px]' : size === 'xl' ? 'text-xl' : 'text-sm'}`}
+          >
             {fallback}
           </span>
         ) : (
-          <User className={`text-text-muted ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} strokeWidth={1.5} />
+          <User
+            className={`text-text-muted ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
+            strokeWidth={1.5}
+          />
         )}
       </div>
 
       {label && (
         <div className="flex flex-col text-left">
-          <span className="text-sm font-bold text-text tracking-tight group-hover:text-primary transition-colors">{label.name}</span>
-          <span className="text-[10px] font-medium text-text-muted/60 lowercase">{label.email}</span>
+          <span className="text-sm font-bold text-text tracking-tight group-hover:text-primary transition-colors">
+            {label.name}
+          </span>
+          <span className="text-[10px] font-medium text-text-muted/60 lowercase">
+            {label.email}
+          </span>
         </div>
       )}
     </div>

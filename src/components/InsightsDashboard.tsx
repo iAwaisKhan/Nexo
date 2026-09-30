@@ -11,11 +11,15 @@ const InsightsDashboard: React.FC = () => {
 
   const insights = useMemo(() => {
     const today = dateKey(new Date());
-    const weekKeys = Array.from({ length: 7 }, (_, index) => dateKey(addDays(new Date(), index - 6)));
+    const weekKeys = Array.from({ length: 7 }, (_, index) =>
+      dateKey(addDays(new Date(), index - 6)),
+    );
     const focusByDay = weekKeys.map((key) => ({
       key,
       label: new Date(`${key}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' }),
-      seconds: sessions.filter((session) => session.date === key).reduce((total, session) => total + session.duration, 0),
+      seconds: sessions
+        .filter((session) => session.date === key)
+        .reduce((total, session) => total + session.duration, 0),
     }));
 
     const totalFocus = sessions.reduce((total, session) => total + session.duration, 0);
@@ -23,11 +27,13 @@ const InsightsDashboard: React.FC = () => {
     const todayFocus = focusByDay.find((day) => day.key === today)?.seconds || 0;
     const completedTasks = tasks.filter((task) => task.status === 'Done').length;
     const openTasks = tasks.length - completedTasks;
-    const overdueTasks = tasks.filter((task) => task.status !== 'Done' && task.dueDate && task.dueDate < today).length;
+    const overdueTasks = tasks.filter(
+      (task) => task.status !== 'Done' && task.dueDate && task.dueDate < today,
+    ).length;
     const completionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
     const spaces = buildSpaces(notes, tasks, sessions)
       .filter((space) => space.notes.length + space.tasks.length > 0)
-      .sort((a, b) => (b.notes.length + b.tasks.length) - (a.notes.length + a.tasks.length));
+      .sort((a, b) => b.notes.length + b.tasks.length - (a.notes.length + a.tasks.length));
 
     return {
       focusByDay,
@@ -55,8 +61,12 @@ const InsightsDashboard: React.FC = () => {
     <div className="w-full min-h-[calc(100vh-9rem)] space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">Intelligence</p>
-          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">Insights Dashboard</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">
+            Intelligence
+          </p>
+          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">
+            Insights Dashboard
+          </h1>
           <p className="text-sm text-text/50 mt-2 max-w-2xl">
             A weekly read on focus, task health, note momentum, and active spaces.
           </p>
@@ -73,7 +83,9 @@ const InsightsDashboard: React.FC = () => {
           >
             <Icon className="w-5 h-5 text-primary mb-4" />
             <div className="text-2xl md:text-3xl font-semibold text-text tabular-nums">{value}</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-text/35 mt-1">{label}</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-text/35 mt-1">
+              {label}
+            </div>
           </motion.div>
         ))}
       </div>
@@ -101,8 +113,12 @@ const InsightsDashboard: React.FC = () => {
                     />
                   </div>
                   <div className="text-center">
-                    <div className="text-[10px] font-bold text-text/40 uppercase tracking-widest">{day.label}</div>
-                    <div className="text-[10px] text-text/25 mt-1">{formatDuration(day.seconds)}</div>
+                    <div className="text-[10px] font-bold text-text/40 uppercase tracking-widest">
+                      {day.label}
+                    </div>
+                    <div className="text-[10px] text-text/25 mt-1">
+                      {formatDuration(day.seconds)}
+                    </div>
                   </div>
                 </div>
               );
@@ -132,7 +148,10 @@ const InsightsDashboard: React.FC = () => {
                     <span>{item.value}</span>
                   </div>
                   <div className="h-2 rounded-full bg-border/20 overflow-hidden">
-                    <div className={`h-full rounded-full ${item.color}`} style={{ width: `${Math.round((item.value / total) * 100)}%` }} />
+                    <div
+                      className={`h-full rounded-full ${item.color}`}
+                      style={{ width: `${Math.round((item.value / total) * 100)}%` }}
+                    />
                   </div>
                 </div>
               );
@@ -156,9 +175,14 @@ const InsightsDashboard: React.FC = () => {
               { label: 'Pinned', value: notes.filter((note) => note.isPinned).length },
               { label: 'Public', value: notes.filter((note) => note.isPublic).length },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl bg-background/55 border border-border/20 p-4">
+              <div
+                key={item.label}
+                className="rounded-2xl bg-background/55 border border-border/20 p-4"
+              >
                 <div className="text-2xl font-semibold text-text">{item.value}</div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-text/35 mt-1">{item.label}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-text/35 mt-1">
+                  {item.label}
+                </div>
               </div>
             ))}
           </div>
@@ -174,13 +198,19 @@ const InsightsDashboard: React.FC = () => {
           </div>
           <div className="space-y-3">
             {insights.spaces.slice(0, 5).map((space) => (
-              <div key={space.id} className="rounded-2xl bg-background/55 border border-border/20 p-4">
+              <div
+                key={space.id}
+                className="rounded-2xl bg-background/55 border border-border/20 p-4"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="font-semibold text-sm text-text truncate">{space.name}</h3>
-                  <span className="text-xs font-bold text-primary">{space.notes.length + space.tasks.length}</span>
+                  <span className="text-xs font-bold text-primary">
+                    {space.notes.length + space.tasks.length}
+                  </span>
                 </div>
                 <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-text/35">
-                  {space.notes.length} notes - {space.tasks.length} tasks - {formatDuration(space.focusSeconds)}
+                  {space.notes.length} notes - {space.tasks.length} tasks -{' '}
+                  {formatDuration(space.focusSeconds)}
                 </div>
               </div>
             ))}

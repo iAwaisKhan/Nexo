@@ -1,9 +1,11 @@
 ## Description
+
 <!-- Brief description of changes -->
 
 Fixes #(issue number if applicable)
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Documentation
@@ -11,9 +13,11 @@ Fixes #(issue number if applicable)
 - [ ] Breaking change
 
 ## Changes Made
+
 <!-- Detailed list of changes -->
 
 ## Testing
+
 - [ ] Tested in development (`npm run dev`)
 - [ ] Tested production build (`npm run build`)
 - [ ] TypeScript compilation passes (`npx tsc --noEmit`)
@@ -21,12 +25,14 @@ Fixes #(issue number if applicable)
 - [ ] Manual testing completed
 
 ## Documentation
+
 - [ ] Updated README.md
 - [ ] Updated docs if needed
 - [ ] Updated CHANGELOG.md
 - [ ] Added code comments
 
 ## Checklist
+
 - [ ] Code follows project style
 - [ ] Changes are tested
 - [ ] Documentation is updated
@@ -34,4 +40,5 @@ Fixes #(issue number if applicable)
 - [ ] Commit messages are clear
 
 ## Screenshots/GIFs
+
 <!-- Add screenshots if UI changes -->

@@ -68,13 +68,13 @@ const queueStorageKey = (userId: string) => `${QUEUE_STORAGE_PREFIX}${userId}`;
 const isQueuedWrite = (value: unknown): value is QueuedWrite => {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
-  return typeof record.userId === 'string' && typeof record.type === 'string' && [
-    'upsert_note',
-    'delete_note',
-    'upsert_task',
-    'delete_task',
-    'upsert_session',
-  ].includes(record.type);
+  return (
+    typeof record.userId === 'string' &&
+    typeof record.type === 'string' &&
+    ['upsert_note', 'delete_note', 'upsert_task', 'delete_task', 'upsert_session'].includes(
+      record.type,
+    )
+  );
 };
 
 const readQueue = (userId: string): QueuedWrite[] => {
@@ -311,19 +311,29 @@ class SyncEngine {
     const allCloudTasks = (tasksRes.data || []) as TaskRow[];
     const pendingNoteDeletes = new Map(
       this.writeQueue
-        .filter((write): write is Extract<QueuedWrite, { type: 'delete_note' }> => write.type === 'delete_note')
+        .filter(
+          (write): write is Extract<QueuedWrite, { type: 'delete_note' }> =>
+            write.type === 'delete_note',
+        )
         .map((write) => [write.noteId, write.version]),
     );
     const pendingTaskDeletes = new Map(
       this.writeQueue
-        .filter((write): write is Extract<QueuedWrite, { type: 'delete_task' }> => write.type === 'delete_task')
+        .filter(
+          (write): write is Extract<QueuedWrite, { type: 'delete_task' }> =>
+            write.type === 'delete_task',
+        )
         .map((write) => [write.taskId, write.version]),
     );
     const cloudNotes = allCloudNotes
-      .filter((row) => !row.deleted_at && (row.version ?? 0) > (pendingNoteDeletes.get(row.id) ?? -1))
+      .filter(
+        (row) => !row.deleted_at && (row.version ?? 0) > (pendingNoteDeletes.get(row.id) ?? -1),
+      )
       .map(rowToNote);
     const cloudTasks = allCloudTasks
-      .filter((row) => !row.deleted_at && (row.version ?? 0) > (pendingTaskDeletes.get(row.id) ?? -1))
+      .filter(
+        (row) => !row.deleted_at && (row.version ?? 0) > (pendingTaskDeletes.get(row.id) ?? -1),
+      )
       .map(rowToTask);
     const cloudSessions = ((sessionsRes.data || []) as SessionRow[]).map(rowToSession);
 
@@ -341,12 +351,12 @@ class SyncEngine {
     });
 
     const store = useAppStore.getState();
-    const localNotes = store.notes.filter((note) => (
-      (note.version ?? 0) > (noteTombstones.get(note.id) ?? -1)
-    ));
-    const localTasks = store.tasks.filter((task) => (
-      (task.version ?? 0) > (taskTombstones.get(task.id) ?? -1)
-    ));
+    const localNotes = store.notes.filter(
+      (note) => (note.version ?? 0) > (noteTombstones.get(note.id) ?? -1),
+    );
+    const localTasks = store.tasks.filter(
+      (task) => (task.version ?? 0) > (taskTombstones.get(task.id) ?? -1),
+    );
 
     const mergedNotes = this.mergeByVersion(localNotes, cloudNotes, 'lastModified');
     const mergedTasks = this.mergeByVersion(localTasks, cloudTasks, 'lastModified');
@@ -380,8 +390,10 @@ class SyncEngine {
       const cloudVersion = existing.version ?? 0;
       if (
         localVersion > cloudVersion ||
-        (localVersion === cloudVersion && Number(item[fallbackKey] ?? 0) >= Number(existing[fallbackKey] ?? 0))
-      ) map.set(item.id, item);
+        (localVersion === cloudVersion &&
+          Number(item[fallbackKey] ?? 0) >= Number(existing[fallbackKey] ?? 0))
+      )
+        map.set(item.id, item);
     });
     return Array.from(map.values());
   }
@@ -447,19 +459,28 @@ class SyncEngine {
 
     this.channel = supabase
       .channel(`nexo-sync-${userId}`)
-      .on('postgres_changes',
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'notes', filter: `user_id=eq.${userId}` },
-        (payload) => this.handleRealtimeChange('notes', payload))
-      .on('postgres_changes',
+        (payload) => this.handleRealtimeChange('notes', payload),
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${userId}` },
-        (payload) => this.handleRealtimeChange('tasks', payload))
-      .on('postgres_changes',
+        (payload) => this.handleRealtimeChange('tasks', payload),
+      )
+      .on(
+        'postgres_changes',
         { event: '*', schema: 'public', table: 'focus_sessions', filter: `user_id=eq.${userId}` },
-        (payload) => this.handleRealtimeChange('focus_sessions', payload))
+        (payload) => this.handleRealtimeChange('focus_sessions', payload),
+      )
       .subscribe();
   }
 
-  private handleRealtimeChange(table: string, payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> }): void {
+  private handleRealtimeChange(
+    table: string,
+    payload: { eventType: string; new: Record<string, unknown>; old: Record<string, unknown> },
+  ): void {
     const store = useAppStore.getState();
     const newRow = payload.new;
     const oldRow = payload.old;
@@ -474,10 +495,12 @@ class SyncEngine {
         if (!existing) useAppStore.setState((state) => ({ notes: [...state.notes, note] }));
         else if (
           (note.version ?? 0) > (existing.version ?? 0) ||
-          ((note.version ?? 0) === (existing.version ?? 0) && note.lastModified >= existing.lastModified)
-        ) useAppStore.setState((state) => ({
-          notes: state.notes.map((item) => item.id === note.id ? note : item),
-        }));
+          ((note.version ?? 0) === (existing.version ?? 0) &&
+            note.lastModified >= existing.lastModified)
+        )
+          useAppStore.setState((state) => ({
+            notes: state.notes.map((item) => (item.id === note.id ? note : item)),
+          }));
       }
     }
 
@@ -493,9 +516,10 @@ class SyncEngine {
           (task.version ?? 0) > (existing.version ?? 0) ||
           ((task.version ?? 0) === (existing.version ?? 0) &&
             (task.lastModified ?? 0) >= (existing.lastModified ?? 0))
-        ) useAppStore.setState((state) => ({
-          tasks: state.tasks.map((item) => item.id === task.id ? task : item),
-        }));
+        )
+          useAppStore.setState((state) => ({
+            tasks: state.tasks.map((item) => (item.id === task.id ? task : item)),
+          }));
       }
     }
 
@@ -511,11 +535,16 @@ class SyncEngine {
 
   private writeKey(write: QueuedWrite): string {
     switch (write.type) {
-      case 'upsert_note': return `note:${write.note.id}`;
-      case 'delete_note': return `note:${write.noteId}`;
-      case 'upsert_task': return `task:${write.task.id}`;
-      case 'delete_task': return `task:${write.taskId}`;
-      case 'upsert_session': return `session:${write.session.id}`;
+      case 'upsert_note':
+        return `note:${write.note.id}`;
+      case 'delete_note':
+        return `note:${write.noteId}`;
+      case 'upsert_task':
+        return `task:${write.task.id}`;
+      case 'delete_task':
+        return `task:${write.taskId}`;
+      case 'upsert_session':
+        return `session:${write.session.id}`;
     }
   }
 
@@ -581,63 +610,83 @@ class SyncEngine {
     const canApplyResult = () => this.lifecycle === lifecycle && this.userId === write.userId;
     switch (write.type) {
       case 'upsert_note': {
-        const result = await supabase.from('notes')
+        const result = await supabase
+          .from('notes')
           .upsert(noteToRow(write.note, write.userId))
           .select('*')
           .single();
         assertNoError(result);
-        if (result.data && canApplyResult()) this.handleRealtimeChange('notes', {
-          eventType: 'UPDATE',
-          new: result.data,
-          old: {},
-        });
+        if (result.data && canApplyResult())
+          this.handleRealtimeChange('notes', {
+            eventType: 'UPDATE',
+            new: result.data,
+            old: {},
+          });
         break;
       }
       case 'delete_note': {
-        const result = await supabase.from('notes').update({
-          deleted_at: new Date(write.lastModified).toISOString(),
-          last_modified: write.lastModified,
-          version: write.version,
-          updated_at: new Date().toISOString(),
-        }).eq('id', write.noteId).eq('user_id', write.userId).select('*').maybeSingle();
+        const result = await supabase
+          .from('notes')
+          .update({
+            deleted_at: new Date(write.lastModified).toISOString(),
+            last_modified: write.lastModified,
+            version: write.version,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', write.noteId)
+          .eq('user_id', write.userId)
+          .select('*')
+          .maybeSingle();
         assertNoError(result);
-        if (result.data && canApplyResult()) this.handleRealtimeChange('notes', {
-          eventType: 'UPDATE',
-          new: result.data,
-          old: {},
-        });
+        if (result.data && canApplyResult())
+          this.handleRealtimeChange('notes', {
+            eventType: 'UPDATE',
+            new: result.data,
+            old: {},
+          });
         break;
       }
       case 'upsert_task': {
-        const result = await supabase.from('tasks')
+        const result = await supabase
+          .from('tasks')
           .upsert(taskToRow(write.task, write.userId))
           .select('*')
           .single();
         assertNoError(result);
-        if (result.data && canApplyResult()) this.handleRealtimeChange('tasks', {
-          eventType: 'UPDATE',
-          new: result.data,
-          old: {},
-        });
+        if (result.data && canApplyResult())
+          this.handleRealtimeChange('tasks', {
+            eventType: 'UPDATE',
+            new: result.data,
+            old: {},
+          });
         break;
       }
       case 'delete_task': {
-        const result = await supabase.from('tasks').update({
-          deleted_at: new Date(write.lastModified).toISOString(),
-          last_modified: write.lastModified,
-          version: write.version,
-          updated_at: new Date().toISOString(),
-        }).eq('id', write.taskId).eq('user_id', write.userId).select('*').maybeSingle();
+        const result = await supabase
+          .from('tasks')
+          .update({
+            deleted_at: new Date(write.lastModified).toISOString(),
+            last_modified: write.lastModified,
+            version: write.version,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', write.taskId)
+          .eq('user_id', write.userId)
+          .select('*')
+          .maybeSingle();
         assertNoError(result);
-        if (result.data && canApplyResult()) this.handleRealtimeChange('tasks', {
-          eventType: 'UPDATE',
-          new: result.data,
-          old: {},
-        });
+        if (result.data && canApplyResult())
+          this.handleRealtimeChange('tasks', {
+            eventType: 'UPDATE',
+            new: result.data,
+            old: {},
+          });
         break;
       }
       case 'upsert_session':
-        assertNoError(await supabase.from('focus_sessions').upsert(sessionToRow(write.session, write.userId)));
+        assertNoError(
+          await supabase.from('focus_sessions').upsert(sessionToRow(write.session, write.userId)),
+        );
         break;
     }
   }

@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  FileText,
-  Code2,
-  Copy,
-  Share2,
-  StickyNote
-} from 'lucide-react';
+import { FileText, Code2, Copy, Share2, StickyNote } from 'lucide-react';
 import Footer from './Footer';
 import { useAppStore } from '../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
 import { localDateKey } from '../lib/date';
 
 const Dashboard: React.FC = () => {
-  const notes = useAppStore(state => state.notes);
-  const focusSessions = useAppStore(state => state.focusSessions);
+  const notes = useAppStore((state) => state.notes);
+  const focusSessions = useAppStore((state) => state.focusSessions);
   const navigate = useNavigate();
   const [snippetFeedback, setSnippetFeedback] = useState('');
 
@@ -58,7 +52,7 @@ const Dashboard: React.FC = () => {
 
   const today = localDateKey();
   const todayFocusSeconds = focusSessions
-    .filter(session => session.date === today)
+    .filter((session) => session.date === today)
     .reduce((total, session) => total + session.duration, 0);
 
   const formatTimer = (seconds: number) => {
@@ -93,8 +87,14 @@ const Dashboard: React.FC = () => {
       >
         <div className="md:col-span-8 bg-surface/50 backdrop-blur-3xl border border-border/50 rounded-[1.75rem] md:rounded-[3rem] p-4 sm:p-5 md:p-6 relative overflow-hidden group shadow-xl min-h-[14rem] sm:min-h-[16rem] md:min-h-[22rem]">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <svg className="absolute bottom-0 left-0 w-full scale-y-150 origin-bottom" viewBox="0 0 1440 320">
-              <path fill="var(--color-primary)" d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+            <svg
+              className="absolute bottom-0 left-0 w-full scale-y-150 origin-bottom"
+              viewBox="0 0 1440 320"
+            >
+              <path
+                fill="var(--color-primary)"
+                d="M0,160L48,176C96,192,192,224,288,224C384,224,480,192,576,165.3C672,139,768,117,864,138.7C960,160,1056,224,1152,245.3C1248,267,1344,245,1392,234.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+              />
             </svg>
           </div>
 
@@ -136,7 +136,9 @@ const Dashboard: React.FC = () => {
                   <div className="item-indicator" />
                   <div className="item-content min-w-0">
                     <h5 className="item-title truncate">{note.title || 'Untitled Note'}</h5>
-                    <p className="item-snippet line-clamp-2">{note.content?.substring(0, 60) || 'No content yet'}...</p>
+                    <p className="item-snippet line-clamp-2">
+                      {note.content?.substring(0, 60) || 'No content yet'}...
+                    </p>
                   </div>
                 </button>
               ))}
@@ -164,7 +166,9 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Code2 className="w-5 h-5 text-blue-600" />
-              <h4 className="font-serif font-bold text-slate-900 text-base">Snippet: Next.js Middleware</h4>
+              <h4 className="font-serif font-bold text-slate-900 text-base">
+                Snippet: Next.js Middleware
+              </h4>
             </div>
           </div>
 
@@ -178,9 +182,11 @@ const Dashboard: React.FC = () => {
               <code className="text-gray-400">
                 <span className="text-blue-400">export function</span>{' '}
                 <span className="text-blue-400">middleware</span>(request) {'{'}
-                {'\n'}{'  '}
+                {'\n'}
+                {'  '}
                 <span className="text-gray-500">// Validate session sync</span>
-                {'\n'}{'}'}
+                {'\n'}
+                {'}'}
               </code>
             </pre>
           </div>
@@ -190,14 +196,32 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Code2 className="w-5 h-5 text-blue-600" />
-              <h4 className="font-serif font-bold text-slate-900 text-base md:text-lg">Snippet: Next.js Middleware</h4>
+              <h4 className="font-serif font-bold text-slate-900 text-base md:text-lg">
+                Snippet: Next.js Middleware
+              </h4>
             </div>
             <div className="flex items-center gap-3">
-              {snippetFeedback && <span className="text-[10px] font-semibold text-blue-600" role="status">{snippetFeedback}</span>}
-              <button type="button" onClick={copySnippet} title="Copy snippet" aria-label="Copy snippet" className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+              {snippetFeedback && (
+                <span className="text-[10px] font-semibold text-blue-600" role="status">
+                  {snippetFeedback}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={copySnippet}
+                title="Copy snippet"
+                aria-label="Copy snippet"
+                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
                 <Copy className="w-4 h-4" />
               </button>
-              <button type="button" onClick={shareSnippet} title="Share snippet" aria-label="Share snippet" className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+              <button
+                type="button"
+                onClick={shareSnippet}
+                title="Share snippet"
+                aria-label="Share snippet"
+                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
@@ -214,20 +238,26 @@ const Dashboard: React.FC = () => {
                 <code className="text-gray-400">
                   <span className="text-blue-400">export function</span>{' '}
                   <span className="text-blue-400">middleware</span>(request) {'{'}
-                  {'\n'}{'  '}
+                  {'\n'}
+                  {'  '}
                   <span className="text-gray-500">// Validate session sync</span>
-                  {'\n'}{'  '}
+                  {'\n'}
+                  {'  '}
                   <span className="text-blue-400">const</span> token = request.cookies.get(
                   <span className="text-green-400">'nexo_token'</span>);
-                  {'\n\n'}{'  '}
+                  {'\n\n'}
+                  {'  '}
                   <span className="text-blue-400">if</span> (!token) {'{'}
-                  {'\n'}{'    '}
+                  {'\n'}
+                  {'    '}
                   <span className="text-blue-400">return</span> Response.redirect(
                   <span className="text-blue-400">new</span> URL(
                   <span className="text-green-400">'/auth'</span>, request.url));
-                  {'\n'}{'  '}
+                  {'\n'}
+                  {'  '}
                   {'}'}
-                  {'\n'}{'}'}
+                  {'\n'}
+                  {'}'}
                 </code>
               </pre>
             </div>

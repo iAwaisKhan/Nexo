@@ -180,9 +180,16 @@ describe('Account-scoped workspaces', () => {
 
   it('migrates ambiguous legacy data only into the guest workspace', () => {
     const legacyNote = makeNote({ title: 'Legacy guest note' });
-    localStorage.setItem('nexo_storage', JSON.stringify({ state: {
-      notes: [legacyNote], tasks: [], focusSessions: [],
-    } }));
+    localStorage.setItem(
+      'nexo_storage',
+      JSON.stringify({
+        state: {
+          notes: [legacyNote],
+          tasks: [],
+          focusSessions: [],
+        },
+      }),
+    );
 
     useAppStore.getState()._switchWorkspace('user:account-a');
     expect(useAppStore.getState().notes).toHaveLength(0);
@@ -300,8 +307,12 @@ describe('Version conflict resolution', () => {
     const cloudVer = newer.version ?? 0;
     const timestampWinner =
       localVer === cloudVer
-        ? older.lastModified >= newer.lastModified ? older : newer
-        : localVer > cloudVer ? older : newer;
+        ? older.lastModified >= newer.lastModified
+          ? older
+          : newer
+        : localVer > cloudVer
+          ? older
+          : newer;
     expect(timestampWinner.title).toBe('Newer');
   });
 });

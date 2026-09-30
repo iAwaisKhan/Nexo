@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Command, 
-  Terminal, 
-  Zap
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Command, Terminal, Zap } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface Action {
   id: string;
   title: string;
   shortcut?: string;
-  icon: any;
+  icon: LucideIcon;
   category: string;
   perform: () => void;
 }
@@ -22,35 +19,37 @@ interface CommandPaletteProps {
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, actions }) => {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const filteredActions = actions.filter(
-    (a) => a.title.toLowerCase().includes(query.toLowerCase()) || a.category.toLowerCase().includes(query.toLowerCase())
+    (a) =>
+      a.title.toLowerCase().includes(query.toLowerCase()) ||
+      a.category.toLowerCase().includes(query.toLowerCase()),
   );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
       }
       if (!isOpen) return;
 
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowDown" && filteredActions.length > 0) {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowDown' && filteredActions.length > 0) {
         setSelectedIndex((prev) => (prev + 1) % filteredActions.length);
       }
-      if (e.key === "ArrowUp" && filteredActions.length > 0) {
+      if (e.key === 'ArrowUp' && filteredActions.length > 0) {
         setSelectedIndex((prev) => (prev - 1 + filteredActions.length) % filteredActions.length);
       }
-      if (e.key === "Enter" && filteredActions[selectedIndex]) {
+      if (e.key === 'Enter' && filteredActions[selectedIndex]) {
         filteredActions[selectedIndex].perform();
         onClose();
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, filteredActions, selectedIndex]);
 
   useEffect(() => {
@@ -58,7 +57,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   }, [query]);
 
   useEffect(() => {
-    if (isOpen) setQuery("");
+    if (isOpen) setQuery('');
   }, [isOpen]);
 
   return (
@@ -72,7 +71,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
             onClick={onClose}
             className="absolute inset-0 bg-background/80 backdrop-blur-md"
           />
-          
+
           <motion.div
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -102,7 +101,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
               {filteredActions.length === 0 ? (
                 <div className="py-10 text-center text-text/30 space-y-2">
                   <Terminal className="w-8 h-8 mx-auto opacity-20" />
-                  <p className="text-xs font-bold uppercase tracking-widest">No signals found in this frequency</p>
+                  <p className="text-xs font-bold uppercase tracking-widest">
+                    No signals found in this frequency
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -120,20 +121,31 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                             <button
                               key={action.id}
                               onMouseEnter={() => setSelectedIndex(globalIndex)}
-                              onClick={() => { action.perform(); onClose(); }}
-                              aria-current={isSelected ? "true" : undefined}
+                              onClick={() => {
+                                action.perform();
+                                onClose();
+                              }}
+                              aria-current={isSelected ? 'true' : undefined}
                               className={`w-full flex items-center justify-between p-3 md:p-4 rounded-2xl transition-all duration-200 group ${
-                                isSelected ? "bg-primary text-white scale-[1.02]" : "hover:bg-primary/5 text-text/70"
+                                isSelected
+                                  ? 'bg-primary text-white scale-[1.02]'
+                                  : 'hover:bg-primary/5 text-text/70'
                               }`}
                             >
                               <div className="flex items-center gap-4">
-                                <action.icon className={`w-5 h-5 ${isSelected ? "text-white" : "text-text/30 group-hover:text-primary"}`} />
+                                <action.icon
+                                  className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-text/30 group-hover:text-primary'}`}
+                                />
                                 <span className="font-semibold tracking-tight">{action.title}</span>
                               </div>
                               {action.shortcut && (
-                                <div className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
-                                  isSelected ? "bg-white/20 border-white/20" : "bg-surface border-border/10 text-text/20"
-                                }`}>
+                                <div
+                                  className={`text-[10px] font-bold px-2 py-1 rounded-lg border ${
+                                    isSelected
+                                      ? 'bg-white/20 border-white/20'
+                                      : 'bg-surface border-border/10 text-text/20'
+                                  }`}
+                                >
                                   {action.shortcut}
                                 </div>
                               )}
@@ -148,11 +160,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
             <div className="p-4 border-t border-border/5 bg-surface/50 flex items-center justify-between">
               <div className="flex items-center gap-4 text-[10px] font-bold text-text/20 uppercase tracking-widest">
-                <div className="flex items-center gap-1"><Zap className="w-3 h-3" /> Nexo Command Engine</div>
+                <div className="flex items-center gap-1">
+                  <Zap className="w-3 h-3" /> Nexo Command Engine
+                </div>
               </div>
               <div className="flex items-center gap-2 text-[10px] font-medium text-text/40">
                 <span>Select</span> <kbd className="bg-border/10 px-1.5 py-0.5 rounded-md">↵</kbd>
-                <span className="ml-2">Navigate</span> <kbd className="bg-border/10 px-1.5 py-0.5 rounded-md">↑↓</kbd>
+                <span className="ml-2">Navigate</span>{' '}
+                <kbd className="bg-border/10 px-1.5 py-0.5 rounded-md">↑↓</kbd>
               </div>
             </div>
           </motion.div>

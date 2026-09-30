@@ -6,13 +6,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
     '⚠️ Supabase credentials not found. Cloud sync is disabled.\n' +
-    'Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sync.'
+      'Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable sync.',
   );
 }
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
 );
 
 export const isSupabaseConfigured = (): boolean => {

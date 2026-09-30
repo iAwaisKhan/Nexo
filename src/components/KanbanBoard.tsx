@@ -6,12 +6,13 @@ import { useAppStore } from '../store/useAppStore';
 import type { Task } from '../types/task';
 import { addDays, dateKey, getKanbanColumns, type KanbanColumnId } from '../lib/productivity';
 
-const columnMeta: Record<KanbanColumnId, { title: string; icon: React.ElementType; hint: string }> = {
-  backlog: { title: 'Backlog', icon: Archive, hint: 'Open work without a date' },
-  today: { title: 'Today', icon: CircleDot, hint: 'Due now or overdue' },
-  upcoming: { title: 'Upcoming', icon: CalendarDays, hint: 'Scheduled next' },
-  done: { title: 'Done', icon: CheckCircle2, hint: 'Completed work' },
-};
+const columnMeta: Record<KanbanColumnId, { title: string; icon: React.ElementType; hint: string }> =
+  {
+    backlog: { title: 'Backlog', icon: Archive, hint: 'Open work without a date' },
+    today: { title: 'Today', icon: CircleDot, hint: 'Due now or overdue' },
+    upcoming: { title: 'Upcoming', icon: CalendarDays, hint: 'Scheduled next' },
+    done: { title: 'Done', icon: CheckCircle2, hint: 'Completed work' },
+  };
 
 const columnOrder: KanbanColumnId[] = ['backlog', 'today', 'upcoming', 'done'];
 
@@ -38,7 +39,10 @@ const KanbanBoard: React.FC = () => {
         : column === 'today'
           ? { status: 'To Do', dueDate: today }
           : column === 'upcoming'
-            ? { status: 'To Do', dueDate: task.dueDate && task.dueDate > today ? task.dueDate : tomorrow }
+            ? {
+                status: 'To Do',
+                dueDate: task.dueDate && task.dueDate > today ? task.dueDate : tomorrow,
+              }
             : { status: 'To Do', dueDate: '' };
 
     updateTask({ ...task, ...updates });
@@ -54,8 +58,12 @@ const KanbanBoard: React.FC = () => {
     <div className="w-full min-h-[calc(100vh-9rem)] space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">Task Flow</p>
-          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">Kanban Board</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-primary mb-2">
+            Task Flow
+          </p>
+          <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-text">
+            Kanban Board
+          </h1>
           <p className="text-sm text-text/50 mt-2 max-w-2xl">
             Drag work between lanes or use the quick moves on each card.
           </p>
@@ -87,10 +95,14 @@ const KanbanBoard: React.FC = () => {
                   </div>
                   <div>
                     <h2 className="font-semibold text-text">{meta.title}</h2>
-                    <p className="text-[10px] text-text/40 font-bold uppercase tracking-widest">{meta.hint}</p>
+                    <p className="text-[10px] text-text/40 font-bold uppercase tracking-widest">
+                      {meta.hint}
+                    </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-text/40 tabular-nums">{columns[columnId].length}</span>
+                <span className="text-xs font-bold text-text/40 tabular-nums">
+                  {columns[columnId].length}
+                </span>
               </div>
 
               <div className="space-y-3">
@@ -107,12 +119,18 @@ const KanbanBoard: React.FC = () => {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-text leading-snug break-words">{task.title}</h3>
+                        <h3 className="font-semibold text-text leading-snug break-words">
+                          {task.title}
+                        </h3>
                         {task.description && (
-                          <p className="text-xs text-text/50 line-clamp-2 mt-2 leading-relaxed">{task.description}</p>
+                          <p className="text-xs text-text/50 line-clamp-2 mt-2 leading-relaxed">
+                            {task.description}
+                          </p>
                         )}
                       </div>
-                      <span className={`shrink-0 px-2 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-widest ${priorityClass[task.priority]}`}>
+                      <span
+                        className={`shrink-0 px-2 py-1 rounded-lg border text-[9px] font-bold uppercase tracking-widest ${priorityClass[task.priority]}`}
+                      >
                         {task.priority}
                       </span>
                     </div>
@@ -120,19 +138,24 @@ const KanbanBoard: React.FC = () => {
                     <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-text/40">
                       <Clock className="w-3 h-3" />
                       {task.dueDate || 'No date'}
-                      {task.timeSpent ? <span>{Math.floor(task.timeSpent / 60)}m focused</span> : null}
+                      {task.timeSpent ? (
+                        <span>{Math.floor(task.timeSpent / 60)}m focused</span>
+                      ) : null}
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
-                      {columnOrder.filter((target) => target !== columnId).slice(0, 3).map((target) => (
-                        <button
-                          key={target}
-                          onClick={() => moveTask(task, target)}
-                          className="px-2 py-2 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 text-[9px] font-bold uppercase tracking-widest transition-colors"
-                        >
-                          {columnMeta[target].title}
-                        </button>
-                      ))}
+                      {columnOrder
+                        .filter((target) => target !== columnId)
+                        .slice(0, 3)
+                        .map((target) => (
+                          <button
+                            key={target}
+                            onClick={() => moveTask(task, target)}
+                            className="px-2 py-2 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 text-[9px] font-bold uppercase tracking-widest transition-colors"
+                          >
+                            {columnMeta[target].title}
+                          </button>
+                        ))}
                     </div>
                   </motion.article>
                 ))}

@@ -10,7 +10,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   isPasswordRecovery: boolean;
-  
+
   initialize: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -36,7 +36,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       set({
         session,
         user: session?.user ?? null,
@@ -50,9 +52,12 @@ export const useAuthStore = create<AuthState>((set) => ({
           session,
           user: session?.user ?? null,
           isAuthenticated: !!session?.user,
-          isPasswordRecovery: event === 'PASSWORD_RECOVERY'
-            ? true
-            : event === 'SIGNED_OUT' ? false : state.isPasswordRecovery,
+          isPasswordRecovery:
+            event === 'PASSWORD_RECOVERY'
+              ? true
+              : event === 'SIGNED_OUT'
+                ? false
+                : state.isPasswordRecovery,
         }));
       });
       authSubscription = data.subscription;

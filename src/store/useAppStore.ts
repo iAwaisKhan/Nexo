@@ -52,9 +52,8 @@ const LEGACY_STORAGE_KEY = 'nexo_storage';
 const emptyWorkspace = (): WorkspaceData => ({ tasks: [], notes: [], focusSessions: [] });
 const getStorageKey = (workspaceId: WorkspaceId) => `${STORAGE_PREFIX}${workspaceId}`;
 
-const isRecord = (value: unknown): value is Record<string, unknown> => (
-  typeof value === 'object' && value !== null
-);
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 const parseWorkspace = (raw: string | null): WorkspaceData => {
   if (!raw) return emptyWorkspace();
@@ -66,10 +65,10 @@ const parseWorkspace = (raw: string | null): WorkspaceData => {
     // Zustand's legacy persist format wrapped data in a `state` property.
     const candidate = isRecord(parsed.state) ? parsed.state : parsed;
     return {
-      tasks: Array.isArray(candidate.tasks) ? candidate.tasks as Task[] : [],
-      notes: Array.isArray(candidate.notes) ? candidate.notes as Note[] : [],
+      tasks: Array.isArray(candidate.tasks) ? (candidate.tasks as Task[]) : [],
+      notes: Array.isArray(candidate.notes) ? (candidate.notes as Note[]) : [],
       focusSessions: Array.isArray(candidate.focusSessions)
-        ? candidate.focusSessions as AppFocusSession[]
+        ? (candidate.focusSessions as AppFocusSession[])
         : [],
     };
   } catch (error) {
@@ -80,10 +79,13 @@ const parseWorkspace = (raw: string | null): WorkspaceData => {
 
 const writeWorkspace = (workspaceId: WorkspaceId, data: WorkspaceData): void => {
   try {
-    localStorage.setItem(getStorageKey(workspaceId), JSON.stringify({
-      version: STORAGE_VERSION,
-      ...data,
-    }));
+    localStorage.setItem(
+      getStorageKey(workspaceId),
+      JSON.stringify({
+        version: STORAGE_VERSION,
+        ...data,
+      }),
+    );
   } catch (error) {
     console.error('[WorkspaceStorage] Failed to persist workspace:', error);
   }
@@ -138,7 +140,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastModified: Math.max(Date.now(), updatedTask.lastModified ?? 0),
     };
     set((state) => ({
-      tasks: state.tasks.map((task) => task.id === updatedTask.id ? nextTask : task),
+      tasks: state.tasks.map((task) => (task.id === updatedTask.id ? nextTask : task)),
     }));
     void getSyncEngine().then((engine) => engine.pushTask(nextTask));
   },
@@ -171,7 +173,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastModified: Math.max(Date.now(), updatedNote.lastModified || 0),
     };
     set((state) => ({
-      notes: state.notes.map((note) => note.id === updatedNote.id ? nextNote : note),
+      notes: state.notes.map((note) => (note.id === updatedNote.id ? nextNote : note)),
     }));
     void getSyncEngine().then((engine) => engine.pushNote(nextNote));
   },
@@ -231,7 +233,8 @@ useAppStore.subscribe((state, previous) => {
     (state.notes === previous.notes &&
       state.tasks === previous.tasks &&
       state.focusSessions === previous.focusSessions)
-  ) return;
+  )
+    return;
 
   if (persistenceTimer) clearTimeout(persistenceTimer);
   persistenceTimer = setTimeout(() => {
