@@ -61,13 +61,14 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,tsx}'],
+      include: ['src/**/*.{ts,tsx}', 'packages/contracts/src/**/*.ts'],
       exclude: [
         'src/**/*.d.ts',
         'src/**/*.test.{ts,tsx}',
         'src/setupTests.ts',
         'src/main.tsx',
         'src/types/**',
+        'packages/contracts/src/**/*.test.ts',
       ],
       thresholds: {
         statements: 6,

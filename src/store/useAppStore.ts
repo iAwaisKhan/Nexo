@@ -1,25 +1,11 @@
 import { create } from 'zustand';
 import type { Task } from '../types/task';
 import type { Note } from '../types/note';
+import type { FocusSession, WorkspaceData } from '@nexo/contracts';
 
 export type { Task, Note };
-
-export interface AppFocusSession {
-  id: string;
-  startTime: number;
-  endTime: number;
-  duration: number;
-  targetId?: string;
-  targetType?: 'task' | 'note' | string;
-  date: string;
-  hour: number;
-}
-
-export interface WorkspaceData {
-  tasks: Task[];
-  notes: Note[];
-  focusSessions: AppFocusSession[];
-}
+export type AppFocusSession = FocusSession;
+export type { WorkspaceData };
 
 export type WorkspaceId = 'guest' | `user:${string}`;
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'offline';
