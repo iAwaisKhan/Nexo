@@ -51,6 +51,51 @@ export const workspaceDataSchema = z.object({
   focusSessions: z.array(focusSessionSchema),
 });
 
+export const registerInputSchema = z.object({
+  email: z.email().trim().toLowerCase(),
+  password: z.string().min(8).max(128),
+  displayName: z.string().trim().min(1).max(80).optional(),
+});
+
+export const loginInputSchema = z.object({
+  email: z.email().trim().toLowerCase(),
+  password: z.string().min(1).max(128),
+});
+
+export const createNoteInputSchema = noteSchema
+  .pick({
+    id: true,
+    title: true,
+    content: true,
+    tags: true,
+    isPinned: true,
+    isPublic: true,
+    slug: true,
+    isBlog: true,
+  })
+  .extend({
+    title: z.string().max(255).default(''),
+    content: z.string().default(''),
+    tags: z.array(z.string().trim().min(1).max(64)).default([]),
+    isPinned: z.boolean().default(false),
+    isPublic: z.boolean().default(false),
+    isBlog: z.boolean().default(false),
+  });
+
+export const updateNoteInputSchema = createNoteInputSchema
+  .omit({ id: true })
+  .partial()
+  .extend({ expectedVersion: z.number().int().nonnegative().optional() })
+  .refine((value) => Object.keys(value).some((key) => key !== 'expectedVersion'), {
+    message: 'At least one note field must be provided.',
+  });
+
+export const noteListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  q: z.string().trim().max(100).optional(),
+});
+
 export const clientEnvSchema = z
   .object({
     VITE_SUPABASE_URL: z.url().optional(),
@@ -74,3 +119,7 @@ export type TaskStatus = z.infer<typeof taskStatusSchema>;
 export type FocusSession = z.infer<typeof focusSessionSchema>;
 export type WorkspaceData = z.infer<typeof workspaceDataSchema>;
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
+export type RegisterInput = z.infer<typeof registerInputSchema>;
+export type LoginInput = z.infer<typeof loginInputSchema>;
+export type CreateNoteInput = z.infer<typeof createNoteInputSchema>;
+export type UpdateNoteInput = z.infer<typeof updateNoteInputSchema>;

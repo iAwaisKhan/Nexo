@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "engines": {
     "node": ">=20.19"
@@ -29,13 +30,16 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" vite.config.ts --max-warnings=0",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" vite.config.ts --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm run coverage && npm run build",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace @nexo/api",
+    "dev:api": "npm run dev --workspace @nexo/api",
+    "build:api": "npm run build --workspace @nexo/api",
+    "build:all": "npm run build && npm run build:api",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run coverage && npm run build:all",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

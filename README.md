@@ -30,6 +30,23 @@ npm run build
 npm run preview
 ```
 
+### MERN API (local development)
+
+The Express API and MongoDB backend are an opt-in local service; the existing Vite app still runs independently. Supabase workflows are not part of this API startup or build.
+
+```bash
+docker compose up -d mongodb
+cp apps/api/.env.example apps/api/.env
+# Set a private JWT_ACCESS_SECRET in apps/api/.env before starting the API.
+npm run dev:api
+```
+
+The API listens on `http://localhost:4000`. Liveness and database readiness are available at `/api/v1/health/live` and `/api/v1/health/ready`. Authenticated Notes endpoints are under `/api/v1/notes`; auth endpoints are under `/api/v1/auth`. The [OpenAPI contract](docs/api/openapi.yaml) describes the current routes.
+
+For a production deployment, configure secrets and `CLIENT_ORIGINS` in the hosting provider, then run `npm run db:indexes --workspace @nexo/api` once against the target MongoDB database before serving traffic. Never commit `apps/api/.env` or production credentials.
+
+To build both apps, run `npm run build:all`; the API alone can be type-checked with `npm run typecheck --workspace @nexo/api` and built with `npm run build:api`.
+
 ## Features
 
 - Focus timer with session history and activity analytics
@@ -48,6 +65,7 @@ npm run preview
 Nexo/
 ├── public/                  Static assets
 ├── packages/contracts/      Shared Zod schemas and inferred domain types
+├── apps/api/                 Express 5 + TypeScript + MongoDB API
 ├── docs/                    Architecture decisions and migration plans
 ├── src/
 │   ├── components/          App screens and UI components
@@ -60,6 +78,7 @@ Nexo/
 │   ├── main.tsx             React entry point
 │   └── index.css            Theme and global styles
 ├── supabase/migrations/     Versioned database schema, RLS, and sync safeguards
+├── compose.yaml              Local MongoDB service for API development
 ├── .github/workflows/ci.yml Frontend type, test, audit, and build checks
 ├── vercel.json              SPA routing and security headers for Vercel
 ├── vite.config.ts           Vite, Tailwind, PWA, and test configuration

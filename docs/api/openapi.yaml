@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: Nexo API
+  version: 0.1.0
+  description: Versioned API for Nexo authentication and notes.
+servers:
+  - url: http://localhost:4000/api/v1
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Notes
+  - name: Sharing
+paths:
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      responses:
+        '200': { description: API process is alive }
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe including MongoDB
+      responses:
+        '200': { description: API and database are ready }
+        '503': { description: A required dependency is unavailable }
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8, maxLength: 128 }
+                displayName: { type: string, maxLength: 80 }
+      responses:
+        '201': { description: Account created; refresh token is set as an httpOnly cookie }
+        '409': { description: Email is already registered }
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Sign in
+      responses:
+        '200': { description: Access token returned and refresh cookie set }
+        '401': { description: Invalid credentials }
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Rotate refresh token and issue a new access token
+      responses:
+        '200': { description: Session rotated }
+        '401': { description: Refresh session is invalid or expired }
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Revoke current refresh session
+      responses:
+        '204': { description: Session revoked and cookie cleared }
+  /auth/me:
+    get:
+      tags: [Authentication]
+      security: [{ bearerAuth: [] }]
+      summary: Return the current account profile
+      responses:
+        '200': { description: Current profile }
+        '401': { description: Authentication required }
+  /notes:
+    get:
+      tags: [Notes]
+      security: [{ bearerAuth: [] }]
+      summary: List the authenticated user's notes
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200': { description: Paginated notes }
+        '401': { description: Authentication required }
+    post:
+      tags: [Notes]
+      security: [{ bearerAuth: [] }]
+      summary: Create a note owned by the authenticated user
+      responses:
+        '201': { description: Note created }
+        '409': { description: A note with this client-generated id already exists }
+  /notes/{noteId}:
+    patch:
+      tags: [Notes]
+      security: [{ bearerAuth: [] }]
+      summary: Update an owned note, optionally using optimistic version checking
+      parameters:
+        - { name: noteId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Note updated }
+        '404': { description: Note not found }
+        '409': { description: Version conflict }
+    delete:
+      tags: [Notes]
+      security: [{ bearerAuth: [] }]
+      summary: Soft-delete an owned note and disable its public link
+      parameters:
+        - { name: noteId, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Note deleted }
+        '404': { description: Note not found }
+  /shared-notes/{slugOrId}:
+    get:
+      tags: [Sharing]
+      summary: Read a note explicitly marked public
+      parameters:
+        - { name: slugOrId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Public note }
+        '404': { description: Public note not found }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
